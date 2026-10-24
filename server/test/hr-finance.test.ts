@@ -166,6 +166,7 @@ describe('tài chính', () => {
     expect(m.payer_kind).toBe('MIEN');
     expect(m.waiver_status).toBe('cho_duyet');
     expect(m.status).toBe('cho_thu');
+    expect((await ketoan('POST', `/api/finance/charges/${m.id}/payments`, { amount: 100_000, method: 'tien_mat' })).http).toBe(409);
     expect((await ketoan('POST', `/api/finance/charges/${m.id}/waiver/decide`, { approve: true })).http).toBe(403);
     const d = await giamdoc('POST', `/api/finance/charges/${m.id}/waiver/decide`, { approve: true });
     expect(d.status).toBe('mien_giam');

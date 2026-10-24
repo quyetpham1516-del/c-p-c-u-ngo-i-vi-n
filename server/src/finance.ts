@@ -163,8 +163,12 @@ export async function recordPayment(tx: Tx, actor: Actor, chargeId: string, b: {
   const c = await one(tx, 'SELECT * FROM charges WHERE id = $1 FOR UPDATE', [chargeId]);
   if (!c) throw new HttpError(404, 'Không tìm thấy khoản thu');
   if (['huy', 'thieu_thong_tin'].includes(c.status)) throw new HttpError(409, c.status === 'huy' ? 'Khoản thu đã hủy' : 'Bổ sung số km/bảng giá trước khi thu');
-  const outstanding = Number(c.total) - Number(c.paid) - Number(c.waived);
-  if (b.amount > outstanding) throw new HttpError(409, `Số tiền vượt số còn phải thu (${outstanding.toLocaleString('vi-VN')} đ)`);
+  // Phần đang chờ duyệt miễn/giảm chưa được thu, tránh thu xong rồi lại duyệt miễn
+  const pending = c.waiver_status === 'cho_duyet' ? Number(c.waiver_amount ?? 0) : 0;
+  const outstanding = Number(c.total) - Number(c.paid) - Number(c.waived) - pending;
+  if (b.amount > outstanding) {
+    throw new HttpError(409, `Số tiền vượt số còn phải thu (${outstanding.toLocaleString('vi-VN')} đ${pending ? `, đã trừ ${pending.toLocaleString('vi-VN')} đ đang chờ duyệt miễn/giảm` : ''})`);
+  }
   if (b.method === 'chuyen_khoan' && !b.reference) throw new HttpError(422, 'Chuyển khoản phải ghi mã giao dịch');
   const p = await one(tx, `INSERT INTO payments(code, charge_id, amount, method, reference, payer_name, received_by) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`,
     [await code(tx, 'PT'), chargeId, b.amount, b.method, b.reference ?? null, b.payerName ?? c.payer_name, actor.id]);

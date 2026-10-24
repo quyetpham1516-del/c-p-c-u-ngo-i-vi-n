@@ -154,3 +154,20 @@ export function homeFor(role: Role | undefined): string {
 }
 
 export const INFECTION_RISK: Record<string, string> = { tiep_xuc: 'Lây qua tiếp xúc', giot_ban: 'Lây qua giọt bắn', khong_khi: 'Lây qua không khí (lao, sởi...)' };
+
+/** Tải tệp (CSV...) từ API có đăng nhập */
+export async function download(url: string, filename: string) {
+  const res = await fetch(API_BASE + url, { headers: session.token ? { authorization: `Bearer ${session.token}` } : {} });
+  if (!res.ok) {
+    const j = await res.json().catch(() => null);
+    throw new Error(j?.error ?? `Lỗi ${res.status}`);
+  }
+  const blob = await res.blob();
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+export const money = (n: number | string | null | undefined) => `${Number(n ?? 0).toLocaleString('vi-VN')} đ`;

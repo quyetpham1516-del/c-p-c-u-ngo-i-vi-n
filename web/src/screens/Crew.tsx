@@ -309,8 +309,9 @@ function VehicleKit({ vehicleId, incidentId, act }: { vehicleId: string; inciden
         <div className="col" style={{ marginTop: 8 }}>
           {short.length > 0 && <div className="small">{short.map((i: any) => `${i.drug_name}: thiếu ${i.missing} (kho điểm còn ${i.in_station})`).join('; ')}</div>}
           <div><button className="primary" disabled={!short.length} onClick={restock}>Bù cơ số từ kho điểm</button></div>
+          <div className="small muted">Kiểm tra đầu ca: quét tem QR trên từng thiết bị bằng camera điện thoại (hoặc bấm tên thiết bị) rồi bấm "Kiểm tra đầu ca".</div>
           <table><tbody>{eq.map((e) => (
-            <tr key={e.id}><td>{e.type_name}<div className="small muted mono">{e.serial}</div></td>
+            <tr key={e.id}><td><a href={`/tb/${e.qr_code}`}>{e.type_name}</a><div className="small muted mono">{e.asset_code} · {e.serial}</div></td>
               <td>{e.status === 'hoat_dong' && !e.overdue ? <span className="badge">Hoạt động</span> : <span className="badge far">{e.status === 'hong' ? 'Hỏng' : e.overdue ? 'Quá hạn kiểm định' : e.status}</span>}</td>
               <td className="right">{e.status === 'hoat_dong' && <button className="ghost small" onClick={() => {
                 const note = prompt(`Mô tả hỏng hóc của ${e.type_name} (${e.serial}):`);

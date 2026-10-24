@@ -1,10 +1,11 @@
 import { Fragment, useEffect, useState } from 'react';
 import { api, session } from '../api';
+import { QrLookup } from './Scan';
 import { useStations } from '../catalog';
 
 interface EqType { id: number; name: string; maintenance_days: number | null; inspection_days: number | null; calibration_days: number | null; active: boolean; required: Record<string, number> }
 interface Eq {
-  id: string; type_id: number; type_name: string; serial: string; model: string | null; station_id: string; vehicle_id: string | null; status: string;
+  id: string; asset_code: string; qr_code: string; type_id: number; type_name: string; serial: string; model: string | null; station_id: string; vehicle_id: string | null; status: string;
   next_maintenance: string | null; next_inspection: string | null; next_calibration: string | null; note: string | null; overdue: boolean; maintenance_overdue: boolean;
 }
 interface Readiness { id: string; type: string; station_id: string; status: string; ok: boolean; gaps: { type: string; need: number; have: number; issues: string[] }[] }
@@ -12,7 +13,7 @@ interface ISet { id: string; code: string; name: string; station_id: string; veh
 interface Batch { id: string; code: string; method: string; station_id: string; status: string; started_at: string; finished_at: string | null; started_by_name: string; finished_by_name: string | null; indicator_ok: boolean | null; bi_ok: boolean | null; shelf_days: number; sets: string[] }
 
 const STATUS: Record<string, string> = { hoat_dong: 'Hoạt động', hong: 'Hỏng', bao_tri: 'Đang bảo trì', thanh_ly: 'Thanh lý' };
-const EVENT: Record<string, string> = { nhap: 'Nhập', bao_duong: 'Bảo dưỡng', kiem_dinh: 'Kiểm định', hieu_chuan: 'Hiệu chuẩn', bao_hong: 'Báo hỏng', sua_xong: 'Sửa xong', dieu_chuyen: 'Điều chuyển', thanh_ly: 'Thanh lý' };
+const EVENT: Record<string, string> = { nhap: 'Nhập', kiem_tra: 'Kiểm tra đầu ca', ve_sinh: 'Vệ sinh', bao_duong: 'Bảo dưỡng', kiem_dinh: 'Kiểm định', hieu_chuan: 'Hiệu chuẩn', bao_hong: 'Báo hỏng', sua_xong: 'Sửa xong', dieu_chuyen: 'Điều chuyển', thanh_ly: 'Thanh lý' };
 const SET_STATUS: Record<string, string> = { san_sang: 'Sẵn sàng', da_dung: 'Đã dùng, chờ tiệt khuẩn', dang_tiet_khuan: 'Đang tiệt khuẩn', hong: 'Hỏng' };
 const METHOD: Record<string, string> = { hap_uot: 'Hấp ướt', eo: 'EO', plasma: 'Plasma' };
 const TABS = ['Xe sẵn sàng', 'Thiết bị', 'Đến hạn', 'Dụng cụ, tiệt khuẩn', 'Danh mục'] as const;
@@ -35,7 +36,10 @@ export function Equipment() {
   };
   return (
     <div className="col">
-      <h2 style={{ margin: 0 }}>Trang thiết bị và dụng cụ <span className="small muted">QLCL-15</span></h2>
+      <div className="row" style={{ justifyContent: 'space-between' }}>
+        <h2 style={{ margin: 0 }}>Trang thiết bị và dụng cụ <span className="small muted">QLCL-15</span></h2>
+        <QrLookup />
+      </div>
       <div className="tabs">{TABS.map((t) => <button key={t} className={tab === t ? 'sel' : ''} onClick={() => { setTab(t); setError(''); setMsg(''); }}>{t}</button>)}</div>
       {error && <div className="error">{error}</div>}
       {msg && <div className="alert green">{msg}</div>}
@@ -139,12 +143,14 @@ function EquipmentTab({ canManage, run }: { canManage: boolean; run: Run }) {
             <option value="">Mọi xe</option>{(filter.stationId ? vehiclesOf(filter.stationId) : vehicles).map((v) => <option key={v.id}>{v.id}</option>)}</select>
           <select value={filter.status} onChange={(e) => setFilter({ ...filter, status: e.target.value })}>
             <option value="">Mọi trạng thái</option>{Object.entries(STATUS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>
+          <a className="btn" href={`/tem-qr?${new URLSearchParams({ loai: 'tb', ...Object.fromEntries(Object.entries(filter).filter(([, v]) => v)) })}`} target="_blank" rel="noreferrer">In tem QR ({list.length} thiết bị đang lọc)</a>
         </div>
         <table>
-          <thead><tr><th>Thiết bị</th><th>Số seri</th><th>Nơi</th><th>Trạng thái</th><th>Bảo dưỡng</th><th>Kiểm định</th><th>Hiệu chuẩn</th></tr></thead>
+          <thead><tr><th>Mã TB</th><th>Thiết bị</th><th>Số seri</th><th>Nơi</th><th>Trạng thái</th><th>Bảo dưỡng</th><th>Kiểm định</th><th>Hiệu chuẩn</th></tr></thead>
           <tbody>{list.map((e) => (
             <Fragment key={e.id}>
               <tr style={{ cursor: 'pointer' }} onClick={() => toggle(e.id)}>
+                <td className="mono small">{e.asset_code}</td>
                 <td>{e.type_name}<div className="small muted">{e.model}</div></td>
                 <td className="mono">{e.serial}</td>
                 <td className="small">{e.vehicle_id ?? `kho ${e.station_id}`}</td>
@@ -154,7 +160,11 @@ function EquipmentTab({ canManage, run }: { canManage: boolean; run: Run }) {
                 <td className="mono small" style={e.next_calibration && e.next_calibration < todayStr() ? { color: 'var(--p1)', fontWeight: 700 } : undefined}>{e.next_calibration ?? '—'}</td>
               </tr>
               {open === e.id && (
-                <tr><td colSpan={7}>
+                <tr><td colSpan={8}>
+                  <div className="row small" style={{ marginBottom: 6 }}>
+                    <a href={`/tb/${e.qr_code}`}>Mở trang quét QR</a>
+                    <a href={`/tem-qr?loai=tb&ids=${e.id}`} target="_blank" rel="noreferrer">In tem thiết bị này</a>
+                  </div>
                   {canManage && e.status !== 'thanh_ly' && (
                     <div className="grid4" style={{ marginBottom: 8 }}>
                       <label className="field">Ghi nhận<select value={ev.kind} onChange={(x) => setEv({ ...ev, kind: x.target.value })}>
@@ -228,7 +238,10 @@ function SterileTab({ canManage, run }: { canManage: boolean; run: Run }) {
   return (
     <>
       <div className="panel" style={{ overflowX: 'auto' }}>
-        <h3 style={{ marginTop: 0 }}>Bộ dụng cụ dùng lại</h3>
+        <div className="row" style={{ justifyContent: 'space-between' }}>
+          <h3 style={{ marginTop: 0 }}>Bộ dụng cụ dùng lại</h3>
+          <a className="btn" href="/tem-qr?loai=dc" target="_blank" rel="noreferrer">In tem QR bộ dụng cụ</a>
+        </div>
         <table>
           <thead><tr>{canManage && <th />}<th>Mã</th><th>Tên bộ</th><th>Nơi</th><th>Trạng thái</th><th>Hạn vô khuẩn</th><th className="right">Số lần</th><th>Dùng gần nhất</th></tr></thead>
           <tbody>{sets.map((s) => (

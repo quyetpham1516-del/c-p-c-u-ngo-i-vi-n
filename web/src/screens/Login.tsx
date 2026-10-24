@@ -17,7 +17,8 @@ export function Login() {
     try {
       const r = await api<{ token: string; user: User }>('POST', '/api/auth/login', { username, password });
       session.set(r.token, r.user);
-      router.push(homeFor(r.user.role));
+      const next = new URLSearchParams(window.location.search).get('next');
+      router.push(next && next.startsWith('/') && !next.startsWith('//') ? next : homeFor(r.user.role));
     } catch (err) {
       setError((err as Error).message);
     } finally {

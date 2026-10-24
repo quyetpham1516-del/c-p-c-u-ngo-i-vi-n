@@ -1,5 +1,6 @@
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import { z } from 'zod';
+import { assertCanStartShift } from '../hr.js';
 import { audit } from '../audit.js';
 import { many, one, withTx } from '../db.js';
 import { ackAssignment, AUTO_DISPATCH_KM, crewStatus, getIncident, HttpError, incidentScope, incidentSummary, recordTime, setVehicleStatus } from '../domain.js';
@@ -131,7 +132,8 @@ export function registerFleet(app: FastifyInstance, { pool, hub }: Ctx) {
   app.post('/api/crew/shift', { preHandler: guard('crew') }, async (req) => {
     const b = z.object({ vehicleId: z.string().min(1), crewRole: z.string().min(1).max(60) }).parse(req.body);
     const actor = actorOf(req);
-    await withTx(pool, async (tx) => {
+    const { warnings } = await withTx(pool, async (tx) => {
+      const check = await assertCanStartShift(tx, req.user.id);
       await tx.query('UPDATE crew_shifts SET ended_at = now() WHERE user_id = $1 AND ended_at IS NULL', [actor.id]);
       const v = await one(tx, 'SELECT status, station_id FROM vehicles WHERE id = $1', [b.vehicleId]);
       if (!v) throw new HttpError(404, 'Không tìm thấy xe');
@@ -139,10 +141,11 @@ export function registerFleet(app: FastifyInstance, { pool, hub }: Ctx) {
       if (home?.station_id && home.station_id !== v.station_id) throw new HttpError(403, `Bạn được phân ở điểm ${home.station_id}, xe ${b.vehicleId} thuộc điểm ${v.station_id}`);
       await tx.query('INSERT INTO crew_shifts(vehicle_id, user_id, crew_role) VALUES ($1,$2,$3)', [b.vehicleId, actor.id, b.crewRole]);
       if (v.status === 'S9') await setVehicleStatus(tx, actor, b.vehicleId, 'S1');
-      await audit(tx, 'system', actor, 'crew.shift_started', 'vehicle', b.vehicleId, { crewRole: b.crewRole });
+      await audit(tx, 'system', actor, 'crew.shift_started', 'vehicle', b.vehicleId, { crewRole: b.crewRole, warnings: check.warnings });
+      return check;
     });
     await pushVehicle(b.vehicleId);
-    return { ok: true };
+    return { ok: true, warnings };
   });
 
   app.delete('/api/crew/shift', { preHandler: guard('crew') }, async (req) => {

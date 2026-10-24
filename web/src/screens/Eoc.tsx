@@ -259,6 +259,8 @@ function IncidentWorkspace({ id, protocol, board, version, canDispatch, onClose 
   };
 
   const saveField = (patch: Record<string, unknown>) => run(() => api('PATCH', `/api/incidents/${id}`, patch));
+  const [customers, setCustomers] = useState<{ id: string; name: string }[]>([]);
+  useEffect(() => { api<any[]>('GET', '/api/customers/active').then(setCustomers).catch(() => {}); }, []);
 
   const onTriage = async (a: Record<string, string>, g: string | null) => {
     setAnswers(a);
@@ -325,6 +327,14 @@ function IncidentWorkspace({ id, protocol, board, version, canDispatch, onClose 
               {Object.entries(INFECTION_RISK).map(([k, l]) => <option key={k} value={k}>{l}</option>)}
             </select>
           </label>
+          {customers.length > 0 && (
+            <label className="field">Khách hàng hợp đồng (bệnh viện, bảo hiểm, sự kiện đặt xe)
+              <select value={inc.customer_id ?? ''} onChange={(e) => saveField({ customerId: e.target.value || null })} disabled={closed}>
+                <option value="">— Khách lẻ —</option>
+                {customers.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+            </label>
+          )}
         </div>
         <div className="small muted" style={{ margin: '6px 0' }}>Bấm lên bản đồ để đặt vị trí hiện trường{inc.lat != null ? ` (${inc.lat.toFixed(5)}, ${inc.lng.toFixed(5)})` : ''}.</div>
         <MapView scene={inc.lat != null ? { lat: inc.lat, lng: inc.lng } : null} vehicles={board?.vehicles ?? []}

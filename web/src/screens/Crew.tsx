@@ -143,7 +143,10 @@ export function Crew() {
             </select>
           </label>
           {error && <div className="error">{error}</div>}
-          <button className="primary big" disabled={!shiftForm.vehicleId} onClick={() => { unlockAudio(); act(() => api('POST', '/api/crew/shift', shiftForm)); }}>Bắt đầu ca</button>
+          <button className="primary big" disabled={!shiftForm.vehicleId} onClick={() => { unlockAudio(); act(async () => {
+            const r = await api<{ warnings?: string[] }>('POST', '/api/crew/shift', shiftForm);
+            if (r.warnings?.length) alert(`Đã nhận ca. Lưu ý hồ sơ: ${r.warnings.join('; ')}`);
+          }); }}>Bắt đầu ca</button>
         </div>
         <OfflineDrafts drafts={drafts} onOpen={(d) => openDraft(d.id)} />
         {draft && <EpcrForm key={draft.id} draft={draft} onChange={() => allDrafts().then(setDrafts)} />}

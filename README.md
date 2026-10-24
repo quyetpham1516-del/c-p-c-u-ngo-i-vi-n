@@ -31,6 +31,8 @@ Phần mềm cho **Dịch vụ Chuyển viện – Cấp cứu ngoại viện Me
 | Kiểm soát nhiễm khuẩn (QLCL-10) | Điều phối hoặc kíp đánh dấu nguy cơ lây nhiễm (tiếp xúc, giọt bắn, không khí); sau ca xe phải **ký phiếu khử khuẩn đủ mức** (thường quy, tăng cường, toàn diện, kèm hóa chất và thời gian tiếp xúc) mới báo sẵn sàng được; quan sát vệ sinh tay 5 thời điểm, phơi nhiễm nghề nghiệp (bảo mật, theo dõi dự phòng), tiêm chủng nhân viên, chất thải y tế | 7.5 |
 | Sự cố y khoa (QLCL-03, TT 43/2018) | Mọi nhân viên báo sự cố ở **Báo sự cố**, được báo ẩn danh; QLCL phân loại NC0–NC3, phân tích nguyên nhân gốc, giao việc khắc phục có hạn và bằng chứng; NC3 phải ghi đã báo cơ quan quản lý và do Ban Giám đốc đóng; hệ thống tự gợi ý sự cố từ dữ liệu (P1 lăn bánh chậm, tới nơi > 15 phút, phiếu bổ sung, giao xe thiếu thiết bị, lô tiệt khuẩn không đạt) | 7.5 |
 | Khiếu nại và hài lòng (QLCL-07, 08) | Tiếp nhận khiếu nại theo ca (hạn trả lời 24/48 giờ); sau ca có phục vụ, hệ thống xếp hàng tin nhắn khảo sát với đường dẫn công khai `/khao-sat/<mã>` (không cần đăng nhập, hết hạn 30 ngày); điểm ≤ 2 tự tạo khiếu nại để gọi lại. Tin nhắn nằm ở **Tin nhắn chờ gửi** cho tới khi nối nhà cung cấp SMS/Zalo | 7.5 |
+| Nhân sự | Mỗi tài khoản có hồ sơ nhân viên (tự tạo), thêm được nhân viên chưa có tài khoản; giấy tờ hành nghề (GPHN, bằng lái, BLS/ACLS...) có hạn; **GPHN/bằng lái hết hạn hoặc bị đình chỉ, đang nghỉ phép đã duyệt thì không nhận ca trên xe được**; đào tạo và số tiết cập nhật kiến thức 5 năm; lịch trực tuần (chặn xếp ca liền sau trực đêm/24 giờ trừ khi ghi lý do); đơn nghỉ phép có duyệt; chấm công văn phòng; bảng công tháng (giờ theo lịch, giờ thực tế trên xe) xuất CSV | 7.5 |
+| Tài chính, kế toán | Ký phiếu chuyển viện là **tự sinh khoản thu** theo bảng giá loại xe (giá mở cửa gồm số km đầu, km tiếp theo, giờ chờ, phụ thu đêm) và số km kíp ghi trên phiếu; khách hàng hợp đồng (chiết khấu, hạn thanh toán) chọn ngay trên ca ở EOC; phiếu thu (tiền mặt, chuyển khoản có mã giao dịch); miễn, giảm, thất thu do **Ban Giám đốc duyệt**, người đề nghị không tự duyệt; hóa đơn (ghi số HĐĐT từ nhà cung cấp); đề xuất chi **2 cấp** (kế toán, từ ngưỡng 5 triệu thêm Ban Giám đốc), phiếu chi lớn phải gắn đề xuất đã duyệt; công nợ theo tuổi nợ; **bút toán CSV** (Nợ/Có, mã xe thống kê) nhập vào MISA/Fast/Bravo; số hiệu tài khoản chỉnh được | 7.5 |
 | Điểm, trạm do quản trị quyết định | Tài khoản `admin` thêm/sửa/tạm ngưng điểm (trụ sở, trạm xe, kho trung tâm, điểm trực sự kiện), đặt tọa độ trên bản đồ, chuyển xe giữa các điểm, phân nhân viên về điểm; kíp chỉ nhận được xe thuộc điểm mình | 5.5 |
 
 ## Chưa có trong bản này (theo đúng lộ trình)
@@ -75,7 +77,7 @@ Hoặc chạy cả 3 lớp bằng Docker: `npm run setup`, rồi `docker compose
 
 Tài khoản mẫu: `dpv01`–`dpv05` tiếp nhận cuộc gọi, `dpv06`–`dpv10` điều phối viên, `truongca`, `qlcl`, `admin`,
 kíp `bs.als`, `dd.als`, `ys.bls`, `bs.msu`, `dd.vc`; phân hệ quản trị `duoc` (kho – dược), `kythuat` (thiết bị), `ksnk`,
-`nhansu`, `ketoan`, `giamdoc`. Mật khẩu là mật khẩu `npm run seed` in ra. Admin tạo thêm tài khoản ở trang **Quản trị**.
+`nhansu`, `ketoan`, `giamdoc`. Mật khẩu là mật khẩu `npm run seed` in ra. Mọi người dùng có trang **Cá nhân** (chấm công, lịch trực, xin nghỉ, đề xuất chi). Admin tạo thêm tài khoản ở trang **Quản trị**.
 
 Cơ sở dữ liệu thử đã có từ bản trước: `npm run demo:ops -w server` thêm tài khoản quản trị mẫu, thiết bị mẫu cho từng xe
 (nếu không, xe sẽ bị chặn vì thiếu thiết bị bắt buộc), bù cơ số xe và bộ dụng cụ mẫu. Không chạy lệnh này trên dữ liệu thật.

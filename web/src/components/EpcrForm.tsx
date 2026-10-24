@@ -531,6 +531,9 @@ export function EpcrForm({ draft: initial, onChange }: { draft: Draft; onChange?
                   <button onClick={() => set('disposition.handoverAt', nowIso())}>Bây giờ</button>
                 </div>
               </label>
+              <label className="field">Số km xe chạy cho ca (tính phí)
+                <input type="number" min={0} step={0.1} value={e.disposition?.distanceKm ?? ''} onChange={(ev) => set('disposition.distanceKm', ev.target.value === '' ? undefined : Number(ev.target.value))} />
+              </label>
               <label className="field">Đối tượng
                 <select value={e.payer ?? ''} onChange={(ev) => set('payer', ev.target.value || undefined)}>
                   <option value="">— Chọn —</option><option value="BHYT">BHYT</option><option value="THU_PHI">Thu phí</option>

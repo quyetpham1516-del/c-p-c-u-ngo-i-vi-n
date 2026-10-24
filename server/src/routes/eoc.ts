@@ -7,6 +7,7 @@ import {
   assignVehicle, AUTO_DISPATCH_KM, confirmTriage, createIncident, findDuplicates, getIncident, HttpError, incidentDetail,
   incidentScope, incidentSummary, recordTime, saveTriage, unassignVehicle,
 } from '../domain.js';
+import { queueSurvey } from '../quality.js';
 import { evaluate } from '../triage/engine.js';
 import { protocolDescriptor, type Priority, type VehicleType } from '../triage/protocol.js';
 import { suggestVehicles } from '../fleet.js';
@@ -158,11 +159,13 @@ export function registerEoc(app: FastifyInstance, { pool, hub }: Ctx) {
       notes: z.string().max(4000).nullish(),
       source: z.enum(['1800', '115']).optional(),
       sourceRef: z.string().max(60).nullish(),
+      infectionRisk: z.enum(['tiep_xuc', 'giot_ban', 'khong_khi']).nullish(),
     }).parse(req.body);
     const actor = actorOf(req);
     const map: Record<string, string> = {
       address: 'address', addressNote: 'address_note', lat: 'lat', lng: 'lng', callbackPhone: 'callback_phone',
       callerName: 'caller_name', patientCount: 'patient_count', notes: 'notes', source: 'source', sourceRef: 'source_ref',
+      infectionRisk: 'infection_risk',
     };
     const keys = Object.keys(b).filter((k) => (b as Record<string, unknown>)[k] !== undefined);
     if (!keys.length) return incidentDetail(pool, id);
@@ -286,6 +289,8 @@ export function registerEoc(app: FastifyInstance, { pool, hub }: Ctx) {
       await tx.query(`UPDATE incidents SET status = $2, duplicate_of = $3, closed_at = now(), updated_at = now() WHERE id = $1`,
         [id, b.status, b.duplicateOf ?? null]);
       await audit(tx, incidentScope(id), actor, 'incident.closed', 'incident', id, b);
+      const served = await one(tx, 'SELECT 1 FROM assignments WHERE incident_id = $1 LIMIT 1', [id]);
+      if (b.status === 'closed' && served) await queueSurvey(tx, id);
       if (b.duplicateOf) {
         await audit(tx, incidentScope(b.duplicateOf), actor, 'incident.duplicate_linked', 'incident', id, {});
         await tx.query(`UPDATE calls SET incident_id = $2 WHERE incident_id = $1`, [id, b.duplicateOf]);

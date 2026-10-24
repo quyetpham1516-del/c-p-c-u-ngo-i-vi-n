@@ -65,6 +65,7 @@ main { flex: 1; padding: 12px 16px; }
 /* ---- Thành phần ---- */
 .panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px; }
 .panel + .panel { margin-top: 12px; }
+.grid2 > .panel + .panel, .grid3 > .panel + .panel, .grid4 > .panel + .panel { margin-top: 0; }
 .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .col { display: flex; flex-direction: column; gap: 8px; }
 .grow { flex: 1; }

@@ -82,7 +82,7 @@ export const EpcrSchema = z.object({
   transportNotes: str,
   disposition: z.object({
     type: z.enum(['transported', 'treated_released', 'refused', 'dead_on_scene', 'cancelled']).optional(),
-    hospital: str, department: str, receiverName: str, receiverTitle: str, handoverAt: str,
+    hospital: str, department: str, receiverName: str, receiverTitle: str, handoverAt: str, distanceKm: num,
     refusalSigned: bool, refusalWitness: str, handoverNote: str,
     fromUnit: str, fromComment: str, toUnit: str, toComment: str,
   }).partial().default({}),

@@ -15,6 +15,12 @@ export async function freshApp() {
   return { app, pool };
 }
 
+export async function token(app: FastifyInstance, username: string): Promise<string> {
+  const r = await app.inject({ method: 'POST', url: '/api/auth/login', payload: { username, password: testPassword } });
+  if (r.statusCode !== 200) throw new Error(`login ${username}: ${r.body}`);
+  return r.json().token;
+}
+
 export async function login(app: FastifyInstance, username: string): Promise<(method: string, url: string, body?: unknown) => Promise<any>> {
   const r = await app.inject({ method: 'POST', url: '/api/auth/login', payload: { username, password: testPassword } });
   if (r.statusCode !== 200) throw new Error(`login ${username}: ${r.body}`);

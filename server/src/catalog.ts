@@ -178,6 +178,12 @@ export const PAR_LEVELS: Record<string, [string, number][]> = {
  * Nạp danh mục đi kèm. Danh sách bệnh viện nạp mỗi lần (nhanh, không ghi đè khoa đã sửa);
  * ICD-10 Bộ Y tế chỉ nạp khi bảng còn ít mã hoặc khi gọi với force (lệnh npm run catalog).
  */
+/** Bảng giá mẫu để thử tính tiền: [loại xe, giá mở cửa, số km gồm trong giá mở cửa, đ/km tiếp theo, đ/giờ chờ] */
+export const SAMPLE_PRICES: [string, number, number, number, number][] = [
+  ['ALS', 1_500_000, 10, 30_000, 300_000], ['BLS', 800_000, 10, 20_000, 200_000], ['MSU', 3_000_000, 10, 40_000, 500_000],
+  ['ECMO', 10_000_000, 10, 60_000, 1_000_000], ['VC', 500_000, 10, 15_000, 100_000], ['DP', 800_000, 10, 20_000, 200_000],
+];
+
 export async function seedCatalog(pool: pg.Pool, opts: { force?: boolean } = {}) {
   const hosp = await importHospitals(pool, BUNDLED_HOSPITALS);
   for (const h of HOSPITALS) {
@@ -218,6 +224,12 @@ export async function seedCatalog(pool: pg.Pool, opts: { force?: boolean } = {})
     for (const [name, qty] of items) {
       await pool.query('INSERT INTO par_levels(vehicle_type, drug_id, qty) SELECT $1, id, $3 FROM drugs WHERE name = $2', [vt, name, qty]);
     }
+  }
+  // Bảng giá mẫu cho loại xe chưa có bảng giá; kế toán thay bằng giá theo quyết định của công ty ở trang Tài chính
+  for (const [vt, base, baseKm, perKm, wait] of SAMPLE_PRICES) {
+    if ((await pool.query('SELECT 1 FROM price_lists WHERE vehicle_type = $1 LIMIT 1', [vt])).rowCount) continue;
+    await pool.query(`INSERT INTO price_lists(name, vehicle_type, base_fee, base_km, per_km, wait_per_hour, night_surcharge_pct)
+                      VALUES ($1, $2, $3, $4, $5, $6, 20)`, [`Bảng giá mẫu ${vt} (cần cập nhật)`, vt, base, baseKm, perKm, wait]);
   }
   const counts = (await pool.query(`SELECT (SELECT count(*) FROM hospitals)::int AS hospitals, (SELECT count(*) FROM drugs)::int AS drugs,
                                            (SELECT count(*) FROM icd10)::int AS icd`)).rows[0];

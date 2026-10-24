@@ -1,5 +1,6 @@
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import { z } from 'zod';
+import { createChargeForTransfer } from '../finance.js';
 import { audit, verifyChain } from '../audit.js';
 import { decryptId, encryptId, isValidCccd, lookupHash, maskLast4, normalizeId } from '../crypto.js';
 import { many, one, withTx, type Queryable } from '../db.js';
@@ -263,6 +264,7 @@ export function registerRecords(app: FastifyInstance, { pool, hub }: Ctx) {
       if (miss.length) throw new HttpError(422, 'Còn thiếu thông tin bắt buộc', miss);
       await consumeForTransfer(tx, actor, id, epcr.medications);
       await tx.query(`UPDATE transfers SET status = 'signed', signed_by = $2, signed_at = now(), updated_at = now() WHERE id = $1`, [id, actor.id]);
+      await createChargeForTransfer(tx, actor, id);
       const scope = t.incident_id ? incidentScope(t.incident_id) : 'system';
       await audit(tx, scope, actor, 'transfer.signed', 'transfer', id, { number: t.transfer_number, version: t.version });
       await audit(tx, patientScope(t.patient_id), actor, 'transfer.signed', 'transfer', id, { number: t.transfer_number });

@@ -160,12 +160,13 @@ export function registerEoc(app: FastifyInstance, { pool, hub }: Ctx) {
       source: z.enum(['1800', '115']).optional(),
       sourceRef: z.string().max(60).nullish(),
       infectionRisk: z.enum(['tiep_xuc', 'giot_ban', 'khong_khi']).nullish(),
+      customerId: z.string().uuid().nullish(),
     }).parse(req.body);
     const actor = actorOf(req);
     const map: Record<string, string> = {
       address: 'address', addressNote: 'address_note', lat: 'lat', lng: 'lng', callbackPhone: 'callback_phone',
       callerName: 'caller_name', patientCount: 'patient_count', notes: 'notes', source: 'source', sourceRef: 'source_ref',
-      infectionRisk: 'infection_risk',
+      infectionRisk: 'infection_risk', customerId: 'customer_id',
     };
     const keys = Object.keys(b).filter((k) => (b as Record<string, unknown>)[k] !== undefined);
     if (!keys.length) return incidentDetail(pool, id);

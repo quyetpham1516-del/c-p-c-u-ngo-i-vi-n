@@ -1,5 +1,6 @@
 import { randomBytes } from 'node:crypto';
 import type pg from 'pg';
+import { seedCatalog } from './catalog.js';
 import { hashPassword } from './crypto.js';
 import { createPool, withTx } from './db.js';
 import { migrate } from './migrate.js';
@@ -21,6 +22,8 @@ export const DEMO_STAFF: [string, string, string, string][] = [
 ];
 
 export async function seedDemoOps(pool: pg.Pool, password: string): Promise<{ users: number; equipment: number; restocked: number; sets: number }> {
+  // Thiết bị mẫu cần danh mục loại thiết bị và thiết bị bắt buộc
+  await seedCatalog(pool);
   let users = 0;
   const pw = hashPassword(password);
   for (const [username, name, role, title] of DEMO_STAFF) {

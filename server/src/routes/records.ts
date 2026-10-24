@@ -238,7 +238,7 @@ export function registerRecords(app: FastifyInstance, { pool, hub }: Ctx) {
         LEFT JOIN users s ON s.id = t.signed_by
        WHERE t.id = $1`, [id]);
     if (!t) throw new HttpError(404, 'Không tìm thấy phiếu');
-    const times = t.incident_id ? await many(pool, 'SELECT code, at, source FROM incident_times WHERE incident_id = $1 ORDER BY code', [t.incident_id]) : [];
+    const times = t.incident_id ? await many(pool, 'SELECT code, at, source FROM incident_times WHERE incident_id = $1 ORDER BY substring(code from 2)::int', [t.incident_id]) : [];
     const amendments = await many(pool, `SELECT m.version, m.reason, m.created_at, u.full_name AS author FROM transfer_amendments m
                                           LEFT JOIN users u ON u.id = m.author_id WHERE m.transfer_id = $1 ORDER BY m.id`, [id]);
     const crew = t.vehicle_id ? await many(pool, `SELECT u.full_name, u.title, u.license_no, cs.crew_role FROM crew_shifts cs JOIN users u ON u.id = cs.user_id

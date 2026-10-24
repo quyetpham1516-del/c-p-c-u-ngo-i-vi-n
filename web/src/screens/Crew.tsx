@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { api, fmtDuration, fmtTime, PRIORITY_LABEL, STATUS_LABEL, useLive, useNow } from '../api';
+import { api, fmtDuration, INFECTION_RISK, fmtTime, PRIORITY_LABEL, STATUS_LABEL, useLive, useNow } from '../api';
 import { EpcrForm } from '../components/EpcrForm';
 import { FLAG_LABEL } from '../components/Triage';
 import { startAlarm, unlockAudio } from '../alarm';
@@ -198,6 +198,12 @@ export function Crew() {
             <a className="btn" style={{ marginTop: 8 }} target="_blank" rel="noreferrer" href={`https://www.google.com/maps/dir/?api=1&destination=${inc.lat},${inc.lng}`}>Dẫn đường</a>
           )}
           {inc.notes && <div className="alert blue small" style={{ marginTop: 8 }}>{inc.notes}</div>}
+          <label className="field" style={{ marginTop: 8, maxWidth: 360 }}>Nguy cơ lây nhiễm (quyết định mức khử khuẩn sau ca)
+            <select value={inc.infectionRisk ?? ''} onChange={(e) => act(() => api('POST', '/api/crew/infection', { risk: e.target.value || null }))}>
+              <option value="">Không nghi lây nhiễm</option>
+              {Object.entries(INFECTION_RISK).map(([k, l]) => <option key={k} value={k}>{l}</option>)}
+            </select>
+          </label>
           <div className="hr" />
           <div className="status-grid">
             {STEPS.filter((s) => s.from.includes(v.status)).map((s, i) => {
@@ -240,6 +246,7 @@ export function Crew() {
       </div>
       {v.equipment_gaps && <div className="alert red">Xe đang thiếu thiết bị bắt buộc nên EOC không giao được: {v.equipment_gaps}. Báo kỹ thuật hoặc trưởng ca.</div>}
       <VehicleKit vehicleId={v.id} incidentId={inc?.id ?? null} act={act} />
+      <Disinfection vehicleId={v.id} status={v.status} refreshKey={error} />
       {error && <div className="error">{error}</div>}
 
       <div className="panel">
@@ -314,6 +321,69 @@ function VehicleKit({ vehicleId, incidentId, act }: { vehicleId: string; inciden
                 await api('POST', `/api/instrument-sets/${s.id}/used`, { incidentId }); await load();
               })}>Đã dùng</button>}</td></tr>
           ))}</tbody></table>}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** Phiếu khử khuẩn xe sau ca (KSNK-01): xe chưa ký phiếu đủ mức thì không báo sẵn sàng được */
+function Disinfection({ vehicleId, status, refreshKey }: { vehicleId: string; status: string; refreshKey: string }) {
+  const [meta, setMeta] = useState<{ levels: Record<string, string>; steps: Record<string, [string, string][]> } | null>(null);
+  const [pending, setPending] = useState<any[]>([]);
+  const [form, setForm] = useState<{ incidentId: string | null; level: string; checklist: Record<string, boolean>; chemical: string; concentration: string; contactMinutes: string } | null>(null);
+  const [msg, setMsg] = useState('');
+  const [err, setErr] = useState('');
+  const load = useCallback(() => {
+    api<any[]>('GET', `/api/ipc/disinfections?status=cho_lam&vehicleId=${encodeURIComponent(vehicleId)}`).then(setPending).catch(() => {});
+  }, [vehicleId]);
+  useEffect(() => { api('GET', '/api/ipc/meta').then(setMeta).catch(() => {}); }, []);
+  useEffect(() => { load(); }, [load, status, refreshKey]);
+  const order = ['thuong_quy', 'tang_cuong', 'toan_dien'];
+  const steps = form && meta ? order.slice(0, order.indexOf(form.level) + 1).flatMap((l) => meta.steps[l]) : [];
+  const start = (incidentId: string | null, level: string) => { setMsg(''); setErr(''); setForm({ incidentId, level, checklist: {}, chemical: '', concentration: '', contactMinutes: '' }); };
+  const sign = async () => {
+    if (!form) return;
+    setErr('');
+    try {
+      await api('POST', '/api/ipc/disinfections', {
+        vehicleId, incidentId: form.incidentId, level: form.level, checklist: form.checklist, chemical: form.chemical,
+        concentration: form.concentration || null, contactMinutes: form.contactMinutes ? Number(form.contactMinutes) : null,
+      });
+      setForm(null); setMsg('Đã ký phiếu khử khuẩn. Có thể báo xe sẵn sàng.'); load();
+    } catch (e) { setErr((e as Error).message); }
+  };
+  if (!meta) return null;
+  return (
+    <div className="panel col">
+      <div className="row" style={{ justifyContent: 'space-between' }}>
+        <b>Khử khuẩn xe</b>
+        {!form && <button className="ghost small" onClick={() => start(null, 'thuong_quy')}>Ghi khử khuẩn thường quy</button>}
+      </div>
+      {pending.map((d) => (
+        <div key={d.id} className="alert red row" style={{ justifyContent: 'space-between' }}>
+          <span>Ca {d.incident_code ?? '—'} cần khử khuẩn mức <b>{meta.levels[d.required_level]}</b> trước khi báo sẵn sàng.</span>
+          {!form && <button className="primary small" onClick={() => start(d.incident_id, d.required_level)}>Làm phiếu</button>}
+        </div>
+      ))}
+      {msg && <div className="alert green small">{msg}</div>}
+      {form && (
+        <div className="col">
+          <label className="field">Mức<select value={form.level} onChange={(e) => setForm({ ...form, level: e.target.value })}>
+            {order.map((l) => <option key={l} value={l}>{meta.levels[l]}</option>)}</select></label>
+          {steps.map(([k, label]) => (
+            <label key={k} className="row small"><input type="checkbox" checked={!!form.checklist[k]} onChange={(e) => setForm({ ...form, checklist: { ...form.checklist, [k]: e.target.checked } })} /> {label}</label>
+          ))}
+          <div className="grid3">
+            <label className="field">Hóa chất<input value={form.chemical} onChange={(e) => setForm({ ...form, chemical: e.target.value })} placeholder="Cloramin B, Presept..." /></label>
+            <label className="field">Nồng độ<input value={form.concentration} onChange={(e) => setForm({ ...form, concentration: e.target.value })} placeholder="0,5%" /></label>
+            <label className="field">Thời gian tiếp xúc (phút)<input type="number" min={0} value={form.contactMinutes} onChange={(e) => setForm({ ...form, contactMinutes: e.target.value })} /></label>
+          </div>
+          {err && <div className="error">{err}</div>}
+          <div className="row">
+            <button className="primary" disabled={form.chemical.trim().length < 2 || steps.some(([k]) => !form.checklist[k])} onClick={sign}>Ký phiếu khử khuẩn</button>
+            <button className="ghost" onClick={() => setForm(null)}>Hủy</button>
+          </div>
         </div>
       )}
     </div>

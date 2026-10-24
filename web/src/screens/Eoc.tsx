@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import {
-  api, fmtDuration, fmtTime, INCIDENT_STATUS, PRIORITY_LABEL, session, TIME_LABEL, useLive, useNow, VEHICLE_LABEL, type LiveEvent,
+  api, fmtDuration, INFECTION_RISK, fmtTime, INCIDENT_STATUS, PRIORITY_LABEL, session, TIME_LABEL, useLive, useNow, VEHICLE_LABEL, type LiveEvent,
 } from '../api';
 import { FleetTable, type Board } from '../components/FleetTable';
 import { HospitalPicker } from '../components/HospitalPicker';
@@ -319,6 +319,12 @@ function IncidentWorkspace({ id, protocol, board, version, canDispatch, onClose 
               <input type="number" min={1} value={form.patientCount ?? 1} onChange={(e) => setForm({ ...form, patientCount: Number(e.target.value) })} onBlur={() => saveField({ patientCount: form.patientCount })} disabled={closed} />
             </label>
           </div>
+          <label className="field">Nguy cơ lây nhiễm (kíp mặc phòng hộ, khử khuẩn xe theo mức này)
+            <select value={inc.infection_risk ?? ''} onChange={(e) => saveField({ infectionRisk: e.target.value || null })} disabled={closed}>
+              <option value="">Không nghi lây nhiễm</option>
+              {Object.entries(INFECTION_RISK).map(([k, l]) => <option key={k} value={k}>{l}</option>)}
+            </select>
+          </label>
         </div>
         <div className="small muted" style={{ margin: '6px 0' }}>Bấm lên bản đồ để đặt vị trí hiện trường{inc.lat != null ? ` (${inc.lat.toFixed(5)}, ${inc.lng.toFixed(5)})` : ''}.</div>
         <MapView scene={inc.lat != null ? { lat: inc.lat, lng: inc.lng } : null} vehicles={board?.vehicles ?? []}

@@ -2,6 +2,7 @@ import { audit, type Actor } from './audit.js';
 import { many, nextCounter, one, type Queryable, type Tx } from './db.js';
 import { equipmentGaps, gapText } from './equipment.js';
 import { haversineKm } from './fleet.js';
+import { assertDisinfected, ensureDisinfection, queueSurvey } from './quality.js';
 import { evaluate, type Answers } from './triage/engine.js';
 import type { Priority } from './triage/protocol.js';
 
@@ -209,8 +210,14 @@ const STATUS_TIME: Record<string, { time: string; source: string; incidentStatus
 };
 
 export async function crewStatus(tx: Tx, actor: Actor, vehicleId: string, status: string, pos?: { lat?: number; lng?: number }) {
+  if (status === 'S1' || status === 'S2') {
+    // Ca nghi lây nhiễm: chưa ký phiếu khử khuẩn đủ mức thì xe chưa được báo sẵn sàng (QLCL-05)
+    const cur = await one(tx, 'SELECT current_incident_id FROM vehicles WHERE id = $1', [vehicleId]);
+    if (cur?.current_incident_id) await assertDisinfected(tx, vehicleId, cur.current_incident_id);
+  }
   const { incidentId } = await setVehicleStatus(tx, actor, vehicleId, status, pos);
   if (!incidentId) return;
+  if (['S8', 'S1', 'S2'].includes(status)) await ensureDisinfection(tx, vehicleId, incidentId);
   const m = STATUS_TIME[status];
   if (m) {
     await recordTime(tx, incidentId, m.time, new Date(), m.source, actor);
@@ -231,6 +238,7 @@ export async function crewStatus(tx: Tx, actor: Actor, vehicleId: string, status
     if (left.n === 0) {
       await tx.query(`UPDATE incidents SET status = 'closed', closed_at = now(), updated_at = now() WHERE id = $1 AND status NOT IN ('cancelled','transferred_115')`, [incidentId]);
       await audit(tx, incidentScope(incidentId), actor, 'incident.closed', 'incident', incidentId, { reason: 'Xe sẵn sàng trở lại' });
+      await queueSurvey(tx, incidentId);
     }
   }
 }

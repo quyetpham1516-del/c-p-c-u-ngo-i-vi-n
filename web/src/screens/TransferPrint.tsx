@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams } from 'next/navigation';
 import { api, fmtDateTime } from '../api';
 import { TRAUMA_TYPES } from '../components/EpcrForm';
 import { StarOfLife } from '../Logo';
@@ -51,7 +51,7 @@ function BodyFigure() {
 
 /** Phiếu in theo mẫu "Bệnh án cấp cứu ngoại viện" (Trung tâm Cấp cứu 115 TP.HCM) chủ đầu tư gửi trên Drive */
 export function TransferPrint() {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
   const [t, setT] = useState<any>(null);
   const [error, setError] = useState('');
   useEffect(() => { api('GET', `/api/transfers/${id}`).then(setT).catch((e) => setError(e.message)); }, [id]);

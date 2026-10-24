@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import Link from 'next/link';
 import {
   api, fmtDuration, fmtTime, INCIDENT_STATUS, PRIORITY_LABEL, session, TIME_LABEL, useLive, useNow, VEHICLE_LABEL, type LiveEvent,
 } from '../api';
@@ -205,7 +205,7 @@ export function Eoc() {
         <div className="panel">
           <div className="row" style={{ justifyContent: 'space-between' }}>
             <h2 style={{ margin: 0 }}>Đội xe</h2>
-            <Link to="/bang-xe" className="small">Mở bảng lớn</Link>
+            <Link href="/bang-xe" className="small">Mở bảng lớn</Link>
           </div>
           <FleetTable board={board} compact />
         </div>
@@ -285,7 +285,7 @@ function IncidentWorkspace({ id, protocol, board, version, canDispatch, onClose 
           </div>
           <div className="row">
             {t0 && <span className="mono">⏱ {fmtDuration(now - new Date(t0).getTime())}</span>}
-            <Link to={`/ca/${id}/truy-xuat`} className="small">Truy xuất ca</Link>
+            <Link href={`/ca/${id}/truy-xuat`} className="small">Truy xuất ca</Link>
             <button className="ghost" onClick={onClose}>Đóng cửa sổ</button>
           </div>
         </div>

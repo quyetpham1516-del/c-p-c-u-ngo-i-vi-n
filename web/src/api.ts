@@ -3,6 +3,15 @@ import { useEffect, useRef, useState } from 'react';
 export type Role = 'calltaker' | 'dispatcher' | 'supervisor' | 'crew' | 'qa' | 'admin';
 export interface User { id: string; username: string; name: string; role: Role }
 
+/** Địa chỉ backend Fastify, đặt qua NEXT_PUBLIC_API_URL trong .env (để trống = cùng địa chỉ với frontend) */
+export const API_BASE = (process.env.NEXT_PUBLIC_API_URL ?? '').replace(/\/$/, '');
+
+function wsUrl(): string {
+  const base = API_BASE ? new URL(API_BASE) : new URL(location.href);
+  const proto = base.protocol === 'https:' ? 'wss' : 'ws';
+  return `${proto}://${base.host}/ws`;
+}
+
 const TOKEN_KEY = 'medone.token';
 const USER_KEY = 'medone.user';
 
@@ -27,7 +36,7 @@ export class ApiError extends Error {
 }
 
 export async function api<T = any>(method: string, url: string, body?: unknown): Promise<T> {
-  const res = await fetch(url, {
+  const res = await fetch(API_BASE + url, {
     method,
     headers: {
       ...(body !== undefined ? { 'content-type': 'application/json' } : {}),
@@ -61,8 +70,7 @@ export function useLive(onEvent: (e: LiveEvent) => void): boolean {
     let retry = 500;
     let timer: number | undefined;
     const connect = () => {
-      const proto = location.protocol === 'https:' ? 'wss' : 'ws';
-      ws = new WebSocket(`${proto}://${location.host}/ws?token=${encodeURIComponent(session.token ?? '')}`);
+      ws = new WebSocket(`${wsUrl()}?token=${encodeURIComponent(session.token ?? '')}`);
       ws.onopen = () => { setConnected(true); retry = 500; handler.current({ type: 'reconnected' }); };
       ws.onmessage = (m) => { try { handler.current(JSON.parse(m.data)); } catch { /* bỏ qua */ } };
       ws.onclose = () => {

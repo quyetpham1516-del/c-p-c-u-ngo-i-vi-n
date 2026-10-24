@@ -1,4 +1,6 @@
-import { NavLink, useNavigate } from 'react-router-dom';
+'use client';
+import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
 import { ROLE_LABEL, session, type Role } from '../api';
 import { Brand } from '../Logo';
 
@@ -11,7 +13,8 @@ const LINKS: { to: string; label: string; roles: Role[] }[] = [
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const user = session.user;
-  const nav = useNavigate();
+  const router = useRouter();
+  const path = usePathname();
   const toggleTheme = () => {
     const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
     document.documentElement.dataset.theme = next;
@@ -23,7 +26,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Brand compact />
         <nav>
           {LINKS.filter((l) => user && l.roles.includes(user.role)).map((l) => (
-            <NavLink key={l.to} to={l.to}>{l.label}</NavLink>
+            <Link key={l.to} href={l.to} className={path.startsWith(l.to) ? 'active' : undefined}>{l.label}</Link>
           ))}
         </nav>
         <button className="ghost" onClick={toggleTheme} title="Đổi nền sáng/tối">Sáng/Tối</button>
@@ -31,7 +34,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <div><b>{user?.name}</b></div>
           <div>{user && ROLE_LABEL[user.role]}</div>
         </div>
-        <button className="ghost" onClick={() => { session.clear(); nav('/dang-nhap'); }}>Đăng xuất</button>
+        <button className="ghost" onClick={() => { session.clear(); router.push('/dang-nhap'); }}>Đăng xuất</button>
       </header>
       <main>{children}</main>
     </div>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams } from 'next/navigation';
 import { api, fmtDateTime, fmtTime, INCIDENT_STATUS, PRIORITY_LABEL, STATUS_LABEL, TIME_LABEL } from '../api';
 
 function describe(e: any): string {
@@ -33,7 +33,7 @@ function describe(e: any): string {
 
 /** Dựng lại toàn bộ một ca từ nhật ký chỉ ghi thêm (mục 6.3); lượt xem này cũng được ghi lại */
 export function Trace() {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
   const [data, setData] = useState<any>(null);
   const [error, setError] = useState('');
   useEffect(() => { api('GET', `/api/incidents/${id}/trace`).then(setData).catch((e) => setError(e.message)); }, [id]);

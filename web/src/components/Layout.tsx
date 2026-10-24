@@ -15,6 +15,8 @@ const LINKS: { to: string; label: string; roles: Role[] }[] = [
   { to: '/bao-su-co', label: 'Báo sự cố', roles: ['calltaker', 'dispatcher', 'supervisor', 'crew', 'qa', 'admin', 'pharmacist', 'technician', 'ipc', 'hr', 'accountant', 'director'] },
   { to: '/nhan-su', label: 'Nhân sự', roles: ['hr', 'admin', 'director'] },
   { to: '/tai-chinh', label: 'Tài chính', roles: ['accountant', 'director', 'admin'] },
+  { to: '/bao-cao', label: 'Báo cáo', roles: ['director', 'admin', 'supervisor', 'qa', 'accountant'] },
+  { to: '/bao-cao', label: 'Tài liệu', roles: ['calltaker', 'dispatcher', 'crew', 'pharmacist', 'technician', 'ipc', 'hr'] },
   { to: '/ca-nhan', label: 'Cá nhân', roles: ['calltaker', 'dispatcher', 'supervisor', 'crew', 'qa', 'admin', 'pharmacist', 'technician', 'ipc', 'hr', 'accountant', 'director'] },
   { to: '/quan-tri', label: 'Quản trị', roles: ['admin'] },
 ];
@@ -34,7 +36,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Brand compact />
         <nav>
           {LINKS.filter((l) => user && l.roles.includes(user.role)).map((l) => (
-            <Link key={l.to} href={l.to} className={path.startsWith(l.to) ? 'active' : undefined}>{l.label}</Link>
+            <Link key={l.label} href={l.to} className={path.startsWith(l.to) ? 'active' : undefined}>{l.label}</Link>
           ))}
         </nav>
         <button className="ghost" onClick={toggleTheme} title="Đổi nền sáng/tối">Sáng/Tối</button>

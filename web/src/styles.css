@@ -192,3 +192,67 @@ tr.sel td { background: color-mix(in srgb, var(--brand) 14%, var(--panel)); }
   main { padding: 0; }
   body { background: #fff; }
 }
+
+/* ---- ePCR theo mẫu giấy ---- */
+.chk { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); cursor: pointer; min-height: 40px; font-size: 14px; }
+.chk.on { border-color: var(--brand); background: color-mix(in srgb, var(--brand) 14%, var(--panel)); }
+.chk input { width: 18px; height: 18px; }
+.abcde-row { display: grid; grid-template-columns: 130px minmax(0, 1fr) minmax(0, 1fr); gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line); align-items: start; }
+.abcde-head { border-bottom: 2px solid var(--line); color: var(--muted); }
+.abcde-title { font-weight: 700; }
+.abcde-care { background: var(--panel-2); border-radius: 6px; padding: 6px; }
+@media (max-width: 900px) { .abcde-row { grid-template-columns: minmax(0, 1fr); } }
+
+/* ---- Phiếu in theo mẫu "Bệnh án cấp cứu ngoại viện" ---- */
+.ba { --sand: #c9c09a; --sand-2: #ddd8bf; --grey: #d9d9d9; --pink: #d99594; --pink-2: #e6b8b7;
+  background: #fff; color: #000; width: 210mm; min-height: 297mm; margin: 0 auto; padding: 8mm 9mm; font: 10.5px/1.35 "Times New Roman", Times, serif; }
+.ba * { color: #000; }
+.ba .hdr { display: grid; grid-template-columns: 1fr 1fr 1fr; align-items: start; text-align: center; font-size: 11px; }
+.ba .hdr .l { display: flex; gap: 6px; align-items: center; text-align: left; }
+.ba .hdr .r { text-align: left; padding-left: 40px; }
+.ba h1 { text-align: center; font-size: 17px; margin: 8px 0 4px; letter-spacing: .02em; }
+.ba .kg { display: grid; grid-template-columns: 1fr auto; align-items: center; margin-bottom: 4px; }
+.ba .kg .t { text-align: center; font-size: 15px; font-weight: 700; }
+.ba .infect { border: 1px solid #000; padding: 2px 8px; font-size: 12px; }
+.ba .infect span { background: #e46c0a; padding: 0 4px; }
+.ba .box { border: 1px solid #000; }
+.ba .box + .box { border-top: none; }
+.ba .g3 { display: grid; grid-template-columns: 1.15fr 0.85fr 1fr; }
+.ba .g3 > div { padding: 3px 6px; }
+.ba .g3 > div + div { border-left: 1px solid #000; }
+.ba .sec { background: var(--sand); font-weight: 700; text-align: center; padding: 1px 4px; margin: -1px 0 3px; }
+.ba .bg-grey { background: #f2f2f2; }
+.ba .fill { border-bottom: 1px dotted #555; min-width: 40px; display: inline-block; padding: 0 3px; }
+.ba .line { border-bottom: 1px dotted #555; min-height: 14px; padding: 0 3px; }
+.ba b.lb { font-weight: 700; }
+.ba .cb { font-family: "DejaVu Sans", Arial, sans-serif; font-size: 10px; }
+.ba table.abc { width: 100%; border-collapse: collapse; }
+.ba table.abc td, .ba table.abc th { border: 1px solid #000; padding: 2px 5px; vertical-align: top; }
+.ba table.abc th { background: var(--sand); text-align: center; }
+.ba table.abc tr:nth-child(odd) td { background: #f2f2f2; }
+.ba .abc-wrap { display: grid; grid-template-columns: 1fr 205px; }
+.ba .trauma { border-left: 1px solid #000; padding: 3px 5px; display: grid; grid-template-columns: 92px 1fr; gap: 2px; }
+.ba .trauma .h { grid-column: 1 / -1; background: var(--sand); font-weight: 700; padding: 1px 4px; }
+.ba .sample { display: grid; grid-template-columns: 1fr 1fr 205px; }
+.ba .sample > div { padding: 2px 5px; }
+.ba .sample > div + div { border-left: 1px solid #000; }
+.ba .kv { display: grid; grid-template-columns: 95px 1fr; gap: 2px 4px; margin-bottom: 2px; }
+.ba .dx { background: var(--sand-2); padding: 4px 6px; border-top: 1px solid #000; display: grid; grid-template-columns: 95px 1fr; }
+.ba .bottom3 { display: grid; grid-template-columns: 1.15fr 0.9fr 0.95fr; }
+.ba .bottom3 > div + div { border-left: 1px solid #000; }
+.ba table.td { width: 100%; border-collapse: collapse; }
+.ba table.td td, .ba table.td th { border: 1px solid #999; padding: 1px 3px; text-align: left; font-size: 10px; }
+.ba table.td td:first-child { background: #f2f2f2; font-weight: 700; width: 70px; }
+.ba .nb { background: var(--pink); margin: 4px; padding: 4px 6px; }
+.ba .nb .h, .ba .cprb .h { background: var(--sand); text-align: center; font-weight: 700; margin: -4px -6px 4px; padding: 1px; }
+.ba .cprb { background: var(--pink-2); margin: 4px; padding: 4px 6px; min-height: 180px; }
+.ba .note { padding: 4px 6px; min-height: 40px; }
+.ba .sig { display: grid; grid-template-columns: 1fr 1fr; background: var(--sand-2); margin-top: 0; text-align: left; gap: 0; }
+.ba .sig > div { padding: 5px 7px; min-height: 80px; }
+.ba .sig > div + div { border-left: 1px solid #000; }
+.ba .draft { color: #c00; text-align: center; font-weight: 700; }
+@media print {
+  @page { size: A4; margin: 0; }
+  .ba { width: auto; min-height: auto; padding: 7mm 8mm; }
+  .ba .sec, .ba .nb, .ba .cprb, .ba .sig, .ba .dx, .ba table.abc th, .ba .trauma .h { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}

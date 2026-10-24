@@ -94,7 +94,14 @@ export function Crew() {
     const inc = cur?.incident;
     const d: Draft = {
       id: crypto.randomUUID(), incidentId: inc?.id ?? null, vehicleId: cur?.vehicle?.id ?? null, patientId: null, patientLabel: null,
-      epcr: { scene: { address: inc?.address ?? undefined }, vitals: [], interventions: [], medications: [] },
+      epcr: {
+        scene: { address: inc?.address ?? undefined },
+        caller: { name: inc?.callerName ?? undefined, phone: inc?.callbackPhone ?? undefined },
+        chiefComplaint: inc?.complaint ?? undefined,
+        dispatch: { from115: inc?.source === '115' || undefined, firstAidGuided: inc ? true : undefined },
+        disposition: { hospital: inc?.destination ?? undefined, fromUnit: 'Medone' + (cur?.vehicle?.id ? ` – xe ${cur.vehicle.id}` : '') },
+        vitals: [], interventions: [], medications: [],
+      },
       baseVersion: 0, dirty: true, status: 'draft', updatedAt: new Date().toISOString(),
     };
     await saveDraft(d);

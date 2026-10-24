@@ -228,7 +228,8 @@ export function registerRecords(app: FastifyInstance, { pool, hub }: Ctx) {
   app.get('/api/transfers/:id', clinical, async (req) => {
     const id = uuidParam(req);
     const t = await one(pool, `
-      SELECT t.*, i.code AS incident_code, i.final_priority, i.source, i.address AS incident_address,
+      SELECT t.*, i.code AS incident_code, i.final_priority, i.source, i.source_ref, i.address AS incident_address,
+             i.caller_name, i.callback_phone, i.caller_phone,
              p.ba_number, p.full_name AS patient_name, p.id_last4, p.sex AS patient_sex, p.dob AS patient_dob, p.birth_year,
              a.full_name AS author_name, s.full_name AS signed_by_name
         FROM transfers t

@@ -161,7 +161,7 @@ export function registerFleet(app: FastifyInstance, { pool, hub }: Ctx) {
         id: i.id, code: i.code, priority: i.final_priority, lights: i.final_lights, address: i.address, addressNote: i.address_note,
         lat: i.lat, lng: i.lng, complaint: findGroup(i.chief_complaint)?.label ?? null,
         flags: evaluate(i.triage_answers ?? {}, i.chief_complaint).flags, callbackPhone: i.callback_phone, notes: i.notes,
-        patientCount: i.patient_count, destination: i.destination, triageAnswers: i.triage_answers,
+        patientCount: i.patient_count, destination: i.destination, source: i.source, callerName: i.caller_name, triageAnswers: i.triage_answers,
         acknowledged: !!a.acknowledged_at, times, transfers,
       };
     }

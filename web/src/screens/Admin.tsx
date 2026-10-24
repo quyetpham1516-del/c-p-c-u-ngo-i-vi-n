@@ -1,0 +1,126 @@
+import { useEffect, useState } from 'react';
+import { api, ROLE_LABEL, type Role } from '../api';
+import { STATION_KIND, useStations, type Station } from '../catalog';
+import { MapView } from '../components/MapView';
+
+interface UserRow { id: string; username: string; full_name: string; title: string | null; role: Role; active: boolean; station_id: string | null }
+interface VehicleRow { id: string; type: string; status: string; station_id: string; station_name: string }
+
+const EMPTY = { id: '', name: '', kind: 'tram', address: '', phone: '', lat: '', lng: '' };
+
+/** Quản trị điểm/trạm: chỉ tài khoản admin quyết định có những điểm nào, xe và nhân viên thuộc điểm nào */
+export function Admin() {
+  const [stations, reloadStations] = useStations(true);
+  const [users, setUsers] = useState<UserRow[]>([]);
+  const [vehicles, setVehicles] = useState<VehicleRow[]>([]);
+  const [form, setForm] = useState<typeof EMPTY>(EMPTY);
+  const [editing, setEditing] = useState<string | null>(null);
+  const [error, setError] = useState('');
+
+  const loadAll = async () => {
+    const [u, b] = await Promise.all([api<UserRow[]>('GET', '/api/users'), api<{ vehicles: VehicleRow[] }>('GET', '/api/board')]);
+    setUsers(u); setVehicles(b.vehicles);
+    reloadStations();
+  };
+  useEffect(() => { loadAll().catch((e) => setError(e.message)); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const run = async (fn: () => Promise<unknown>) => {
+    setError('');
+    try { await fn(); await loadAll(); } catch (e) { setError((e as Error).message); }
+  };
+
+  const save = () => run(async () => {
+    const body = { name: form.name, kind: form.kind, address: form.address || null, phone: form.phone || null, lat: Number(form.lat), lng: Number(form.lng) };
+    if (editing) await api('PATCH', `/api/stations/${editing}`, body);
+    else await api('POST', '/api/stations', { id: form.id, ...body });
+    setForm(EMPTY); setEditing(null);
+  });
+
+  const edit = (s: Station) => {
+    setEditing(s.id);
+    setForm({ id: s.id, name: s.name, kind: s.kind, address: s.address ?? '', phone: s.phone ?? '', lat: String(s.lat), lng: String(s.lng) });
+  };
+  const active = stations.filter((s) => s.active);
+  const valid = form.name.trim().length >= 2 && (editing || /^[A-Za-z0-9-]{2,20}$/.test(form.id)) && form.lat !== '' && form.lng !== '' && !Number.isNaN(Number(form.lat)) && !Number.isNaN(Number(form.lng));
+
+  return (
+    <div className="col">
+      <h2 style={{ margin: 0 }}>Quản trị điểm, trạm</h2>
+      {error && <div className="error">{error}</div>}
+      <div className="panel" style={{ overflowX: 'auto' }}>
+        <table>
+          <thead><tr><th>Mã</th><th>Tên điểm</th><th>Loại</th><th>Địa chỉ</th><th className="right">Xe</th><th className="right">Nhân viên</th><th>Trạng thái</th><th /></tr></thead>
+          <tbody>
+            {stations.map((s) => (
+              <tr key={s.id} style={s.active ? undefined : { opacity: 0.55 }}>
+                <td className="mono"><b>{s.id}</b></td><td>{s.name}</td><td>{STATION_KIND[s.kind] ?? s.kind}</td><td className="small">{s.address ?? '—'}</td>
+                <td className="right">{s.vehicle_count}</td><td className="right">{s.staff_count}</td>
+                <td>{s.active ? 'Đang hoạt động' : 'Tạm ngưng'}</td>
+                <td className="right row" style={{ justifyContent: 'flex-end' }}>
+                  <button className="ghost small" onClick={() => edit(s)}>Sửa</button>
+                  <button className="ghost small" onClick={() => run(() => api('PATCH', `/api/stations/${s.id}`, { active: !s.active }))}>{s.active ? 'Tạm ngưng' : 'Mở lại'}</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="panel col">
+        <h3 style={{ margin: 0 }}>{editing ? `Sửa điểm ${editing}` : 'Thêm điểm mới'}</h3>
+        <div className="grid4">
+          <label className="field">Mã điểm<input value={form.id} disabled={!!editing} placeholder="VD: TR-03" onChange={(e) => setForm({ ...form, id: e.target.value.toUpperCase() })} /></label>
+          <label className="field">Tên điểm<input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></label>
+          <label className="field">Loại
+            <select value={form.kind} onChange={(e) => setForm({ ...form, kind: e.target.value })}>
+              {Object.entries(STATION_KIND).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+            </select>
+          </label>
+          <label className="field">Điện thoại<input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></label>
+          <label className="field" style={{ gridColumn: 'span 2' }}>Địa chỉ<input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} /></label>
+          <label className="field">Vĩ độ<input value={form.lat} inputMode="decimal" onChange={(e) => setForm({ ...form, lat: e.target.value })} /></label>
+          <label className="field">Kinh độ<input value={form.lng} inputMode="decimal" onChange={(e) => setForm({ ...form, lng: e.target.value })} /></label>
+        </div>
+        <div className="small muted">Bấm lên bản đồ để lấy tọa độ. Tọa độ dùng để tính xe gần nhất khi xe chưa có GPS.</div>
+        <MapView className="map-small" onPick={(lat, lng) => setForm((f) => ({ ...f, lat: lat.toFixed(5), lng: lng.toFixed(5) }))}
+          scene={form.lat && form.lng ? { lat: Number(form.lat), lng: Number(form.lng) } : null} zoom={11} />
+        <div className="row">
+          <button className="primary" disabled={!valid} onClick={save}>{editing ? 'Lưu' : 'Thêm điểm'}</button>
+          {editing && <button className="ghost" onClick={() => { setEditing(null); setForm(EMPTY); }}>Hủy</button>}
+        </div>
+      </div>
+
+      <div className="grid2">
+        <div className="panel" style={{ overflowX: 'auto' }}>
+          <h3>Xe thuộc điểm nào</h3>
+          <table><tbody>
+            {vehicles.map((v) => (
+              <tr key={v.id}><td><b>{v.id}</b> <span className="small muted">{v.type} · {v.status}</span></td>
+                <td className="right">
+                  <select value={v.station_id} onChange={(e) => run(() => api('PATCH', `/api/vehicles/${v.id}/station`, { stationId: e.target.value }))}>
+                    {active.map((s) => <option key={s.id} value={s.id}>{s.id} – {s.name}</option>)}
+                  </select>
+                </td></tr>
+            ))}
+          </tbody></table>
+          <div className="small muted">Chỉ chuyển được xe đang rảnh hoặc ngoài hoạt động.</div>
+        </div>
+        <div className="panel" style={{ overflowX: 'auto' }}>
+          <h3>Nhân viên làm ở điểm nào</h3>
+          <table><tbody>
+            {users.filter((u) => u.active).map((u) => (
+              <tr key={u.id}><td>{u.full_name} <span className="small muted">{u.username} · {ROLE_LABEL[u.role]}</span></td>
+                <td className="right">
+                  <select value={u.station_id ?? ''} onChange={(e) => run(() => api('PATCH', `/api/users/${u.id}/station`, { stationId: e.target.value || null }))}>
+                    <option value="">Mọi điểm</option>
+                    {active.map((s) => <option key={s.id} value={s.id}>{s.id} – {s.name}</option>)}
+                  </select>
+                </td></tr>
+            ))}
+          </tbody></table>
+          <div className="small muted">Kíp được phân điểm chỉ nhận ca trên xe của điểm đó.</div>
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -71,7 +71,7 @@ export function TransferPrint() {
   while (vit.length < 4) vit.push(null);
   const careRows: string[] = [
     ...(e.interventions ?? []).map((i: any) => `${hhmm(i.at)} ${i.name}${i.by ? ` (${i.by})` : ''}${i.note ? ` – ${i.note}` : ''}`),
-    ...(e.medications ?? []).map((m: any) => `${hhmm(m.at)} ${m.name} ${m.dose ?? ''} ${m.route ?? ''} – lô ${m.lot ?? '—'}${m.by ? `, ${m.by}` : ''}${m.witness ? `, chứng kiến ${m.witness}` : ''}`),
+    ...(e.medications ?? []).map((m: any) => `${hhmm(m.at)} ${m.name} ${m.dose ?? ''} ${m.route ?? ''}${m.qty ? ` ×${m.qty}` : ''} – lô ${m.lot ?? '—'}${m.expiry ? ` (HD ${m.expiry})` : ''}${m.by ? `, ${m.by}` : ''}${m.witness ? `, chứng kiến ${m.witness}` : ''}`),
   ];
   while (careRows.length < 4) careRows.push('');
   const sex = ({ M: 'Nam', F: 'Nữ', U: 'Chưa rõ' } as Record<string, string>)[t.patient_sex ?? e.patient?.sex] ?? '';
@@ -90,7 +90,7 @@ export function TransferPrint() {
         <h1>BỆNH ÁN CẤP CỨU NGOẠI VIỆN</h1>
         {t.status !== 'signed' && <div className="draft">BẢN NHÁP – CHƯA KÝ</div>}
         <div className="kg">
-          <div className="t">Kính gửi: <F v={e.kinhGui} w={260} /></div>
+          <div className="t">Kính gửi: <F v={e.kinhGui ?? dp.hospital} w={260} /></div>
           <div className="infect"><span>Bệnh truyền nhiễm <span className="cb">{e.infectious ? '☑' : '☐'}</span></span></div>
         </div>
 
@@ -120,7 +120,7 @@ export function TransferPrint() {
             <div><b>Thời gian xuất xe</b>: {gioPhut(time('T6'))}</div>
             <div><b>Thời gian nhận bệnh</b>: {gioPhut(time('T8'))}</div>
             <div><b>Thời gian giao bệnh</b>: {gioPhut(time('T13') ?? dp.handoverAt)}</div>
-            <div><b>Chuyển bệnh</b>: <F v={[dp.hospital, dp.department].filter(Boolean).join(' – ')} w={130} /></div>
+            <div><b>Chuyển bệnh</b>: <F v={[dp.department, dp.hospital].filter(Boolean).join(' – ')} w={130} /></div>
           </div>
         </div>
 
@@ -254,7 +254,7 @@ export function TransferPrint() {
             <div style={{ fontSize: 9 }}>{t.crew.map((m: any) => `${m.full_name}${m.license_no ? ` (GPHN ${m.license_no})` : ''}`).join(', ')}</div>
           </div>
           <div>
-            <div><b>Đơn vị nhận bệnh</b>: <F v={[dp.toUnit ?? dp.hospital, dp.department].filter(Boolean).join(' – ')} w={170} /></div>
+            <div><b>Đơn vị nhận bệnh</b>: <F v={dp.toUnit ?? [dp.department, dp.hospital].filter(Boolean).join(' – ')} w={170} /></div>
             <div><b>Nhận xét</b>: <F v={dp.toComment} w={220} /></div>
             <div><b>Chữ ký</b>: <F v={[dp.receiverName, dp.receiverTitle].filter(Boolean).join(' – ')} w={200} /></div>
           </div>

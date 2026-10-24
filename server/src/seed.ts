@@ -17,10 +17,10 @@ export async function seed(pool: import('pg').Pool, password: string) {
   const has = await pool.query('SELECT 1 FROM users LIMIT 1');
   if (has.rowCount) return false;
   const pw = hashPassword(password);
-  await pool.query(`INSERT INTO stations(id, name, lat, lng) VALUES
-    ('TS', 'Trụ sở chính', 10.7769, 106.7009),
-    ('TR-01', 'Trạm 1', 10.8016, 106.6526),
-    ('TR-02', 'Trạm 2', 10.7380, 106.7220)`);
+  await pool.query(`INSERT INTO stations(id, name, kind, lat, lng) VALUES
+    ('TS', 'Trụ sở chính', 'tru_so', 10.7769, 106.7009),
+    ('TR-01', 'Trạm 1', 'tram', 10.8016, 106.6526),
+    ('TR-02', 'Trạm 2', 'tram', 10.7380, 106.7220)`);
   await pool.query(`INSERT INTO vehicles(id, plate, type, station_id, duty, status, lat, lng) VALUES
     ('MD-ALS-01', '51B-001.01', 'ALS',  'TS',    '24/7',    'S9', 10.7769, 106.7009),
     ('MD-BLS-01', '51B-001.02', 'BLS',  'TR-01', '24/7',    'S9', 10.8016, 106.6526),

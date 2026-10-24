@@ -28,7 +28,7 @@ export function registerAdmin(app: FastifyInstance, { pool, hub }: Ctx) {
       SELECT s.*, (SELECT count(*)::int FROM vehicles v WHERE v.station_id = s.id) AS vehicle_count,
              (SELECT count(*)::int FROM users u WHERE u.station_id = s.id AND u.active) AS staff_count,
              (SELECT coalesce(sum(qty), 0)::float FROM stock_lots l WHERE l.station_id = s.id) AS stock_qty
-        FROM stations s WHERE $1 OR s.active ORDER BY s.active DESC, s.id`, [all]);
+        FROM stations s WHERE $1 OR s.active ORDER BY s.active DESC, (s.kind = 'tru_so') DESC, s.id`, [all]);
   });
 
   app.post('/api/stations', admin, async (req) => {

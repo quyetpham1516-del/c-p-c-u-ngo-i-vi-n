@@ -11,6 +11,8 @@ import { registerEoc } from './routes/eoc.js';
 import { registerFleet } from './routes/fleet.js';
 import { registerRecords } from './routes/records.js';
 import { registerAuth } from './routes/auth.js';
+import { registerAdmin } from './routes/admin.js';
+import { registerCatalog } from './routes/catalog.js';
 import type { Ctx } from './http.js';
 
 export * from './http.js';
@@ -52,6 +54,8 @@ export async function buildApp(pool: pg.Pool, opts: { logger?: boolean } = {}) {
   registerEoc(app, ctx);
   registerFleet(app, ctx);
   registerRecords(app, ctx);
+  registerCatalog(app, ctx);
+  registerAdmin(app, ctx);
 
   app.setNotFoundHandler((_req, reply) => reply.code(404).send({ error: 'Không tìm thấy' }));
 

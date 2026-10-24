@@ -1,4 +1,5 @@
 import { randomBytes } from 'node:crypto';
+import { seedCatalog } from './catalog.js';
 import { hashPassword } from './crypto.js';
 import { createPool } from './db.js';
 import { migrate } from './migrate.js';
@@ -12,6 +13,7 @@ import { migrate } from './migrate.js';
 export async function seed(pool: import('pg').Pool, password: string) {
   if (password.length < 10) throw new Error('Mật khẩu tài khoản mẫu phải dài ít nhất 10 ký tự');
   await migrate(pool);
+  await seedCatalog(pool);
   const has = await pool.query('SELECT 1 FROM users LIMIT 1');
   if (has.rowCount) return false;
   const pw = hashPassword(password);
@@ -45,6 +47,11 @@ export async function seed(pool: import('pg').Pool, password: string) {
     await pool.query('INSERT INTO users(username, full_name, role, title, license_no, password_hash) VALUES ($1,$2,$3,$4,$5,$6)',
       [username, name, role, title, license, pw]);
   }
+  // Kho mẫu: mỗi trạm có sẵn một lô cho mỗi loại thuốc (số lô, hạn dùng minh họa)
+  await pool.query(`
+    INSERT INTO stock_lots(station_id, drug_id, lot, expiry, qty, supplier)
+    SELECT s.id, d.id, 'MAU-' || s.id || '-' || lpad(d.id::text, 3, '0'), (current_date + interval '1 year')::date, 20, 'Kho trung tâm (mẫu)'
+      FROM stations s CROSS JOIN drugs d`);
   return true;
 }
 

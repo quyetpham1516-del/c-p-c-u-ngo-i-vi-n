@@ -152,3 +152,5 @@ export function homeFor(role: Role | undefined): string {
   if (role === 'director') return '/bao-cao';
   return '/eoc';
 }
+
+export const INFECTION_RISK: Record<string, string> = { tiep_xuc: 'Lây qua tiếp xúc', giot_ban: 'Lây qua giọt bắn', khong_khi: 'Lây qua không khí (lao, sởi...)' };

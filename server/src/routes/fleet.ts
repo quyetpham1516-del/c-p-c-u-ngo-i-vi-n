@@ -170,7 +170,7 @@ export function registerFleet(app: FastifyInstance, { pool, hub }: Ctx) {
         lat: i.lat, lng: i.lng, complaint: findGroup(i.chief_complaint)?.label ?? null,
         flags: evaluate(i.triage_answers ?? {}, i.chief_complaint).flags, callbackPhone: i.callback_phone, notes: i.notes,
         patientCount: i.patient_count, destination: i.destination, destinationDepartment: i.destination_department, source: i.source, callerName: i.caller_name, triageAnswers: i.triage_answers,
-        acknowledged: !!a.acknowledged_at, times, transfers,
+        acknowledged: !!a.acknowledged_at, infectionRisk: i.infection_risk ?? null, times, transfers,
       };
     }
     return { shift, vehicle, incident };

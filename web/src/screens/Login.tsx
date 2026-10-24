@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import { api, homeFor, session, type User } from '../api';
 import { StarOfLife } from '../Logo';
 
@@ -8,7 +8,7 @@ export function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
-  const nav = useNavigate();
+  const router = useRouter();
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -17,7 +17,7 @@ export function Login() {
     try {
       const r = await api<{ token: string; user: User }>('POST', '/api/auth/login', { username, password });
       session.set(r.token, r.user);
-      nav(homeFor(r.user.role));
+      router.push(homeFor(r.user.role));
     } catch (err) {
       setError((err as Error).message);
     } finally {

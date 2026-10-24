@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { FastifyInstance } from 'fastify';
 import type pg from 'pg';
+import { config } from '../src/config.js';
 import { freshApp, login } from './helpers.js';
 
 let app: FastifyInstance;
@@ -234,7 +235,7 @@ describe('ca từ 115, trùng ca, bệnh án tạm', () => {
 
   it('cuộc gọi bỏ dở vào danh sách gọi lại', async () => {
     const c = await ct('POST', '/api/telephony/ring', { phone: '0988777666' });
-    const r = await app.inject({ method: 'POST', url: '/api/telephony/abandon', payload: { callId: c.id }, headers: { 'x-medone-telephony-key': 'dev-only-telephony-key' } });
+    const r = await app.inject({ method: 'POST', url: '/api/telephony/abandon', payload: { callId: c.id }, headers: { 'x-medone-telephony-key': config.telephonyKey } });
     expect(r.json().ok).toBe(true);
     const list = await ct('GET', '/api/calls?state=abandoned');
     expect(list.data.map((x: any) => x.id)).toContain(c.id);

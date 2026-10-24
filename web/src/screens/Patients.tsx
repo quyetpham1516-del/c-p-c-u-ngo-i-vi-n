@@ -1,23 +1,24 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import Link from 'next/link';
+import { useParams, useRouter } from 'next/navigation';
 import { api, fmtDateTime, session } from '../api';
 import { PatientPicker, type PatientRow } from '../components/PatientPicker';
 
 const REVIEW = ['supervisor', 'qa', 'admin'];
 
 export function Patients() {
-  const nav = useNavigate();
+  const router = useRouter();
   return (
     <div className="col" style={{ maxWidth: 980, margin: '0 auto' }}>
       <h2>Bệnh án</h2>
       <div className="small muted">Mỗi người bệnh một bệnh án (khóa là số CCCD/định danh cá nhân); mỗi lần cấp cứu hoặc chuyển viện là một phiếu gắn vào bệnh án.</div>
-      <PatientPicker value={null} label={null} onPick={(p: PatientRow) => nav(`/benh-an/${p.id}`)} />
+      <PatientPicker value={null} label={null} onPick={(p: PatientRow) => router.push(`/benh-an/${p.id}`)} />
     </div>
   );
 }
 
 export function PatientDetail() {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
   const [p, setP] = useState<any>(null);
   const [shared, setShared] = useState<any>({});
   const [msg, setMsg] = useState('');
@@ -49,9 +50,9 @@ export function PatientDetail() {
             <h2 style={{ margin: 0 }}>{p.full_name ?? 'Chưa rõ tên'} {p.is_temporary && <span className="badge">Bệnh án tạm</span>}</h2>
             <div className="mono">Số BA: <b>{p.ba_number}</b></div>
           </div>
-          <Link to="/benh-an">← Tìm bệnh án khác</Link>
+          <Link href="/benh-an">← Tìm bệnh án khác</Link>
         </div>
-        {p.merged_into && <div className="alert amber" style={{ marginTop: 8 }}>Bệnh án này đã gộp vào <Link to={`/benh-an/${p.merged_into}`}>{p.merged_into_ba}</Link>.</div>}
+        {p.merged_into && <div className="alert amber" style={{ marginTop: 8 }}>Bệnh án này đã gộp vào <Link href={`/benh-an/${p.merged_into}`}>{p.merged_into_ba}</Link>.</div>}
         <div className="grid4" style={{ marginTop: 8 }}>
           <div><div className="small muted">Giấy tờ</div>{p.id_type} {p.id_number ?? p.id_masked ?? '—'}
             {canReview && p.id_masked && !p.id_number && <button className="ghost small" onClick={() => load(true)}>Xem đủ số</button>}</div>
@@ -84,7 +85,7 @@ export function PatientDetail() {
                 <td>{t.diagnosis ?? '—'}</td>
                 <td>{t.hospital ?? '—'}</td>
                 <td>{t.status === 'signed' ? 'Đã ký' : 'Nháp'}</td>
-                <td><Link to={`/phieu/${t.id}`}>Xem</Link></td>
+                <td><Link href={`/phieu/${t.id}`}>Xem</Link></td>
               </tr>
             ))}
           </tbody>

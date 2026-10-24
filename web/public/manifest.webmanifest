@@ -1,0 +1,10 @@
+{
+  "name": "Medone – Cấp cứu ngoại viện",
+  "short_name": "Medone",
+  "lang": "vi",
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#0b4ea2",
+  "background_color": "#0f1720",
+  "icons": [{ "src": "/logo.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}

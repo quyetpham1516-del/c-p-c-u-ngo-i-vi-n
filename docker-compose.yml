@@ -1,23 +1,30 @@
-# Chạy thử toàn bộ hệ thống trên một máy: docker compose up --build
-# Khi triển khai thật: đổi toàn bộ khóa bí mật, dùng PostgreSQL có sao lưu và bản sao dự phòng.
+# Chạy toàn bộ 3 lớp trên một máy: npm run setup (tạo .env có khóa ngẫu nhiên), rồi docker compose up --build
+# Mọi mật khẩu và khóa lấy từ tệp .env, không ghi trong tệp này.
 services:
   db:
     image: postgres:16
     environment:
       POSTGRES_USER: medone
-      POSTGRES_PASSWORD: medone
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?chạy npm run setup để tạo .env}
       POSTGRES_DB: medone
     volumes: [pgdata:/var/lib/postgresql/data]
-  app:
-    build: .
+  api:
+    build: { context: ., target: api }
     depends_on: [db]
     ports: ["8080:8080"]
     environment:
-      DATABASE_URL: postgres://medone:medone@db:5432/medone
-      MEDONE_WEB_DIST: /app/web/dist
-      MEDONE_JWT_SECRET: doi-khoa-nay
-      MEDONE_DATA_KEY: doi-khoa-nay-ma-hoa-cccd
-      MEDONE_LOOKUP_KEY: doi-khoa-nay-tim-kiem-cccd
-      MEDONE_TELEPHONY_KEY: doi-khoa-nay-tong-dai
+      DATABASE_URL: postgres://medone:${POSTGRES_PASSWORD}@db:5432/medone
+      MEDONE_JWT_SECRET: ${MEDONE_JWT_SECRET:?}
+      MEDONE_DATA_KEY: ${MEDONE_DATA_KEY:?}
+      MEDONE_LOOKUP_KEY: ${MEDONE_LOOKUP_KEY:?}
+      MEDONE_TELEPHONY_KEY: ${MEDONE_TELEPHONY_KEY:?}
+      MEDONE_WEB_ORIGIN: ${MEDONE_WEB_ORIGIN:-http://localhost:3000}
+  web:
+    build:
+      context: .
+      target: web
+      args: { NEXT_PUBLIC_API_URL: "${NEXT_PUBLIC_API_URL:-http://localhost:8080}" }
+    depends_on: [api]
+    ports: ["3000:3000"]
 volumes:
   pgdata:

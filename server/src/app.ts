@@ -1,9 +1,7 @@
 import cors from '@fastify/cors';
 import jwt from '@fastify/jwt';
-import fastifyStatic from '@fastify/static';
 import websocket from '@fastify/websocket';
 import Fastify from 'fastify';
-import { existsSync } from 'node:fs';
 import type pg from 'pg';
 import { ZodError } from 'zod';
 import { config } from './config.js';
@@ -23,7 +21,7 @@ export async function buildApp(pool: pg.Pool, opts: { logger?: boolean } = {}) {
   await hub.start();
   const ctx: Ctx = { pool, hub };
 
-  await app.register(cors, { origin: config.isProd ? false : true });
+  await app.register(cors, { origin: config.webOrigins });
   await app.register(jwt, { secret: config.jwtSecret, sign: { expiresIn: '14h' } });
   await app.register(websocket);
 
@@ -55,13 +53,7 @@ export async function buildApp(pool: pg.Pool, opts: { logger?: boolean } = {}) {
   registerFleet(app, ctx);
   registerRecords(app, ctx);
 
-  if (existsSync(config.webDist)) {
-    await app.register(fastifyStatic, { root: config.webDist, wildcard: false });
-    app.setNotFoundHandler((req, reply) => {
-      if (req.url.startsWith('/api/')) return reply.code(404).send({ error: 'Không tìm thấy' });
-      return reply.sendFile('index.html');
-    });
-  }
+  app.setNotFoundHandler((_req, reply) => reply.code(404).send({ error: 'Không tìm thấy' }));
 
   app.addHook('onClose', async () => {
     await hub.stop();

@@ -6,6 +6,7 @@ import { ackAssignment, AUTO_DISPATCH_KM, crewStatus, getIncident, HttpError, in
 import {
   estimateFree, haversineKm, STATUS_LABEL, statusMedians, suggestVehicles, travelMinutes, VEHICLE_LABEL, type VehicleRow,
 } from '../fleet.js';
+import { equipmentGaps, gapText } from '../equipment.js';
 import { actorOf, DISPATCH_ROLES, EOC_ROLES, guard, type Ctx } from '../http.js';
 import { evaluate } from '../triage/engine.js';
 import { findGroup, type Priority, type VehicleType } from '../triage/protocol.js';
@@ -13,9 +14,13 @@ import { findGroup, type Priority, type VehicleType } from '../triage/protocol.j
 const BOARD_ROLES = [...EOC_ROLES, 'qa' as const];
 
 export async function loadVehicles(q: import('../db.js').Queryable): Promise<VehicleRow[]> {
-  return many<VehicleRow>(q, `
-    SELECT v.*, s.name AS station_name, s.lat AS station_lat, s.lng AS station_lng
-      FROM vehicles v JOIN stations s ON s.id = v.station_id ORDER BY v.id`);
+  const [rows, gaps] = await Promise.all([
+    many<VehicleRow>(q, `
+      SELECT v.*, s.name AS station_name, s.lat AS station_lat, s.lng AS station_lng
+        FROM vehicles v JOIN stations s ON s.id = v.station_id ORDER BY v.id`),
+    equipmentGaps(q),
+  ]);
+  return rows.map((v) => ({ ...v, equipment_gaps: gaps[v.id]?.length ? gapText(gaps[v.id]) : null }));
 }
 
 export async function boardRows(q: import('../db.js').Queryable) {

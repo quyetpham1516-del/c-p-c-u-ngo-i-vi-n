@@ -8,6 +8,7 @@
     "start": "tsx src/index.ts",
     "migrate": "tsx src/migrate.ts",
     "seed": "tsx src/seed.ts",
+    "demo:ops": "tsx src/demo-ops.ts",
     "catalog": "tsx src/catalog.ts",
     "import:icd": "tsx src/tools/import-icd.ts",
     "import:hospitals": "tsx src/tools/import-hospitals.ts",

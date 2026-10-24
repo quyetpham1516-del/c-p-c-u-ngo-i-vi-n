@@ -109,16 +109,18 @@ describe('giao xe: chỉ xe rảnh, tự báo xe gần nhất trong 5 km', () =>
     expect(cur.incident.destinationDepartment).toBe('Khoa Cấp cứu');
   });
 
-  it('kho thuốc: xe thấy lô của trạm theo hạn dùng sớm trước; ký phiếu thì trừ kho đúng lô', async () => {
+  it('kho thuốc: xe thấy cơ số trên xe trước, rồi lô kho điểm theo hạn dùng sớm trước; ký phiếu thì trừ kho đúng lô', async () => {
     const before = await crew('GET', '/api/stock/vehicle/MD-ALS-01');
     const adr = before.data.find((l: any) => /Adrenalin/i.test(l.drug_name));
     expect(adr.lot).toMatch(/^MAU-TS-/);
+    expect(adr.place).toBe('xe');
     const soon = new Date(Date.now() + 30 * 86400_000).toISOString().slice(0, 10);
     expect((await crew('POST', '/api/stock/receive', { stationId: 'TS', drugId: adr.drug_id, lot: 'L1', expiry: soon, qty: 3 })).http).toBe(403);
     const lot = await admin('POST', '/api/stock/receive', { stationId: 'TS', drugId: adr.drug_id, lot: 'LO-2026-01', expiry: soon, qty: 3, supplier: 'Kho tổng' });
     expect(lot.http).toBe(200);
     const after = await crew('GET', '/api/stock/vehicle/MD-ALS-01');
-    const first = after.data.find((l: any) => l.drug_id === adr.drug_id);
+    expect(after.data.find((l: any) => l.drug_id === adr.drug_id).place).toBe('xe');
+    const first = after.data.find((l: any) => l.drug_id === adr.drug_id && l.place === 'kho');
     expect(first.lot).toBe('LO-2026-01');
 
     const p = await crew('POST', '/api/patients', { idType: 'CCCD', idNumber: '079200000001', fullName: 'Trần Thị Kho', birthYear: 1970, sex: 'F' });

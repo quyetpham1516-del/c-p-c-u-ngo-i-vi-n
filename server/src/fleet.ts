@@ -91,6 +91,8 @@ export interface VehicleRow {
   free_hint_at: string | null;
   supplies_ok: boolean;
   supplies_note: string | null;
+  /** Thiết bị bắt buộc còn thiếu/hỏng/quá hạn kiểm định (rỗng = đủ) */
+  equipment_gaps?: string | null;
 }
 
 export interface Suggestion {
@@ -133,6 +135,10 @@ export function suggestVehicles(
     if (v.duty === 'office' && !office) continue;
     const rule = rules.find((r) => r.type === v.type);
     if (!rule) continue;
+    if (v.equipment_gaps) {
+      advice.push(`${v.id} rảnh nhưng không được gợi ý: thiếu thiết bị bắt buộc (${v.equipment_gaps}).`);
+      continue;
+    }
     // BLS chỉ là phương án hỗ trợ cho P1/P2 khi ALS xa, xét ở dưới
     const pos = v.lat != null && v.lng != null ? { lat: v.lat, lng: v.lng }
       : v.station_lat != null && v.station_lng != null ? { lat: v.station_lat, lng: v.station_lng } : null;

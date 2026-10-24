@@ -3,6 +3,7 @@ import { fmtDuration, fmtTime, STATUS_LABEL, useNow } from '../api';
 export interface BoardVehicle {
   id: string; type: string; type_label: string; plate: string | null; station_id: string; station_name: string; duty: string;
   status: string; status_since: string; lat: number | null; lng: number | null; supplies_ok: boolean; supplies_note: string | null;
+  equipment_gaps?: string | null;
   crew: { name: string; title: string; role: string }[];
   incident: null | { id: string; code: string; priority: string | null; complaint: string | null; destination: string | null; address: string | null; acknowledged: boolean };
   free: { freeAt: string | null; lowAt: string | null; highAt: string | null; basis: string };
@@ -34,6 +35,7 @@ export function FleetTable({ board, compact = false, onPick }: { board: Board | 
             <tr key={v.id} className={onPick ? 'click' : ''} onClick={() => onPick?.(v)}>
               <td>
                 <b>{v.id}</b>
+                {v.equipment_gaps && <span className="badge far" style={{ marginLeft: 6 }} title={v.equipment_gaps}>Thiếu thiết bị</span>}
                 <div className="small muted">{compact ? v.type : v.type_label} · {v.station_name} · {DUTY[v.duty]}</div>
               </td>
               <td>
@@ -59,7 +61,10 @@ export function FleetTable({ board, compact = false, onPick }: { board: Board | 
                       {v.free.basis === 'Kíp báo' && <div className="muted">kíp báo</div>}
                     </>}
               </td>
-              {!compact && <td className="small">{v.supplies_ok ? <span style={{ color: 'var(--ok)' }}>Đủ</span> : <span className="error">Thiếu: {v.supplies_note}</span>}</td>}
+              {!compact && <td className="small">
+                {v.supplies_ok ? <span style={{ color: 'var(--ok)' }}>Đủ</span> : <span className="error">Thiếu: {v.supplies_note}</span>}
+                {v.equipment_gaps && <div className="error">Thiết bị: {v.equipment_gaps}</div>}
+              </td>}
             </tr>
           );
         })}

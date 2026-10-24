@@ -238,6 +238,8 @@ export function Crew() {
           if (note !== null) act(() => api('POST', `/api/vehicles/${v.id}/supplies`, { ok: !note.trim(), note: note.trim() || null }));
         }}>Cập nhật cơ số</button>
       </div>
+      {v.equipment_gaps && <div className="alert red">Xe đang thiếu thiết bị bắt buộc nên EOC không giao được: {v.equipment_gaps}. Báo kỹ thuật hoặc trưởng ca.</div>}
+      <VehicleKit vehicleId={v.id} incidentId={inc?.id ?? null} act={act} />
       {error && <div className="error">{error}</div>}
 
       <div className="panel">
@@ -255,6 +257,65 @@ export function Crew() {
         <OfflineDrafts drafts={drafts.filter((d) => !inc?.transfers?.some((t: any) => t.id === d.id))} onOpen={(d) => openDraft(d.id)} />
       </div>
       {draft && <EpcrForm key={draft.id} draft={draft} onChange={() => allDrafts().then(setDrafts)} />}
+    </div>
+  );
+}
+
+/** Cơ số thuốc, thiết bị và bộ dụng cụ trên xe: kíp bù cơ số đầu ca, báo hỏng thiết bị, báo đã dùng bộ dụng cụ */
+function VehicleKit({ vehicleId, incidentId, act }: { vehicleId: string; incidentId: string | null; act: (fn: () => Promise<any>) => Promise<void> }) {
+  const [open, setOpen] = useState(false);
+  const [par, setPar] = useState<any>(null);
+  const [eq, setEq] = useState<any[]>([]);
+  const [sets, setSets] = useState<any[]>([]);
+  const load = useCallback(async () => {
+    const q = encodeURIComponent(vehicleId);
+    const [p, e, s] = await Promise.all([
+      api('GET', `/api/stock/vehicle/${q}/par`), api<any[]>('GET', `/api/equipment?vehicleId=${q}`), api<any[]>('GET', `/api/instrument-sets?vehicleId=${q}`),
+    ]);
+    setPar(p); setEq(e); setSets(s);
+  }, [vehicleId]);
+  useEffect(() => { load().catch(() => {}); }, [load]);
+  const short = par?.items?.filter((i: any) => i.missing > 0) ?? [];
+  const restock = () => {
+    const needWitness = short.some((i: any) => i.controlled);
+    const witness = needWitness ? prompt('Có thuốc kiểm soát đặc biệt cần bù. Người chứng kiến:') : null;
+    if (needWitness && !witness?.trim()) return;
+    act(async () => {
+      const r = await api('POST', `/api/stock/vehicle/${encodeURIComponent(vehicleId)}/restock`, { witness });
+      await load();
+      if (r.unfilled?.length) alert(`Kho điểm không đủ: ${r.unfilled.map((u: any) => `${u.drug} thiếu ${u.missing}`).join('; ')}. Báo kho.`);
+    });
+  };
+  return (
+    <div className="panel">
+      <div className="row" style={{ justifyContent: 'space-between' }}>
+        <b>Cơ số thuốc, thiết bị, dụng cụ trên xe</b>
+        <span className="row">
+          {short.length > 0 ? <span className="badge far">Thiếu {short.length} loại thuốc</span> : par && <span className="badge">Đủ cơ số thuốc</span>}
+          <button className="ghost small" onClick={() => setOpen(!open)}>{open ? 'Thu gọn' : 'Xem'}</button>
+        </span>
+      </div>
+      {open && (
+        <div className="col" style={{ marginTop: 8 }}>
+          {short.length > 0 && <div className="small">{short.map((i: any) => `${i.drug_name}: thiếu ${i.missing} (kho điểm còn ${i.in_station})`).join('; ')}</div>}
+          <div><button className="primary" disabled={!short.length} onClick={restock}>Bù cơ số từ kho điểm</button></div>
+          <table><tbody>{eq.map((e) => (
+            <tr key={e.id}><td>{e.type_name}<div className="small muted mono">{e.serial}</div></td>
+              <td>{e.status === 'hoat_dong' && !e.overdue ? <span className="badge">Hoạt động</span> : <span className="badge far">{e.status === 'hong' ? 'Hỏng' : e.overdue ? 'Quá hạn kiểm định' : e.status}</span>}</td>
+              <td className="right">{e.status === 'hoat_dong' && <button className="ghost small" onClick={() => {
+                const note = prompt(`Mô tả hỏng hóc của ${e.type_name} (${e.serial}):`);
+                if (note?.trim()) act(async () => { await api('POST', `/api/equipment/${e.id}/events`, { kind: 'bao_hong', note }); await load(); });
+              }}>Báo hỏng</button>}</td></tr>
+          ))}</tbody></table>
+          {sets.length > 0 && <table><tbody>{sets.map((s) => (
+            <tr key={s.id}><td>{s.name}<div className="small muted mono">{s.code}</div></td>
+              <td>{s.status === 'san_sang' && !s.sterile_expired ? <span className="badge">Sẵn sàng · HSD {s.sterile_until}</span> : <span className="badge far">{s.sterile_expired ? 'Hết hạn vô khuẩn' : s.status === 'da_dung' ? 'Chờ tiệt khuẩn' : s.status}</span>}</td>
+              <td className="right">{s.status === 'san_sang' && <button className="ghost small" onClick={() => act(async () => {
+                await api('POST', `/api/instrument-sets/${s.id}/used`, { incidentId }); await load();
+              })}>Đã dùng</button>}</td></tr>
+          ))}</tbody></table>}
+        </div>
+      )}
     </div>
   );
 }

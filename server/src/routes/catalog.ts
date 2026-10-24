@@ -4,10 +4,8 @@ import { audit } from '../audit.js';
 import { many, one, withTx } from '../db.js';
 import { HttpError } from '../domain.js';
 import { actorOf, guard, type Ctx, type Role } from '../http.js';
-import { adjustStock, lotsForVehicle, receiveStock } from '../stock.js';
 
 const CATALOG_ADMIN: Role[] = ['supervisor', 'admin'];
-const STOCK_VIEW: Role[] = ['crew', 'supervisor', 'qa', 'admin', 'dispatcher'];
 
 export function registerCatalog(app: FastifyInstance, { pool }: Ctx) {
   /* ---------- Bệnh viện và khoa nhận bệnh ---------- */
@@ -65,7 +63,9 @@ export function registerCatalog(app: FastifyInstance, { pool }: Ctx) {
     if (/^[A-Za-z][0-9]/.test(q)) {
       return many(pool, `SELECT code, name FROM icd10 WHERE active AND code ILIKE $1 ORDER BY length(code), code LIMIT 20`, [`${q.replace(/[%_]/g, '')}%`]);
     }
-    return many(pool, `SELECT code, name FROM icd10 WHERE active AND lower(name) LIKE '%' || lower($1) || '%' ORDER BY length(name), code LIMIT 20`, [q.replace(/[%_]/g, '')]);
+    // Gõ có dấu hay không dấu đều tìm được
+    return many(pool, `SELECT code, name FROM icd10 WHERE active AND name_plain LIKE '%' || vn_plain($1) || '%' ORDER BY length(name), code LIMIT 20`,
+      [q.normalize('NFC').replace(/[%_]/g, '')]);
   });
 
   app.get('/api/icd10/:code', { preHandler: guard() }, async (req) => {
@@ -83,34 +83,4 @@ export function registerCatalog(app: FastifyInstance, { pool }: Ctx) {
 
   /* ---------- Thuốc và kho theo số lô ---------- */
   app.get('/api/drugs', { preHandler: guard() }, async () => many(pool, 'SELECT * FROM drugs WHERE active ORDER BY name'));
-
-  app.get('/api/stock', { preHandler: guard(...STOCK_VIEW) }, async (req) => {
-    const q = z.object({ stationId: z.string().optional() }).parse(req.query);
-    return many(pool, `
-      SELECT l.id, l.station_id, s.name AS station_name, l.lot, l.expiry, l.qty, l.supplier, l.received_at,
-             d.id AS drug_id, d.name AS drug_name, d.unit
-        FROM stock_lots l JOIN drugs d ON d.id = l.drug_id JOIN stations s ON s.id = l.station_id
-       WHERE ($1::text IS NULL OR l.station_id = $1)
-       ORDER BY s.id, d.name, l.expiry`, [q.stationId ?? null]);
-  });
-
-  app.get('/api/stock/vehicle/:vehicleId', { preHandler: guard(...STOCK_VIEW) }, async (req) => {
-    const vehicleId = z.object({ vehicleId: z.string().min(1) }).parse(req.params).vehicleId;
-    return lotsForVehicle(pool, vehicleId);
-  });
-
-  app.post('/api/stock/receive', { preHandler: guard(...CATALOG_ADMIN) }, async (req) => {
-    const b = z.object({
-      stationId: z.string().min(1), drugId: z.number().int().nullish(), drugName: z.string().max(200).nullish(), unit: z.string().max(30).nullish(),
-      lot: z.string().trim().min(1).max(60), expiry: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), qty: z.number().positive().max(100000),
-      supplier: z.string().max(200).nullish(),
-    }).parse(req.body);
-    return withTx(pool, (tx) => receiveStock(tx, actorOf(req), b));
-  });
-
-  app.post('/api/stock/adjust', { preHandler: guard(...CATALOG_ADMIN) }, async (req) => {
-    const b = z.object({ lotId: z.string().uuid(), delta: z.number().refine((x) => x !== 0), note: z.string().trim().min(2).max(300) }).parse(req.body);
-    await withTx(pool, (tx) => adjustStock(tx, actorOf(req), b.lotId, b.delta, b.note));
-    return { ok: true };
-  });
 }

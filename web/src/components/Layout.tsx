@@ -9,7 +9,8 @@ const LINKS: { to: string; label: string; roles: Role[] }[] = [
   { to: '/bang-xe', label: 'Bảng đội xe', roles: ['calltaker', 'dispatcher', 'supervisor', 'qa', 'admin'] },
   { to: '/kip', label: 'Ứng dụng kíp', roles: ['crew'] },
   { to: '/benh-an', label: 'Bệnh án', roles: ['crew', 'calltaker', 'dispatcher', 'supervisor', 'qa', 'admin'] },
-  { to: '/kho', label: 'Kho thuốc', roles: ['dispatcher', 'supervisor', 'qa', 'admin'] },
+  { to: '/kho', label: 'Kho thuốc', roles: ['dispatcher', 'supervisor', 'qa', 'admin', 'pharmacist', 'director'] },
+  { to: '/thiet-bi', label: 'Thiết bị', roles: ['dispatcher', 'supervisor', 'qa', 'admin', 'technician', 'ipc', 'director'] },
   { to: '/quan-tri', label: 'Quản trị', roles: ['admin'] },
 ];
 

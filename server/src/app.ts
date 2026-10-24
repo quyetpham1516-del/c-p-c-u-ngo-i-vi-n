@@ -13,6 +13,8 @@ import { registerRecords } from './routes/records.js';
 import { registerAuth } from './routes/auth.js';
 import { registerAdmin } from './routes/admin.js';
 import { registerCatalog } from './routes/catalog.js';
+import { registerEquipment } from './routes/equipment.js';
+import { registerStock } from './routes/stock.js';
 import type { Ctx } from './http.js';
 
 export * from './http.js';
@@ -55,6 +57,8 @@ export async function buildApp(pool: pg.Pool, opts: { logger?: boolean } = {}) {
   registerFleet(app, ctx);
   registerRecords(app, ctx);
   registerCatalog(app, ctx);
+  registerStock(app, ctx);
+  registerEquipment(app, ctx);
   registerAdmin(app, ctx);
 
   app.setNotFoundHandler((_req, reply) => reply.code(404).send({ error: 'Không tìm thấy' }));

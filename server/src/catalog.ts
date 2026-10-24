@@ -101,6 +101,9 @@ export const ICD_STARTER: [string, string][] = [
   ['R06.0', 'Khó thở'],
 ];
 
+/** Thuốc gây nghiện, hướng thần: dùng cho người bệnh phải có người chứng kiến */
+export const CONTROLLED = /^(morphin|fentanyl|midazolam|diazepam|ketamin|pethidin)/i;
+
 export const DRUGS: [string, string, string][] = [
   ['Adrenalin 1 mg/1 ml', 'ống', 'TM'],
   ['Amiodaron 150 mg/3 ml', 'ống', 'TM'],
@@ -128,7 +131,49 @@ export const DRUGS: [string, string, string][] = [
   ['Magnesi sulfat 15% 10 ml', 'ống', 'TM'],
 ];
 
-/** Nạp bộ danh mục khởi đầu; chạy lại nhiều lần không tạo trùng và không ghi đè dữ liệu đã sửa */
+/** Loại trang thiết bị và chu kỳ (ngày) bảo dưỡng, kiểm định, hiệu chuẩn — quản trị sửa được (QLCL-15) */
+export const EQUIPMENT_TYPES: [string, number | null, number | null, number | null][] = [
+  ['Máy sốc điện – monitor', 180, 365, 365],
+  ['Máy sốc điện tự động (AED)', 180, 365, null],
+  ['Máy thở vận chuyển', 180, 365, 365],
+  ['Bơm tiêm điện', 180, null, 365],
+  ['Máy hút đàm', 180, null, null],
+  ['Bình oxy và van giảm áp', 90, 365, null],
+  ['Máy đo SpO2 cầm tay', 365, null, 365],
+  ['Cáng chính', 90, null, null],
+  ['Ván cứng cố định cột sống', 180, null, null],
+  ['Máy ép tim tự động', 180, 365, 365],
+  ['Máy CT di động', 90, 365, 180],
+  ['Máy ECMO', 90, 365, 180],
+];
+
+/** Thiết bị bắt buộc theo loại xe: thiếu, hỏng hoặc quá hạn kiểm định thì xe không được giao */
+export const REQUIRED_EQUIPMENT: Record<string, [string, number][]> = {
+  ALS: [['Máy sốc điện – monitor', 1], ['Máy thở vận chuyển', 1], ['Bơm tiêm điện', 1], ['Máy hút đàm', 1], ['Bình oxy và van giảm áp', 2], ['Cáng chính', 1], ['Ván cứng cố định cột sống', 1]],
+  DP: [['Máy sốc điện – monitor', 1], ['Máy hút đàm', 1], ['Bình oxy và van giảm áp', 2], ['Cáng chính', 1], ['Ván cứng cố định cột sống', 1]],
+  BLS: [['Máy sốc điện tự động (AED)', 1], ['Máy hút đàm', 1], ['Bình oxy và van giảm áp', 1], ['Cáng chính', 1], ['Ván cứng cố định cột sống', 1]],
+  MSU: [['Máy CT di động', 1], ['Máy sốc điện – monitor', 1], ['Bình oxy và van giảm áp', 1], ['Cáng chính', 1]],
+  ECMO: [['Máy ECMO', 1], ['Máy sốc điện – monitor', 1], ['Máy thở vận chuyển', 1], ['Bơm tiêm điện', 2], ['Bình oxy và van giảm áp', 2], ['Cáng chính', 1]],
+  VC: [['Bình oxy và van giảm áp', 1], ['Máy đo SpO2 cầm tay', 1], ['Cáng chính', 1]],
+};
+
+/** Cơ số thuốc chuẩn trên mỗi loại xe đầu ca (bản nháp, Hội đồng Chuyên môn duyệt) */
+const ALS_PAR: [string, number][] = [
+  ['Adrenalin 1 mg/1 ml', 10], ['Amiodaron 150 mg/3 ml', 3], ['Atropin sulfat 0,25 mg/1 ml', 6], ['Diazepam 10 mg/2 ml', 2],
+  ['Midazolam 5 mg/1 ml', 3], ['Morphin 10 mg/1 ml', 2], ['Fentanyl 0,1 mg/2 ml', 2], ['Naloxon 0,4 mg/1 ml', 2],
+  ['Glucose 30% 5 ml', 4], ['Natri clorid 0,9% 500 ml', 4], ['Ringer lactat 500 ml', 2], ['Salbutamol 2,5 mg/2,5 ml (khí dung)', 4],
+  ['Methylprednisolon 40 mg', 2], ['Furosemid 20 mg/2 ml', 4], ['Aspirin 81 mg', 8], ['Clopidogrel 75 mg', 8],
+  ['Nitroglycerin 0,4 mg (xịt dưới lưỡi)', 1], ['Acid tranexamic 250 mg/5 ml', 4], ['Magnesi sulfat 15% 10 ml', 2],
+];
+export const PAR_LEVELS: Record<string, [string, number][]> = {
+  ALS: ALS_PAR,
+  DP: ALS_PAR,
+  ECMO: ALS_PAR,
+  MSU: [['Adrenalin 1 mg/1 ml', 5], ['Atropin sulfat 0,25 mg/1 ml', 2], ['Natri clorid 0,9% 500 ml', 2], ['Glucose 30% 5 ml', 2], ['Aspirin 81 mg', 4]],
+  BLS: [['Adrenalin 1 mg/1 ml', 3], ['Glucose 30% 5 ml', 2], ['Natri clorid 0,9% 500 ml', 2], ['Salbutamol 2,5 mg/2,5 ml (khí dung)', 2], ['Aspirin 81 mg', 4]],
+  VC: [['Natri clorid 0,9% 500 ml', 1]],
+};
+
 /**
  * Nạp danh mục đi kèm. Danh sách bệnh viện nạp mỗi lần (nhanh, không ghi đè khoa đã sửa);
  * ICD-10 Bộ Y tế chỉ nạp khi bảng còn ít mã hoặc khi gọi với force (lệnh npm run catalog).
@@ -154,7 +199,25 @@ export async function seedCatalog(pool: pg.Pool, opts: { force?: boolean } = {})
     await pool.query('INSERT INTO icd10(code, name) VALUES ($1, $2) ON CONFLICT DO NOTHING', [code, name]);
   }
   for (const [name, unit, route] of DRUGS) {
-    await pool.query('INSERT INTO drugs(name, unit, default_route) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING', [name, unit, route]);
+    await pool.query('INSERT INTO drugs(name, unit, default_route, controlled) VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING',
+      [name, unit, route, CONTROLLED.test(name)]);
+  }
+  for (const [name, m, i, c] of EQUIPMENT_TYPES) {
+    await pool.query('INSERT INTO equipment_types(name, maintenance_days, inspection_days, calibration_days) VALUES ($1,$2,$3,$4) ON CONFLICT DO NOTHING', [name, m, i, c]);
+  }
+  // Danh mục bắt buộc và cơ số chuẩn chỉ nạp cho loại xe chưa cấu hình, để không ghi đè chỗ quản trị đã sửa
+  for (const [vt, items] of Object.entries(REQUIRED_EQUIPMENT)) {
+    if ((await pool.query('SELECT 1 FROM vehicle_required_equipment WHERE vehicle_type = $1 LIMIT 1', [vt])).rowCount) continue;
+    for (const [name, qty] of items) {
+      await pool.query(`INSERT INTO vehicle_required_equipment(vehicle_type, equipment_type_id, qty)
+                        SELECT $1, id, $3 FROM equipment_types WHERE name = $2`, [vt, name, qty]);
+    }
+  }
+  for (const [vt, items] of Object.entries(PAR_LEVELS)) {
+    if ((await pool.query('SELECT 1 FROM par_levels WHERE vehicle_type = $1 LIMIT 1', [vt])).rowCount) continue;
+    for (const [name, qty] of items) {
+      await pool.query('INSERT INTO par_levels(vehicle_type, drug_id, qty) SELECT $1, id, $3 FROM drugs WHERE name = $2', [vt, name, qty]);
+    }
   }
   const counts = (await pool.query(`SELECT (SELECT count(*) FROM hospitals)::int AS hospitals, (SELECT count(*) FROM drugs)::int AS drugs,
                                            (SELECT count(*) FROM icd10)::int AS icd`)).rows[0];

@@ -4,11 +4,13 @@ import { audit } from '../audit.js';
 import { config } from '../config.js';
 import { many, one, withTx } from '../db.js';
 import {
-  assignVehicle, confirmTriage, createIncident, findDuplicates, getIncident, HttpError, incidentDetail,
+  assignVehicle, AUTO_DISPATCH_KM, confirmTriage, createIncident, findDuplicates, getIncident, HttpError, incidentDetail,
   incidentScope, incidentSummary, recordTime, saveTriage, unassignVehicle,
 } from '../domain.js';
 import { evaluate } from '../triage/engine.js';
-import { protocolDescriptor } from '../triage/protocol.js';
+import { protocolDescriptor, type Priority, type VehicleType } from '../triage/protocol.js';
+import { suggestVehicles } from '../fleet.js';
+import { loadVehicles } from './fleet.js';
 import { actorOf, DISPATCH_ROLES, EOC_ROLES, guard, type Ctx } from '../http.js';
 
 const PRIORITY = z.enum(['P1', 'P2', 'P3', 'P4', 'HEN']);
@@ -131,7 +133,7 @@ export function registerEoc(app: FastifyInstance, { pool, hub }: Ctx) {
     return many(pool, `
       SELECT i.id, i.code, i.source, i.status, i.address, i.lat, i.lng, i.chief_complaint, i.suggested_priority,
              i.final_priority, i.final_vehicle_type, i.suggested_vehicle_type, i.created_at, i.confirmed_at,
-             i.callback_phone, i.caller_phone, i.destination, i.duplicate_of,
+             i.callback_phone, i.caller_phone, i.destination, i.destination_department, i.duplicate_of,
              (SELECT array_agg(a.vehicle_id) FROM assignments a WHERE a.incident_id = i.id AND a.ended_at IS NULL) AS vehicles,
              (SELECT u.full_name FROM users u WHERE u.id = i.created_by) AS created_by_name
         FROM incidents i WHERE ${where} ORDER BY i.created_at DESC LIMIT 500`);
@@ -197,10 +199,34 @@ export function registerEoc(app: FastifyInstance, { pool, hub }: Ctx) {
 
   app.post('/api/incidents/:id/assign', dispatch, async (req) => {
     const id = idParam(req);
-    const b = z.object({ vehicleId: z.string().min(1), divertReason: z.string().max(500).nullish() }).parse(req.body);
-    await withTx(pool, (tx) => assignVehicle(tx, actorOf(req), id, b.vehicleId, b.divertReason));
+    const b = z.object({
+      vehicleId: z.string().min(1), divertReason: z.string().max(500).nullish(), confirmFar: z.boolean().optional(),
+    }).parse(req.body);
+    await withTx(pool, (tx) => assignVehicle(tx, actorOf(req), id, b.vehicleId, { divertReason: b.divertReason, confirmFar: b.confirmFar }));
     await Promise.all([pushIncident(id), hub.publish({ type: 'vehicle', id: b.vehicleId })]);
     return incidentDetail(pool, id);
+  });
+
+  /**
+   * Tự động báo xe rảnh phù hợp gần nhất: trong bán kính AUTO_DISPATCH_KM thì giao luôn (xe nhận chuông báo ngay),
+   * xa hơn thì trả về xe đề xuất để điều phối viên xác nhận.
+   */
+  app.post('/api/incidents/:id/auto-assign', dispatch, async (req) => {
+    const id = idParam(req);
+    const inc = await getIncident(pool, id);
+    if (inc.lat == null || inc.lng == null) throw new HttpError(409, 'Chưa có vị trí hiện trường trên bản đồ: không tính được xe gần nhất');
+    const requested = (inc.final_vehicle_type ?? inc.suggested_vehicle_type) as VehicleType | null;
+    const priority = (inc.final_priority ?? inc.suggested_priority) as Priority | null;
+    const { suggestions } = suggestVehicles(await loadVehicles(pool), { lat: inc.lat, lng: inc.lng }, requested, priority);
+    const best = suggestions[0];
+    if (!best) throw new HttpError(409, 'Không còn xe rảnh phù hợp: đưa vào hàng chờ, rút xe ca thấp hơn hoặc chuyển 115', { code: 'NO_VEHICLE' });
+    if (best.distanceKm != null && best.distanceKm > AUTO_DISPATCH_KM) {
+      return { assigned: false, candidate: best, distanceKm: best.distanceKm, limitKm: AUTO_DISPATCH_KM,
+        message: `Xe rảnh gần nhất là ${best.vehicleId}, cách ${best.distanceKm} km (> ${AUTO_DISPATCH_KM} km). Xác nhận để giao.` };
+    }
+    await withTx(pool, (tx) => assignVehicle(tx, actorOf(req), id, best.vehicleId, { auto: true }));
+    await Promise.all([pushIncident(id), hub.publish({ type: 'vehicle', id: best.vehicleId })]);
+    return { assigned: true, candidate: best, distanceKm: best.distanceKm, limitKm: AUTO_DISPATCH_KM, incident: await incidentDetail(pool, id) };
   });
 
   app.post('/api/incidents/:id/unassign', dispatch, async (req) => {
@@ -213,10 +239,13 @@ export function registerEoc(app: FastifyInstance, { pool, hub }: Ctx) {
 
   app.post('/api/incidents/:id/prealert', dispatch, async (req) => {
     const id = idParam(req);
-    const b = z.object({ hospital: z.string().min(2).max(200), note: z.string().max(1000).optional() }).parse(req.body);
+    const b = z.object({
+      hospital: z.string().min(2).max(200), department: z.string().max(200).nullish(), note: z.string().max(1000).optional(),
+    }).parse(req.body);
     const actor = actorOf(req);
     await withTx(pool, async (tx) => {
-      await tx.query('UPDATE incidents SET destination = $2, updated_at = now() WHERE id = $1', [id, b.hospital]);
+      await tx.query('UPDATE incidents SET destination = $2, destination_department = $3, updated_at = now() WHERE id = $1',
+        [id, b.hospital, b.department || null]);
       await recordTime(tx, id, 'T11', new Date(), 'CAD', actor);
       await audit(tx, incidentScope(id), actor, 'hospital.prealert', 'incident', id, b);
     });

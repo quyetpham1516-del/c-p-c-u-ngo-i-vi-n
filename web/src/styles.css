@@ -256,3 +256,9 @@ tr.sel td { background: color-mix(in srgb, var(--brand) 14%, var(--panel)); }
   .ba { width: auto; min-height: auto; padding: 7mm 8mm; }
   .ba .sec, .ba .nb, .ba .cprb, .ba .sig, .ba .dx, .ba table.abc th, .ba .trauma .h { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
+
+/* Chuông báo lệnh mới trên ứng dụng kíp */
+.order-alarm { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 18px; animation: alarm-pulse 1s ease-in-out infinite; }
+@keyframes alarm-pulse { 50% { background: color-mix(in srgb, var(--p1) 35%, var(--panel)); } }
+@media (prefers-reduced-motion: reduce) { .order-alarm { animation: none; } }
+.badge.far { border-color: var(--p2); color: var(--p2); }

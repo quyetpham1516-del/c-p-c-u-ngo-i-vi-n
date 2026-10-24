@@ -2,7 +2,7 @@ import type { FastifyInstance, FastifyRequest } from 'fastify';
 import { z } from 'zod';
 import { audit } from '../audit.js';
 import { many, one, withTx } from '../db.js';
-import { ackAssignment, crewStatus, getIncident, HttpError, incidentScope, incidentSummary, recordTime, setVehicleStatus } from '../domain.js';
+import { ackAssignment, AUTO_DISPATCH_KM, crewStatus, getIncident, HttpError, incidentScope, incidentSummary, recordTime, setVehicleStatus } from '../domain.js';
 import {
   estimateFree, haversineKm, STATUS_LABEL, statusMedians, suggestVehicles, travelMinutes, VEHICLE_LABEL, type VehicleRow,
 } from '../fleet.js';
@@ -69,15 +69,14 @@ export function registerFleet(app: FastifyInstance, { pool, hub }: Ctx) {
 
   app.get('/api/board', { preHandler: guard(...BOARD_ROLES) }, async () => boardRows(pool));
 
-  app.get('/api/stations', { preHandler: guard() }, async () => many(pool, 'SELECT * FROM stations ORDER BY id'));
-
   app.get('/api/incidents/:id/suggest', { preHandler: guard(...EOC_ROLES) }, async (req) => {
     const id = z.object({ id: z.string().uuid() }).parse(req.params).id;
     const inc = await getIncident(pool, id);
     const scene = inc.lat != null && inc.lng != null ? { lat: inc.lat, lng: inc.lng } : null;
     const requested = (inc.final_vehicle_type ?? inc.suggested_vehicle_type) as VehicleType | null;
     const priority = (inc.final_priority ?? inc.suggested_priority) as Priority | null;
-    return suggestVehicles(await loadVehicles(pool), scene, requested, priority);
+    const r = suggestVehicles(await loadVehicles(pool), scene, requested, priority);
+    return { ...r, limitKm: AUTO_DISPATCH_KM, suggestions: r.suggestions.map((s) => ({ ...s, far: s.distanceKm != null && s.distanceKm > AUTO_DISPATCH_KM })) };
   });
 
   app.post('/api/vehicles/:id/status', { preHandler: guard('crew', ...DISPATCH_ROLES) }, async (req) => {
@@ -119,17 +118,21 @@ export function registerFleet(app: FastifyInstance, { pool, hub }: Ctx) {
 
   /* ---------- Ứng dụng kíp ---------- */
 
-  app.get('/api/crew/vehicles', { preHandler: guard('crew') }, async () =>
-    many(pool, `SELECT v.id, v.type, v.status, s.name AS station_name FROM vehicles v JOIN stations s ON s.id = v.station_id ORDER BY v.id`));
+  /** Kíp được phân điểm thì chỉ thấy xe của điểm đó */
+  app.get('/api/crew/vehicles', { preHandler: guard('crew') }, async (req) =>
+    many(pool, `SELECT v.id, v.type, v.status, v.station_id, s.name AS station_name FROM vehicles v JOIN stations s ON s.id = v.station_id
+                 WHERE v.station_id = coalesce((SELECT station_id FROM users WHERE id = $1), v.station_id) ORDER BY v.id`, [req.user.id]));
 
   app.post('/api/crew/shift', { preHandler: guard('crew') }, async (req) => {
     const b = z.object({ vehicleId: z.string().min(1), crewRole: z.string().min(1).max(60) }).parse(req.body);
     const actor = actorOf(req);
     await withTx(pool, async (tx) => {
       await tx.query('UPDATE crew_shifts SET ended_at = now() WHERE user_id = $1 AND ended_at IS NULL', [actor.id]);
-      await tx.query('INSERT INTO crew_shifts(vehicle_id, user_id, crew_role) VALUES ($1,$2,$3)', [b.vehicleId, actor.id, b.crewRole]);
-      const v = await one(tx, 'SELECT status FROM vehicles WHERE id = $1', [b.vehicleId]);
+      const v = await one(tx, 'SELECT status, station_id FROM vehicles WHERE id = $1', [b.vehicleId]);
       if (!v) throw new HttpError(404, 'Không tìm thấy xe');
+      const home = await one(tx, 'SELECT station_id FROM users WHERE id = $1', [actor.id]);
+      if (home?.station_id && home.station_id !== v.station_id) throw new HttpError(403, `Bạn được phân ở điểm ${home.station_id}, xe ${b.vehicleId} thuộc điểm ${v.station_id}`);
+      await tx.query('INSERT INTO crew_shifts(vehicle_id, user_id, crew_role) VALUES ($1,$2,$3)', [b.vehicleId, actor.id, b.crewRole]);
       if (v.status === 'S9') await setVehicleStatus(tx, actor, b.vehicleId, 'S1');
       await audit(tx, 'system', actor, 'crew.shift_started', 'vehicle', b.vehicleId, { crewRole: b.crewRole });
     });
@@ -161,7 +164,7 @@ export function registerFleet(app: FastifyInstance, { pool, hub }: Ctx) {
         id: i.id, code: i.code, priority: i.final_priority, lights: i.final_lights, address: i.address, addressNote: i.address_note,
         lat: i.lat, lng: i.lng, complaint: findGroup(i.chief_complaint)?.label ?? null,
         flags: evaluate(i.triage_answers ?? {}, i.chief_complaint).flags, callbackPhone: i.callback_phone, notes: i.notes,
-        patientCount: i.patient_count, destination: i.destination, source: i.source, callerName: i.caller_name, triageAnswers: i.triage_answers,
+        patientCount: i.patient_count, destination: i.destination, destinationDepartment: i.destination_department, source: i.source, callerName: i.caller_name, triageAnswers: i.triage_answers,
         acknowledged: !!a.acknowledged_at, times, transfers,
       };
     }

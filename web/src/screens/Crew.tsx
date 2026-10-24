@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { api, fmtDuration, fmtTime, PRIORITY_LABEL, STATUS_LABEL, useLive, useNow } from '../api';
 import { EpcrForm } from '../components/EpcrForm';
 import { FLAG_LABEL } from '../components/Triage';
+import { startAlarm, unlockAudio } from '../alarm';
 import { allDrafts, loadDraft, saveDraft, startBackgroundSync, type Draft } from '../offline';
 
 const CREW_ROLES = ['Trưởng kíp', 'Bác sĩ', 'Điều dưỡng', 'Y sĩ', 'Cấp cứu viên', 'Kỹ thuật viên', 'Lái xe'];
@@ -43,10 +44,18 @@ export function Crew() {
     allDrafts().then(setDrafts);
     const on = () => setOnline(true);
     const off = () => setOnline(false);
+    document.addEventListener('pointerdown', unlockAudio);
     window.addEventListener('online', on);
     window.addEventListener('offline', off);
-    return () => { window.removeEventListener('online', on); window.removeEventListener('offline', off); };
+    return () => { window.removeEventListener('online', on); window.removeEventListener('offline', off); document.removeEventListener('pointerdown', unlockAudio); };
   }, [load]);
+
+  // Lệnh mới chưa xác nhận: chuông + rung + thông báo lặp lại cho tới khi kíp bấm "Xác nhận lệnh"
+  const pendingOrder = cur?.incident && !cur.incident.acknowledged ? cur.incident : null;
+  useEffect(() => {
+    if (!pendingOrder) return;
+    return startAlarm(`Lệnh mới ${pendingOrder.priority}: ${pendingOrder.code}`, pendingOrder.address ?? 'Mở ứng dụng kíp để xác nhận');
+  }, [pendingOrder?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (cur && !cur.shift) api('GET', '/api/crew/vehicles').then(setVehicles).catch(() => setVehicles([]));
@@ -99,7 +108,13 @@ export function Crew() {
         caller: { name: inc?.callerName ?? undefined, phone: inc?.callbackPhone ?? undefined },
         chiefComplaint: inc?.complaint ?? undefined,
         dispatch: { from115: inc?.source === '115' || undefined, firstAidGuided: inc ? true : undefined },
-        disposition: { hospital: inc?.destination ?? undefined, fromUnit: 'Medone' + (cur?.vehicle?.id ? ` – xe ${cur.vehicle.id}` : '') },
+        // Bệnh viện, khoa điều phối đã báo trước: điền sẵn "Kính gửi" và "Đơn vị nhận bệnh"
+        kinhGui: inc?.destination ?? undefined,
+        disposition: {
+          hospital: inc?.destination ?? undefined, department: inc?.destinationDepartment ?? undefined,
+          toUnit: inc?.destination ? (inc.destinationDepartment ? `${inc.destinationDepartment} – ${inc.destination}` : inc.destination) : undefined,
+          fromUnit: 'Medone' + (cur?.vehicle?.id ? ` – xe ${cur.vehicle.id}` : ''),
+        },
         vitals: [], interventions: [], medications: [],
       },
       baseVersion: 0, dirty: true, status: 'draft', updatedAt: new Date().toISOString(),
@@ -128,7 +143,7 @@ export function Crew() {
             </select>
           </label>
           {error && <div className="error">{error}</div>}
-          <button className="primary big" disabled={!shiftForm.vehicleId} onClick={() => act(() => api('POST', '/api/crew/shift', shiftForm))}>Bắt đầu ca</button>
+          <button className="primary big" disabled={!shiftForm.vehicleId} onClick={() => { unlockAudio(); act(() => api('POST', '/api/crew/shift', shiftForm)); }}>Bắt đầu ca</button>
         </div>
         <OfflineDrafts drafts={drafts} onOpen={(d) => openDraft(d.id)} />
         {draft && <EpcrForm key={draft.id} draft={draft} onChange={() => allDrafts().then(setDrafts)} />}
@@ -154,6 +169,12 @@ export function Crew() {
         </div>
       </div>
 
+      {inc && !inc.acknowledged && (
+        <div className="alert red order-alarm" role="alert">
+          <b>LỆNH MỚI {inc.priority} · {inc.code}</b> {inc.address ?? ''}
+          <button className="danger big" style={{ marginLeft: 12 }} onClick={() => act(() => api('POST', '/api/crew/ack'))}>Xác nhận lệnh</button>
+        </div>
+      )}
       {inc ? (
         <div className="panel">
           <div className="row" style={{ justifyContent: 'space-between' }}>
@@ -171,7 +192,7 @@ export function Crew() {
             <div><div className="small muted">Địa chỉ</div><b>{inc.address ?? '—'}</b>{inc.addressNote && <div className="small">{inc.addressNote}</div>}</div>
             <div><div className="small muted">Số gọi lại</div>{inc.callbackPhone ? <a href={`tel:${inc.callbackPhone}`}><b>{inc.callbackPhone}</b></a> : '—'}</div>
             <div><div className="small muted">Tình trạng</div>{[inc.complaint, ...(inc.flags ?? []).map((f: string) => FLAG_LABEL[f] ?? f)].filter(Boolean).join(', ') || '—'} · {inc.patientCount} người</div>
-            <div><div className="small muted">Bệnh viện đích</div>{inc.destination ?? '—'}</div>
+            <div><div className="small muted">Bệnh viện đích</div>{inc.destination ?? '—'}{inc.destinationDepartment && <div className="small">{inc.destinationDepartment}</div>}</div>
           </div>
           {inc.lat != null && (
             <a className="btn" style={{ marginTop: 8 }} target="_blank" rel="noreferrer" href={`https://www.google.com/maps/dir/?api=1&destination=${inc.lat},${inc.lng}`}>Dẫn đường</a>

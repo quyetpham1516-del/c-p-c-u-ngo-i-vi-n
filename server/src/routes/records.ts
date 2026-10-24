@@ -6,6 +6,7 @@ import { many, one, withTx, type Queryable } from '../db.js';
 import { HttpError, incidentScope, newBaNumber, newTransferNumber, patientScope, recordTime, TIME_LABEL } from '../domain.js';
 import { EpcrSchema, missingForSign } from '../epcr.js';
 import { actorOf, guard, REVIEW_ROLES, type Ctx, type Role } from '../http.js';
+import { consumeForTransfer } from '../stock.js';
 
 const CLINICAL: Role[] = ['crew', 'calltaker', 'dispatcher', 'supervisor', 'qa', 'admin'];
 const ID_TYPE = z.enum(['CCCD', 'DDCN', 'PASSPORT', 'UNKNOWN']);
@@ -257,8 +258,10 @@ export function registerRecords(app: FastifyInstance, { pool, hub }: Ctx) {
       if (!t) throw new HttpError(404, 'Không tìm thấy phiếu');
       if (t.status === 'signed') throw new HttpError(409, 'Phiếu đã ký');
       if (!t.patient_id) throw new HttpError(409, 'Phiếu chưa gắn bệnh án (Số BA)');
-      const miss = missingForSign(EpcrSchema.parse(t.epcr));
+      const epcr = EpcrSchema.parse(t.epcr);
+      const miss = missingForSign(epcr);
       if (miss.length) throw new HttpError(422, 'Còn thiếu thông tin bắt buộc', miss);
+      await consumeForTransfer(tx, actor, id, epcr.medications);
       await tx.query(`UPDATE transfers SET status = 'signed', signed_by = $2, signed_at = now(), updated_at = now() WHERE id = $1`, [id, actor.id]);
       const scope = t.incident_id ? incidentScope(t.incident_id) : 'system';
       await audit(tx, scope, actor, 'transfer.signed', 'transfer', id, { number: t.transfer_number, version: t.version });

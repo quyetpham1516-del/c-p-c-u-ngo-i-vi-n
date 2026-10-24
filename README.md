@@ -22,11 +22,16 @@ Phần mềm cho **Dịch vụ Chuyển viện – Cấp cứu ngoại viện Me
 | Truy xuất ca và lưu vết | Mọi thao tác ghi vào nhật ký chỉ ghi thêm (cơ sở dữ liệu chặn sửa/xóa), chuỗi băm SHA-256 theo từng ca; màn hình dựng lại ca và báo ngay nếu chuỗi bị phá; lượt xem cũng bị ghi | 6.2, 6.3, 6.4 |
 | 16 mốc thời gian | T0–T15 tự ghi từ tổng đài, CAD, nút trên máy tính bảng, ePCR; giữ giá trị đầu tiên | 5.2 |
 | In phiếu | Phiếu chuyển viện in được, có Số BA, Số chuyển viện, mốc thời gian, chữ ký hai bên | 8.5, 8.6 |
+| Chỉ giao xe rảnh, tự báo xe gần nhất | Xe đang bận không giao được; nút **Tự động báo xe rảnh gần nhất** giao ngay xe phù hợp trong bán kính `MEDONE_AUTO_DISPATCH_KM` (mặc định 5 km), máy tính bảng của kíp đổ chuông, rung cho tới khi bấm **Xác nhận lệnh**; xe gần nhất xa hơn bán kính thì không tự giao mà báo điều phối xác nhận | 5.5 |
+| Danh mục bệnh viện | 154 cơ sở KCB TP.HCM theo danh sách BHXH quý 3/2022 (mã KCB, địa chỉ, nhóm) + 11 bệnh viện tuyến cuối, mỗi nơi có danh sách khoa nhận bệnh; chọn ở "Kính gửi", báo trước bệnh viện và "Đơn vị nhận bệnh" (tự điền *Khoa – Bệnh viện*) | 8.6 |
+| ICD-10 Bộ Y tế | 13.186 mã theo danh mục Bộ Y tế; gõ mã (kể cả thiếu dấu chấm, mã có †) là hiện tên bệnh và tự điền chẩn đoán | 8.6 |
+| Kho thuốc theo số lô | Nhập kho tại từng điểm (số lô, hạn dùng, số lượng); trong phiếu chọn thuốc là tự lấy số lô hết hạn sớm nhất; ký phiếu thì trừ kho đúng lô, không đủ thì không cho ký; kiểm kê điều chỉnh có lý do | 8.6 |
+| Điểm, trạm do quản trị quyết định | Tài khoản `admin` thêm/sửa/tạm ngưng điểm (trụ sở, trạm xe, kho trung tâm, điểm trực sự kiện), đặt tọa độ trên bản đồ, chuyển xe giữa các điểm, phân nhân viên về điểm; kíp chỉ nhận được xe thuộc điểm mình | 5.5 |
 
 ## Chưa có trong bản này (theo đúng lộ trình)
 
 Nối tổng đài SIP thật (đã có webhook `/api/telephony/ring` và `/abandon` chờ nối), ghi âm, ASR; bản đồ Việt Nam có giao thông
-(đang dùng OpenStreetMap và ước tính theo khoảng cách); chữ ký số CA; FHIR sang bệnh viện; kho – cơ số; ứng dụng Android gốc
+(đang dùng OpenStreetMap và ước tính theo khoảng cách); chữ ký số CA; FHIR sang bệnh viện; ứng dụng Android gốc
 (bản này là ứng dụng web cài được, chạy offline); đăng nhập Keycloak/MFA; vùng bị hở trên bản đồ. Xem mục 12.5, 12.7 của kế hoạch.
 
 ## Kiến trúc 3 lớp
@@ -69,12 +74,16 @@ kíp `bs.als`, `dd.als`, `ys.bls`, `bs.msu`, `dd.vc`. Mật khẩu là mật kh�
 Thử một ca: đăng nhập `bs.als` trên máy tính bảng/điện thoại và bắt đầu ca trên xe MD-ALS-01; đăng nhập `dpv01` trên máy khác,
 bấm **Giả lập cuộc gọi** → **Nhận** → nhập địa chỉ, bấm bản đồ → trả lời câu hỏi → **Xác nhận**; đăng nhập `dpv06` để **Giao** xe.
 
+**Danh mục:** `npm run seed` tự nạp danh mục bệnh viện, ICD-10 và thuốc từ `server/data/`. Nạp lại (sau khi cập nhật bản mới):
+`npm run catalog -w server`. Nạp từ tệp khác: `npm run import:icd -w server -- <tệp .xlsx/.csv>`,
+`npm run import:hospitals -w server -- <tệp .csv>`.
+
 Phát triển: `npm run dev:server` và `npm run dev:web` (Next.js ở cổng 3000, gọi backend theo `NEXT_PUBLIC_API_URL`).
 
 ## Kiểm thử
 
 ```bash
-npm test                              # 52 kiểm thử (dùng TEST_DATABASE_URL trong .env): phân loại, mã hóa, chuỗi băm, gợi ý xe, trọn luồng một ca
+npm test                              # 63 kiểm thử (dùng TEST_DATABASE_URL trong .env): phân loại, mã hóa, chuỗi băm, gợi ý xe, trọn luồng một ca
 npm run load -w server -- 100 20      # kiểm thử tải
 ```
 
@@ -112,5 +121,5 @@ WebSocket, phần sống còn tách khỏi hành chính); đội phát triển c
 
 Tất cả nằm trong `.env` (tạo bằng `npm run setup`): `DATABASE_URL`, `MEDONE_JWT_SECRET`, `MEDONE_DATA_KEY` (mã hóa số định danh),
 `MEDONE_LOOKUP_KEY` (tìm kiếm), `MEDONE_TELEPHONY_KEY` (webhook tổng đài), `MEDONE_WEB_ORIGIN` (địa chỉ frontend được phép gọi API),
-`NEXT_PUBLIC_API_URL` (địa chỉ backend cho frontend). Khóa phải dài ít nhất 32 ký tự; thiếu là backend không chạy.
+`NEXT_PUBLIC_API_URL` (địa chỉ backend cho frontend), `MEDONE_AUTO_DISPATCH_KM` (bán kính tự báo xe, mặc định 5). Khóa phải dài ít nhất 32 ký tự; thiếu là backend không chạy.
 **Mất `MEDONE_DATA_KEY` là mất khả năng đọc số CCCD đã lưu**: cất khóa trong kho khóa (HSM/KMS) và có bản sao.

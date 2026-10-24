@@ -64,11 +64,13 @@ export const EpcrSchema = z.object({
   }).partial().default({}),
   exam: z.object({ headFace: str, neck: str, chest: str, abdomen: str, limbs: str, skin: str, other: str }).partial().default({}),
   postExamCare: str,
-  diagnosis: z.object({ text: str, icd10: z.string().max(10).optional() }).partial().default({}),
+  diagnosis: z.object({ text: str, icd10: z.string().max(10).optional(), icdName: str }).partial().default({}),
   vitals: z.array(VitalSchema).max(500).default([]),
   interventions: z.array(z.object({ at: z.string(), name: z.string().max(200), by: str, note: str })).max(500).default([]),
   medications: z.array(z.object({
     at: z.string(), name: z.string().max(200), dose: str, route: str, lot: str, expiry: str, by: str, witness: str,
+    /** Lô trong kho trạm (tự điền khi chọn thuốc); số lượng đơn vị trừ kho khi ký phiếu */
+    drugId: num, lotId: z.string().uuid().optional(), qty: num,
   })).max(500).default([]),
   newborn: z.object({
     born: bool, at: str, sex: z.enum(['M', 'F', 'U']).optional(),

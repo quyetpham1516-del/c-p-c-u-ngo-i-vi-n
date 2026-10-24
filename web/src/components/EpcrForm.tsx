@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { api, fmtTime } from '../api';
 import { saveDraft, syncDraft, type Draft } from '../offline';
+import { useVehicleStock, type StockLot } from '../catalog';
+import { HospitalPicker } from './HospitalPicker';
+import { IcdInput } from './IcdInput';
 import { PatientPicker } from './PatientPicker';
 
 /** Các thẻ đi theo đúng thứ tự các khối trên mẫu "Bệnh án cấp cứu ngoại viện" */
@@ -12,6 +15,10 @@ const nowIso = () => new Date().toISOString();
 const localInput = (iso?: string) => (iso ? new Date(new Date(iso).getTime() - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 16) : '');
 const fromLocal = (v: string) => (v ? new Date(v).toISOString() : undefined);
 const toNum = (v: string) => (v === '' ? undefined : Number(v));
+const norm = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/gi, 'd').toLowerCase();
+/** "Adrenalin" khớp "Adrenalin 1 mg/1 ml" trong kho */
+const sameDrug = (stockName: string, name?: string) => !!name && (norm(stockName).startsWith(norm(name)) || norm(name).startsWith(norm(stockName)));
+const QUICK_DRUGS = ['Adrenalin', 'Amiodaron', 'Aspirin', 'Nitroglycerin', 'Salbutamol', 'Glucose 30%', 'Acid tranexamic', 'Naloxon'];
 
 type Setter = (path: string, v: any) => void;
 
@@ -90,6 +97,29 @@ export function EpcrForm({ draft: initial, onChange }: { draft: Draft; onChange?
     o[parts[parts.length - 1]] = v;
     return x;
   });
+  /** Chọn bệnh viện nhận: điền luôn "Kính gửi", bệnh viện/khoa chuyển đến và "Đơn vị nhận bệnh" */
+  const setHospital = (hospital: string, department: string) => update((x) => {
+    x.disposition ??= {};
+    x.disposition.hospital = hospital || undefined;
+    x.disposition.department = department || undefined;
+    x.kinhGui = hospital || undefined;
+    x.disposition.toUnit = hospital ? (department ? `${department} – ${hospital}` : hospital) : undefined;
+    return x;
+  });
+  const stock = useVehicleStock(d.vehicleId);
+  const stockDrugs = [...new Map(stock.map((l) => [l.drug_id, l])).values()];
+  /** Gắn một lô trong kho xe vào dòng thuốc: tự điền tên, số lô, hạn dùng, đường dùng mặc định */
+  const applyLot = (m: any, l: StockLot | undefined) => {
+    if (!l) { delete m.lotId; return m; }
+    m.name = l.drug_name; m.drugId = l.drug_id; m.lotId = l.id; m.lot = l.lot; m.expiry = l.expiry;
+    m.route ??= l.default_route ?? undefined; m.qty ??= 1;
+    return m;
+  };
+  const addDrug = (n: string) => update((x) => {
+    // Lô hết hạn sớm nhất đứng đầu danh sách kho (FEFO)
+    (x.medications ??= []).push(applyLot({ at: nowIso(), name: n }, stock.find((l) => sameDrug(l.drug_name, n))));
+    return x;
+  });
   const toggleTrauma = (t: string) => update((x) => {
     x.trauma ??= {};
     const list: string[] = x.trauma.types ?? [];
@@ -132,7 +162,9 @@ export function EpcrForm({ draft: initial, onChange }: { draft: Draft; onChange?
         {tab === 'Thông tin, điều phối' && (
           <div className="col">
             <div className="grid2">
-              <Txt label="Kính gửi" value={e.kinhGui} onChange={(v) => set('kinhGui', v)} />
+              <label className="field">Kính gửi (bệnh viện và khoa nhận)
+                <HospitalPicker hospital={e.disposition?.hospital ?? e.kinhGui ?? ''} department={e.disposition?.department ?? ''} disabled={locked} onChange={setHospital} />
+              </label>
               <div className="row"><Chk label="Bệnh truyền nhiễm" value={e.infectious} onChange={(v) => set('infectious', v)} /></div>
             </div>
             <h3>Thông tin bệnh nhân</h3>
@@ -323,7 +355,17 @@ export function EpcrForm({ draft: initial, onChange }: { draft: Draft; onChange?
             <Txt label="Can thiệp sau khám toàn diện" area value={e.postExamCare} onChange={(v) => set('postExamCare', v)} />
             <div className="grid2">
               <Txt label="Chẩn đoán" value={e.diagnosis?.text} onChange={(v) => set('diagnosis.text', v)} />
-              <Txt label="Mã ICD-10" value={e.diagnosis?.icd10} onChange={(v) => set('diagnosis.icd10', v)} />
+              <label className="field">Mã ICD-10
+                <IcdInput value={e.diagnosis?.icd10 ?? ''} disabled={locked} onChange={(v) => set('diagnosis.icd10', v || undefined)}
+                  onResolved={(code, name) => update((x) => {
+                    x.diagnosis ??= {};
+                    x.diagnosis.icd10 = code;
+                    // Chưa ghi chẩn đoán thì lấy tên bệnh theo mã
+                    if (!x.diagnosis.text?.trim()) x.diagnosis.text = name;
+                    x.diagnosis.icdName = name;
+                    return x;
+                  })} />
+              </label>
             </div>
           </div>
         )}
@@ -375,23 +417,46 @@ export function EpcrForm({ draft: initial, onChange }: { draft: Draft; onChange?
                 <button key={n} onClick={() => update((x) => { (x.interventions ??= []).push({ at: nowIso(), name: n }); return x; })}>+ {n}</button>
               ))}
             </div>
-            <h3>Thuốc (ghi số lô bắt buộc)</h3>
-            {(e.medications ?? []).map((m: any, i: number) => (
-              <div key={i} className="grid4" style={{ marginBottom: 6 }}>
-                <label className="field">Giờ<input type="datetime-local" value={localInput(m.at)} onChange={(ev) => set(`medications.${i}.at`, fromLocal(ev.target.value))} /></label>
-                <Txt label="Thuốc" value={m.name} onChange={(v) => set(`medications.${i}.name`, v)} />
-                <Txt label="Liều" value={m.dose} onChange={(v) => set(`medications.${i}.dose`, v)} />
-                <Txt label="Đường dùng" value={m.route} onChange={(v) => set(`medications.${i}.route`, v)} />
-                <Txt label="Số lô" value={m.lot} onChange={(v) => set(`medications.${i}.lot`, v)} />
-                <Txt label="Hạn dùng" value={m.expiry} onChange={(v) => set(`medications.${i}.expiry`, v)} />
-                <Txt label="Người dùng" value={m.by} onChange={(v) => set(`medications.${i}.by`, v)} />
-                <Txt label="Người chứng kiến" value={m.witness} onChange={(v) => set(`medications.${i}.witness`, v)} />
-              </div>
-            ))}
+            <h3>Thuốc (số lô lấy từ kho của điểm, lô hết hạn sớm nhất được chọn trước)</h3>
+            {!d.vehicleId && <div className="small muted">Phiếu chưa gắn xe nên chưa lấy được kho thuốc; nhập số lô bằng tay.</div>}
+            {(e.medications ?? []).map((m: any, i: number) => {
+              const lots = stock.filter((l) => l.drug_id === m.drugId || (!m.drugId && sameDrug(l.drug_name, m.name)));
+              return (
+                <div key={i} className="grid4" style={{ marginBottom: 6 }}>
+                  <label className="field">Giờ<input type="datetime-local" value={localInput(m.at)} onChange={(ev) => set(`medications.${i}.at`, fromLocal(ev.target.value))} /></label>
+                  {stockDrugs.length ? (
+                    <label className="field">Thuốc
+                      <select value={m.drugId ?? ''} onChange={(ev) => update((x) => {
+                        const id = Number(ev.target.value);
+                        const row = x.medications[i];
+                        delete row.lotId; delete row.lot; delete row.expiry; delete row.drugId;
+                        applyLot(row, stock.find((l) => l.drug_id === id));
+                        return x;
+                      })}>
+                        <option value="">{m.name && !m.drugId ? `${m.name} (ngoài kho)` : '— Chọn thuốc —'}</option>
+                        {stockDrugs.map((l) => <option key={l.drug_id} value={l.drug_id}>{l.drug_name}</option>)}
+                      </select>
+                    </label>
+                  ) : <Txt label="Thuốc" value={m.name} onChange={(v) => set(`medications.${i}.name`, v)} />}
+                  <Txt label="Liều" value={m.dose} onChange={(v) => set(`medications.${i}.dose`, v)} />
+                  <Txt label="Đường dùng" value={m.route} onChange={(v) => set(`medications.${i}.route`, v)} />
+                  {lots.length ? (
+                    <label className="field">Số lô
+                      <select value={m.lotId ?? ''} onChange={(ev) => update((x) => { applyLot(x.medications[i], stock.find((l) => l.id === ev.target.value)); return x; })}>
+                        <option value="">— Chọn lô —</option>
+                        {lots.map((l) => <option key={l.id} value={l.id}>{l.lot} · HD {l.expiry} · còn {Number(l.qty)} {l.unit}</option>)}
+                      </select>
+                    </label>
+                  ) : <Txt label="Số lô" value={m.lot} onChange={(v) => set(`medications.${i}.lot`, v)} />}
+                  <Txt label="Hạn dùng" value={m.expiry} onChange={(v) => set(`medications.${i}.expiry`, v)} />
+                  <Txt label="Số lượng" type="number" value={m.qty} onChange={(v) => set(`medications.${i}.qty`, v)} />
+                  <Txt label="Người dùng" value={m.by} onChange={(v) => set(`medications.${i}.by`, v)} />
+                  <Txt label="Người chứng kiến" value={m.witness} onChange={(v) => set(`medications.${i}.witness`, v)} />
+                </div>
+              );
+            })}
             <div className="row">
-              {['Adrenalin', 'Amiodaron', 'Aspirin', 'Nitroglycerin', 'Salbutamol', 'Glucose 30%', 'Tranexamic acid', 'Naloxon'].map((n) => (
-                <button key={n} onClick={() => update((x) => { (x.medications ??= []).push({ at: nowIso(), name: n }); return x; })}>+ {n}</button>
-              ))}
+              {QUICK_DRUGS.map((n) => <button key={n} onClick={() => addDrug(n)}>+ {n}</button>)}
             </div>
           </div>
         )}
@@ -457,8 +522,9 @@ export function EpcrForm({ draft: initial, onChange }: { draft: Draft; onChange?
               </div>
             )}
             <div className="grid2">
-              <Txt label="Chuyển bệnh (bệnh viện nhận)" value={e.disposition?.hospital} onChange={(v) => set('disposition.hospital', v)} />
-              <Txt label="Khoa" value={e.disposition?.department} onChange={(v) => set('disposition.department', v)} />
+              <label className="field" style={{ gridColumn: '1 / -1' }}>Chuyển bệnh (bệnh viện và khoa nhận)
+                <HospitalPicker hospital={e.disposition?.hospital ?? ''} department={e.disposition?.department ?? ''} disabled={locked} onChange={setHospital} />
+              </label>
               <label className="field">Thời gian giao bệnh
                 <div className="row" style={{ flexWrap: 'nowrap' }}>
                   <input className="grow" type="datetime-local" value={localInput(e.disposition?.handoverAt)} onChange={(ev) => set('disposition.handoverAt', fromLocal(ev.target.value))} />
@@ -480,7 +546,7 @@ export function EpcrForm({ draft: initial, onChange }: { draft: Draft; onChange?
               </div>
               <div className="col">
                 <h3>Đơn vị nhận bệnh</h3>
-                <Txt label="Đơn vị" value={e.disposition?.toUnit} onChange={(v) => set('disposition.toUnit', v)} />
+                <Txt label="Đơn vị (tự điền theo bệnh viện, khoa chuyển đến)" value={e.disposition?.toUnit} onChange={(v) => set('disposition.toUnit', v)} />
                 <Txt label="Người nhận" value={e.disposition?.receiverName} onChange={(v) => set('disposition.receiverName', v)} />
                 <Txt label="Chức danh" value={e.disposition?.receiverTitle} onChange={(v) => set('disposition.receiverTitle', v)} />
                 <Txt label="Nhận xét" area value={e.disposition?.toComment} onChange={(v) => set('disposition.toComment', v)} />

@@ -4,6 +4,7 @@ import {
   api, fmtDuration, fmtTime, INCIDENT_STATUS, PRIORITY_LABEL, session, TIME_LABEL, useLive, useNow, VEHICLE_LABEL, type LiveEvent,
 } from '../api';
 import { FleetTable, type Board } from '../components/FleetTable';
+import { HospitalPicker } from '../components/HospitalPicker';
 import { MapView } from '../components/MapView';
 import { FLAG_LABEL, TriageQuestions, type Protocol, type TriageResult } from '../components/Triage';
 
@@ -455,6 +456,27 @@ function ConfirmCard({ inc, result, run, id }: { inc: any; result: TriageResult 
 
 function DispatchCard({ inc, suggest, run, id, active }: { inc: any; suggest: any; run: (fn: () => Promise<any>) => Promise<any>; id: string; active: any[] }) {
   const [hospital, setHospital] = useState(inc.destination ?? '');
+  const [department, setDepartment] = useState(inc.destination_department ?? '');
+  const [note, setNote] = useState('');
+  const limit = suggest?.limitKm ?? 5;
+
+  /** Giao xe; xe ngoài bán kính thì hỏi xác nhận trước (máy chủ cũng chặn nếu chưa xác nhận) */
+  const assign = async (s: any) => {
+    if (s.far && !confirm(`${s.vehicleId} cách hiện trường ${s.distanceKm} km, xa hơn ${limit} km.\nVẫn giao xe này?`)) return;
+    await run(() => api('POST', `/api/incidents/${id}/assign`, { vehicleId: s.vehicleId, confirmFar: !!s.far }));
+  };
+
+  /** Tự kiểm tra xe rảnh và báo xe phù hợp gần nhất; xa hơn bán kính thì hỏi điều phối */
+  const autoAssign = async () => {
+    const r = await run(() => api('POST', `/api/incidents/${id}/auto-assign`, {}));
+    if (!r) return;
+    if (r.assigned) setNote(`Đã báo xe ${r.candidate.vehicleId} (cách ${r.distanceKm} km). Máy tính bảng của kíp đang đổ chuông.`);
+    else if (confirm(`${r.message}`)) {
+      await run(() => api('POST', `/api/incidents/${id}/assign`, { vehicleId: r.candidate.vehicleId, confirmFar: true }));
+      setNote(`Đã giao xe ${r.candidate.vehicleId} (cách ${r.distanceKm} km, đã xác nhận xe xa).`);
+    } else setNote(`Chưa giao: xe rảnh gần nhất ${r.candidate.vehicleId} cách ${r.distanceKm} km.`);
+  };
+
   return (
     <div className="panel">
       <h3>4. Giao xe</h3>
@@ -465,23 +487,33 @@ function DispatchCard({ inc, suggest, run, id, active }: { inc: any; suggest: an
         </div>
       ))}
       {suggest?.advice?.map((a: string) => <div key={a} className="alert amber small" style={{ marginBottom: 6 }}>{a}</div>)}
+      {!active.length && (
+        <div className="row" style={{ marginBottom: 8 }}>
+          <button className="primary" disabled={!suggest?.suggestions?.length || inc.lat == null} onClick={autoAssign}>Tự động báo xe rảnh gần nhất (≤ {limit} km)</button>
+          {inc.lat == null && <span className="small muted">Cần chấm vị trí hiện trường trên bản đồ</span>}
+        </div>
+      )}
+      {note && <div className="alert blue small" style={{ marginBottom: 6 }}>{note}</div>}
+      <div className="small muted" style={{ marginBottom: 4 }}>Chỉ hiện xe đang rảnh (S1, S2) và đúng loại; xe đang bận không giao được.</div>
       <table>
         <tbody>
           {suggest?.suggestions?.slice(0, 6).map((s: any) => (
             <tr key={s.vehicleId}>
               <td><b>{s.vehicleId}</b> <span className="small muted">{s.type}</span>{s.note && <div className="small muted">{s.note}</div>}</td>
-              <td className="mono small">{s.etaMin != null ? `~${s.etaMin} ph · ${s.distanceKm} km` : '—'}</td>
-              <td className="right"><button className="primary" onClick={() => run(() => api('POST', `/api/incidents/${id}/assign`, { vehicleId: s.vehicleId }))}>Giao</button></td>
+              <td className="mono small">{s.etaMin != null ? `~${s.etaMin} ph · ${s.distanceKm} km` : '—'} {s.far && <span className="badge far">xa hơn {limit} km</span>}</td>
+              <td className="right"><button className={s.far ? '' : 'primary'} onClick={() => assign(s)}>Giao</button></td>
             </tr>
           ))}
         </tbody>
       </table>
-      {suggest && !suggest.suggestions?.length && <div className="muted small">Không có xe sẵn sàng phù hợp.</div>}
+      {suggest && !suggest.suggestions?.length && <div className="alert amber small">Không còn xe rảnh phù hợp. Đưa vào hàng chờ, rút xe ca thấp hơn hoặc chuyển 115.</div>}
       {suggest?.basis && <div className="small muted" style={{ marginTop: 4 }}>{suggest.basis}</div>}
       <div className="hr" />
-      <div className="row">
-        <input className="grow" placeholder="Bệnh viện đích" value={hospital} onChange={(e) => setHospital(e.target.value)} />
-        <button disabled={hospital.trim().length < 2} onClick={() => run(() => api('POST', `/api/incidents/${id}/prealert`, { hospital }))}>Báo trước BV</button>
+      <div className="small muted">Bệnh viện đích và khoa nhận (kíp nhận được ngay, phiếu chuyển viện tự điền)</div>
+      <HospitalPicker hospital={hospital} department={department} onChange={(h, d) => { setHospital(h); setDepartment(d); }} />
+      <div className="row" style={{ marginTop: 6 }}>
+        <button disabled={hospital.trim().length < 2} onClick={() => run(() => api('POST', `/api/incidents/${id}/prealert`, { hospital, department: department || null }))}>Báo trước BV</button>
+        {inc.destination && <span className="small muted">Đã báo: {inc.destination}{inc.destination_department ? ` – ${inc.destination_department}` : ''}</span>}
       </div>
       <div className="row" style={{ marginTop: 8 }}>
         <button className="ghost" disabled={active.length > 0} onClick={() => { const r = prompt('Lý do chuyển ca sang 115:'); if (r) run(() => api('POST', `/api/incidents/${id}/transfer-115`, { reason: r })); }}>Chuyển 115</button>

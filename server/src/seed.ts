@@ -1,4 +1,5 @@
 import { randomBytes } from 'node:crypto';
+import { seedCatalog } from './catalog.js';
 import { hashPassword } from './crypto.js';
 import { createPool } from './db.js';
 import { migrate } from './migrate.js';
@@ -12,13 +13,14 @@ import { migrate } from './migrate.js';
 export async function seed(pool: import('pg').Pool, password: string) {
   if (password.length < 10) throw new Error('Mật khẩu tài khoản mẫu phải dài ít nhất 10 ký tự');
   await migrate(pool);
+  await seedCatalog(pool);
   const has = await pool.query('SELECT 1 FROM users LIMIT 1');
   if (has.rowCount) return false;
   const pw = hashPassword(password);
-  await pool.query(`INSERT INTO stations(id, name, lat, lng) VALUES
-    ('TS', 'Trụ sở chính', 10.7769, 106.7009),
-    ('TR-01', 'Trạm 1', 10.8016, 106.6526),
-    ('TR-02', 'Trạm 2', 10.7380, 106.7220)`);
+  await pool.query(`INSERT INTO stations(id, name, kind, lat, lng) VALUES
+    ('TS', 'Trụ sở chính', 'tru_so', 10.7769, 106.7009),
+    ('TR-01', 'Trạm 1', 'tram', 10.8016, 106.6526),
+    ('TR-02', 'Trạm 2', 'tram', 10.7380, 106.7220)`);
   await pool.query(`INSERT INTO vehicles(id, plate, type, station_id, duty, status, lat, lng) VALUES
     ('MD-ALS-01', '51B-001.01', 'ALS',  'TS',    '24/7',    'S9', 10.7769, 106.7009),
     ('MD-BLS-01', '51B-001.02', 'BLS',  'TR-01', '24/7',    'S9', 10.8016, 106.6526),
@@ -45,6 +47,11 @@ export async function seed(pool: import('pg').Pool, password: string) {
     await pool.query('INSERT INTO users(username, full_name, role, title, license_no, password_hash) VALUES ($1,$2,$3,$4,$5,$6)',
       [username, name, role, title, license, pw]);
   }
+  // Kho mẫu: mỗi trạm có sẵn một lô cho mỗi loại thuốc (số lô, hạn dùng minh họa)
+  await pool.query(`
+    INSERT INTO stock_lots(station_id, drug_id, lot, expiry, qty, supplier)
+    SELECT s.id, d.id, 'MAU-' || s.id || '-' || lpad(d.id::text, 3, '0'), (current_date + interval '1 year')::date, 20, 'Kho trung tâm (mẫu)'
+      FROM stations s CROSS JOIN drugs d`);
   return true;
 }
 

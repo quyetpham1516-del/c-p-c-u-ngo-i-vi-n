@@ -70,7 +70,7 @@ export async function incidentSummary(q: Queryable, id: string) {
   return one(q, `
     SELECT i.id, i.code, i.source, i.status, i.address, i.lat, i.lng, i.chief_complaint, i.suggested_priority,
            i.final_priority, i.final_vehicle_type, i.suggested_vehicle_type, i.created_at, i.confirmed_at, i.callback_phone,
-           i.caller_phone, i.destination, i.duplicate_of,
+           i.caller_phone, i.destination, i.destination_department, i.duplicate_of,
            (SELECT array_agg(a.vehicle_id) FROM assignments a WHERE a.incident_id = i.id AND a.ended_at IS NULL) AS vehicles,
            (SELECT u.full_name FROM users u WHERE u.id = i.created_by) AS created_by_name
       FROM incidents i WHERE i.id = $1`, [id]);
@@ -244,7 +244,22 @@ export async function ackAssignment(tx: Tx, actor: Actor, vehicleId: string) {
   return a;
 }
 
-export async function assignVehicle(tx: Tx, actor: Actor, incidentId: string, vehicleId: string, divertReason?: string | null) {
+/** Bán kính tự động báo xe gần nhất (km); xa hơn phải điều phối viên xác nhận */
+export const AUTO_DISPATCH_KM = Number(process.env.MEDONE_AUTO_DISPATCH_KM) > 0 ? Number(process.env.MEDONE_AUTO_DISPATCH_KM) : 5;
+
+/** Khoảng cách xe (vị trí GPS, không có thì vị trí trạm) tới hiện trường; null nếu thiếu tọa độ */
+export async function vehicleDistanceKm(q: Queryable, vehicleId: string, scene: { lat: number | null; lng: number | null }) {
+  if (scene.lat == null || scene.lng == null) return null;
+  const v = await one(q, `SELECT coalesce(v.lat, s.lat) AS lat, coalesce(v.lng, s.lng) AS lng
+                            FROM vehicles v JOIN stations s ON s.id = v.station_id WHERE v.id = $1`, [vehicleId]);
+  if (!v || v.lat == null || v.lng == null) return null;
+  return Math.round(haversineKm({ lat: v.lat, lng: v.lng }, { lat: scene.lat, lng: scene.lng }) * 10) / 10;
+}
+
+export interface AssignOptions { divertReason?: string | null; confirmFar?: boolean; auto?: boolean }
+
+export async function assignVehicle(tx: Tx, actor: Actor, incidentId: string, vehicleId: string, opts: AssignOptions = {}) {
+  const { divertReason } = opts;
   const inc = await getIncident(tx, incidentId, true);
   if (!inc.confirmed_at) throw new HttpError(409, 'Chưa xác nhận mã ưu tiên và loại xe: không được kích hoạt');
   if (['closed', 'cancelled', 'transferred_115', 'advice_only'].includes(inc.status)) throw new HttpError(409, 'Ca đã đóng');
@@ -261,10 +276,16 @@ export async function assignVehicle(tx: Tx, actor: Actor, incidentId: string, ve
     await tx.query(`UPDATE incidents SET status = 'confirmed', updated_at = now() WHERE id = $1`, [cur.id]);
     await audit(tx, incidentScope(cur.id), actor, 'assignment.diverted', 'vehicle', vehicleId, { toIncident: inc.code, reason: divertReason });
   }
+  const distanceKm = await vehicleDistanceKm(tx, vehicleId, inc);
+  if (distanceKm != null && distanceKm > AUTO_DISPATCH_KM && !opts.confirmFar) {
+    throw new HttpError(409, `Xe ${vehicleId} cách hiện trường ${distanceKm} km (> ${AUTO_DISPATCH_KM} km): cần điều phối viên xác nhận`,
+      { code: 'FAR', vehicleId, distanceKm, limitKm: AUTO_DISPATCH_KM });
+  }
   const a = await one(tx, 'INSERT INTO assignments(incident_id, vehicle_id, assigned_by) VALUES ($1,$2,$3) RETURNING *',
     [incidentId, vehicleId, actor.id]);
-  await audit(tx, incidentScope(incidentId), actor, 'assignment.created', 'vehicle', vehicleId, {
-    vehicleType: v.type, divertReason: divertReason ?? null,
+  await audit(tx, incidentScope(incidentId), actor, opts.auto ? 'assignment.auto' : 'assignment.created', 'vehicle', vehicleId, {
+    vehicleType: v.type, divertReason: divertReason ?? null, distanceKm,
+    farConfirmed: distanceKm != null && distanceKm > AUTO_DISPATCH_KM ? true : undefined,
   });
   await recordTime(tx, incidentId, 'T4', new Date(), 'CAD → máy tính bảng', actor);
   await setVehicleStatus(tx, actor, vehicleId, 'S3', { incidentId });

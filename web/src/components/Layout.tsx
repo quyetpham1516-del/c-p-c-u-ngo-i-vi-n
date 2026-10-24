@@ -9,6 +9,8 @@ const LINKS: { to: string; label: string; roles: Role[] }[] = [
   { to: '/bang-xe', label: 'Bảng đội xe', roles: ['calltaker', 'dispatcher', 'supervisor', 'qa', 'admin'] },
   { to: '/kip', label: 'Ứng dụng kíp', roles: ['crew'] },
   { to: '/benh-an', label: 'Bệnh án', roles: ['crew', 'calltaker', 'dispatcher', 'supervisor', 'qa', 'admin'] },
+  { to: '/kho', label: 'Kho thuốc', roles: ['dispatcher', 'supervisor', 'qa', 'admin'] },
+  { to: '/quan-tri', label: 'Quản trị', roles: ['admin'] },
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {

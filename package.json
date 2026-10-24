@@ -4,6 +4,7 @@
   "description": "Phần mềm điều phối Dịch vụ Chuyển viện - Cấp cứu ngoại viện Medone",
   "workspaces": ["server", "web"],
   "scripts": {
+    "setup": "npm run setup-env -w server",
     "dev:server": "npm run dev -w server",
     "dev:web": "npm run dev -w web",
     "build": "npm run build -w web",

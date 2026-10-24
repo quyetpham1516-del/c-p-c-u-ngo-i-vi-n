@@ -3,6 +3,7 @@
  * Chạy: npm run load -- [số cuộc gọi] [số vị trí]   (mặc định 100 và 20)
  * Dùng cơ sở dữ liệu riêng (LOAD_DATABASE_URL), xóa sạch mỗi lần chạy.
  */
+import { randomBytes } from 'node:crypto';
 import WebSocket from 'ws';
 import { buildApp } from '../src/app.js';
 import { hashPassword } from '../src/crypto.js';
@@ -13,7 +14,9 @@ const CALLS = Number(process.argv[2] ?? 100);
 const SEATS = Number(process.argv[3] ?? 20);
 const PORT = 8090;
 const BASE = `http://127.0.0.1:${PORT}`;
-const url = process.env.LOAD_DATABASE_URL ?? 'postgres://medone:medone@localhost:5432/medone_load';
+const url = process.env.LOAD_DATABASE_URL;
+if (!url) throw new Error('Chưa đặt LOAD_DATABASE_URL (cơ sở dữ liệu riêng cho kiểm thử tải, sẽ bị xóa sạch)');
+const loadPassword = randomBytes(12).toString('base64url');
 
 const lat: Record<string, number[]> = {};
 async function call(token: string, method: string, path: string, body?: unknown) {
@@ -33,15 +36,15 @@ const pct = (a: number[], p: number) => { const s = [...a].sort((x, y) => x - y)
 async function main() {
   const pool = createPool(url);
   await pool.query('DROP SCHEMA public CASCADE; CREATE SCHEMA public;');
-  await seed(pool, 'load-pass');
-  const pw = hashPassword('load-pass');
+  await seed(pool, loadPassword);
+  const pw = hashPassword(loadPassword);
   for (let i = 11; i <= SEATS; i++) {
     await pool.query(`INSERT INTO users(username, full_name, role, title, password_hash) VALUES ($1,$2,'dispatcher','ĐPV',$3)`, [`dpv${i}`, `Điều phối viên ${i}`, pw]);
   }
   const { app } = await buildApp(pool);
   await app.listen({ port: PORT, host: '127.0.0.1' });
 
-  const login = async (u: string) => (await (await fetch(`${BASE}/api/auth/login`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ username: u, password: 'load-pass' }) })).json()).token as string;
+  const login = async (u: string) => (await (await fetch(`${BASE}/api/auth/login`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ username: u, password: loadPassword }) })).json()).token as string;
   const seats = await Promise.all(Array.from({ length: SEATS }, (_, i) => login(`dpv${String(i + 1).padStart(2, '0')}`)));
   // 10 vị trí đầu là call-taker/điều phối theo seed; vị trí 11–20 là điều phối viên
   const dispatcherTokens = seats.slice(5);

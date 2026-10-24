@@ -1,3 +1,4 @@
+import { randomBytes } from 'node:crypto';
 import { hashPassword } from './crypto.js';
 import { createPool } from './db.js';
 import { migrate } from './migrate.js';
@@ -5,9 +6,11 @@ import { migrate } from './migrate.js';
 /**
  * Dữ liệu mẫu cho môi trường thử: 1 trụ sở + 2 trạm, 6 xe (mục 5.5), 10 vị trí EOC, kíp mẫu.
  * Tọa độ đặt quanh TP.HCM chỉ để minh họa; thay bằng địa bàn thật khi triển khai.
- * Mật khẩu mặc định chỉ dùng cho môi trường thử.
+ * Không có mật khẩu ghi trong mã nguồn: lấy từ MEDONE_SEED_PASSWORD, nếu không đặt thì sinh ngẫu nhiên
+ * và in ra một lần. Mật khẩu chỉ lưu dạng băm (scrypt) trong bảng users.
  */
-export async function seed(pool: import('pg').Pool, password = process.env.MEDONE_SEED_PASSWORD ?? 'medone123') {
+export async function seed(pool: import('pg').Pool, password: string) {
+  if (password.length < 10) throw new Error('Mật khẩu tài khoản mẫu phải dài ít nhất 10 ký tự');
   await migrate(pool);
   const has = await pool.query('SELECT 1 FROM users LIMIT 1');
   if (has.rowCount) return false;
@@ -47,7 +50,13 @@ export async function seed(pool: import('pg').Pool, password = process.env.MEDON
 
 if (import.meta.url === `file://${process.argv[1]}`) {
   const pool = createPool();
-  seed(pool)
-    .then((done) => console.log(done ? 'Đã tạo dữ liệu mẫu (mật khẩu: medone123 hoặc MEDONE_SEED_PASSWORD)' : 'Đã có dữ liệu, bỏ qua'))
+  const given = process.env.MEDONE_SEED_PASSWORD;
+  const password = given || randomBytes(9).toString('base64url');
+  seed(pool, password)
+    .then((done) => {
+      if (!done) return console.log('Đã có dữ liệu, bỏ qua');
+      console.log(given ? 'Đã tạo dữ liệu mẫu, mật khẩu lấy từ MEDONE_SEED_PASSWORD'
+        : `Đã tạo dữ liệu mẫu. Mật khẩu chung của các tài khoản mẫu (chỉ hiện một lần): ${password}`);
+    })
     .finally(() => pool.end());
 }

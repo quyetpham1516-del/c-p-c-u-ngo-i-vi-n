@@ -7,7 +7,8 @@ import {
   estimateFree, haversineKm, STATUS_LABEL, statusMedians, suggestVehicles, travelMinutes, VEHICLE_LABEL, type VehicleRow,
 } from '../fleet.js';
 import { actorOf, DISPATCH_ROLES, EOC_ROLES, guard, type Ctx } from '../http.js';
-import type { Priority, VehicleType } from '../triage/protocol.js';
+import { evaluate } from '../triage/engine.js';
+import { findGroup, type Priority, type VehicleType } from '../triage/protocol.js';
 
 const BOARD_ROLES = [...EOC_ROLES, 'qa' as const];
 
@@ -41,7 +42,7 @@ export async function boardRows(q: import('../db.js').Queryable) {
       status_label: STATUS_LABEL[v.status],
       crew: crews.filter((c) => c.vehicle_id === v.id).map((c) => ({ name: c.full_name, title: c.title, role: c.crew_role })),
       incident: inc && {
-        id: inc.id, code: inc.code, priority: inc.final_priority, complaint: inc.chief_complaint,
+        id: inc.id, code: inc.code, priority: inc.final_priority, complaint: findGroup(inc.chief_complaint)?.label ?? null,
         destination: inc.destination, address: inc.address, acknowledged: !!inc.acknowledged_at,
       },
       free: estimateFree(v, medians, now, toScene),
@@ -118,6 +119,9 @@ export function registerFleet(app: FastifyInstance, { pool, hub }: Ctx) {
 
   /* ---------- Ứng dụng kíp ---------- */
 
+  app.get('/api/crew/vehicles', { preHandler: guard('crew') }, async () =>
+    many(pool, `SELECT v.id, v.type, v.status, s.name AS station_name FROM vehicles v JOIN stations s ON s.id = v.station_id ORDER BY v.id`));
+
   app.post('/api/crew/shift', { preHandler: guard('crew') }, async (req) => {
     const b = z.object({ vehicleId: z.string().min(1), crewRole: z.string().min(1).max(60) }).parse(req.body);
     const actor = actorOf(req);
@@ -155,7 +159,8 @@ export function registerFleet(app: FastifyInstance, { pool, hub }: Ctx) {
       const transfers = await many(pool, 'SELECT id, transfer_number, status, patient_id FROM transfers WHERE incident_id = $1 AND vehicle_id = $2', [a.incident_id, shift.vehicle_id]);
       incident = {
         id: i.id, code: i.code, priority: i.final_priority, lights: i.final_lights, address: i.address, addressNote: i.address_note,
-        lat: i.lat, lng: i.lng, complaint: i.chief_complaint, callbackPhone: i.callback_phone, notes: i.notes,
+        lat: i.lat, lng: i.lng, complaint: findGroup(i.chief_complaint)?.label ?? null,
+        flags: evaluate(i.triage_answers ?? {}, i.chief_complaint).flags, callbackPhone: i.callback_phone, notes: i.notes,
         patientCount: i.patient_count, destination: i.destination, triageAnswers: i.triage_answers,
         acknowledged: !!a.acknowledged_at, times, transfers,
       };

@@ -1,0 +1,338 @@
+{
+ "code": "TC-DV-CCNV",
+ "version": "1.0",
+ "facilityKind": "ccnv",
+ "name": "Bộ tiêu chí chất lượng đơn vị cấp cứu ngoại viện (10 tiêu chí, theo tệp mô tả)",
+ "source": "Tệp \"Mô tả tiêu chí chất lượng.xlsx\" (đơn vị trong mạng lưới cấp cứu ngoại viện TP.HCM). Lưu ý: tiểu mục 1–9 của Tiêu chí 3 trùng Tiêu chí 2 trong tệp gốc, cần đối chiếu.",
+ "criteria": [
+  {
+   "part": "A",
+   "partName": "Tiêu chí chất lượng đơn vị cấp cứu ngoại viện",
+   "chapter": "A1",
+   "chapterName": "Tiêu chí chung",
+   "code": "TC1",
+   "title": "Người dân được hướng dẫn cụ thể và cung cấp thông tin rõ ràng về các dịch vụ do đơn vị cung cấp.",
+   "legalBasis": null,
+   "ownerUnit": null,
+   "levels": [
+    [
+     "Chưa có hình thức cung cấp những thông tin cơ bản gồm số điện thoại, địa điểm trụ sở, dịch vụ cấp cứu ngoại viện của đơn vị."
+    ],
+    [
+     "Biển hiệu về hoạt động cấp cứu ngoại viện tại cổng chính rõ ràng, không bị mất chữ hoặc mất nét, méo, xệ.",
+     "Có hình thức truyền thông cho người dân gọi Tổng đài 115 khi có nhu cầu cấp cứu ngoại viện.",
+     "Công khai các thông tin cơ bản của đơn vị trên trang thông tin điện tử của đơn vị, trên xe cứu thương gồm số điện thoại liên hệ, địa điểm trụ sở"
+    ],
+    [
+     "Cung cấp đầy đủ thông tin về các dịch vụ ngoại viện (cấp cứu ngoại viện, chuyển viện, vận chuyển người bệnh về nhà, phục vụ lễ hội sự kiện...) do đơn vị cung cấp.",
+     "Có hình thức công khai danh sách các cơ sở trong mạng lưới cấp cứu ngoại viện bao gồm: Trung tâm Cấp cứu 115 và các Trạm vệ tinh…"
+    ],
+    [
+     "Các thông tin về cấp cứu ngoại viện của đơn vị được tra cứu dễ dàng trên trang thông tin điện tử.",
+     "Có tiến hành khảo sát hài lòng người sử dụng dịch vụ cấp cứu ngoại viện.*"
+    ],
+    [
+     "Phối hợp với Trung tâm cấp cứu 115 và các đơn vị trên địa bàn để truyền thông, phổ biến, cung cấp thông tin cho người dân về hệ thống cấp cứu ngoại viện với nhiều hình thức khác nhau theo định hướng của ngành Y tế.",
+     "Áp dụng phân tích kết quả khảo sát hài lòng để xây dựng các giải pháp cải tiến chất lượng."
+    ]
+   ]
+  },
+  {
+   "part": "A",
+   "partName": "Tiêu chí chất lượng đơn vị cấp cứu ngoại viện",
+   "chapter": "A1",
+   "chapterName": "Tiêu chí chung",
+   "code": "TC2",
+   "title": "Đảm bảo thực hiện quy trình cấp cứu ngoại viện.",
+   "legalBasis": null,
+   "ownerUnit": null,
+   "levels": [
+    [
+     "Trong năm, có trường hợp người dân yêu cầu cấp cứu ngoại viện nhưng không được tiếp cận và cấp cứu kịp thời làm ảnh hưởng nghiêm trọng đến sức khỏe của người bệnh (sau khi xác minh là đúng).",
+     "Trong năm, có sự cố cấp cứu gây ảnh hưởng nghiêm trọng đến sức khỏe người bệnh do không thực hiện đúng quy trình cấp cứu."
+    ],
+    [
+     "Có xây dựng quy trình cấp cứu ngoại viện và được lãnh đạo đơn vị ban hành (quy trình kích hoạt, tiếp cận người bệnh, bàn giao người bệnh đối với cấp cứu thông thường, người bệnh tử vong và cấp cứu hàng loạt do tai nạn, thảm họa, ngộ độc thực phẩm…).",
+     "Có quy định về phân loại và cấp cứu người bệnh theo mức độ ưu tiên trong trường hợp cấp cứu hàng loạt và được lãnh đạo đơn vị ban hành."
+    ],
+    [
+     "Có triển khai, phổ biến cho nhân viên về các quy trình cấp cứu ngoại viện.",
+     "Định kỳ giao ban chuyên môn với Trung tâm cấp cứu 115 (ít nhất 01 lần mỗi quý)."
+    ],
+    [
+     "Có báo cáo đánh giá về thời gian đáp ứng* của đơn vị đối với các trường hợp cấp cứu, đặc biệt là các trường hợp nguy kịch.",
+     "Có quy định về việc phản hồi liên quan đến chuyên môn và quá trình tiếp nhận cấp cứu giữa đơn vị và cơ sở y tế tiếp nhận."
+    ],
+    [
+     "Có sáng kiến cải tiến về quy trình cấp cứu ngoại viện nhằm nâng cao chất lượng, hiệu quả hoạt động cấp cứu người bệnh."
+    ]
+   ]
+  },
+  {
+   "part": "A",
+   "partName": "Tiêu chí chất lượng đơn vị cấp cứu ngoại viện",
+   "chapter": "A1",
+   "chapterName": "Tiêu chí chung",
+   "code": "TC3",
+   "title": "Bảo đảm các điều kiện cấp cứu ngoại viện.",
+   "legalBasis": null,
+   "ownerUnit": null,
+   "levels": [
+    [
+     "Trong năm, có trường hợp người dân yêu cầu cấp cứu ngoại viện nhưng không được tiếp cận và cấp cứu kịp thời làm ảnh hưởng nghiêm trọng đến sức khỏe của người bệnh (sau khi xác minh là đúng).",
+     "Trong năm, có sự cố cấp cứu gây ảnh hưởng nghiêm trọng đến sức khỏe người bệnh do không thực hiện đúng quy trình cấp cứu."
+    ],
+    [
+     "Có xây dựng quy trình cấp cứu ngoại viện và được lãnh đạo đơn vị ban hành (quy trình kích hoạt, tiếp cận người bệnh, bàn giao người bệnh đối với cấp cứu thông thường, người bệnh tử vong và cấp cứu hàng loạt do tai nạn, thảm họa, ngộ độc thực phẩm…).",
+     "Có quy định về phân loại và cấp cứu người bệnh theo mức độ ưu tiên trong trường hợp cấp cứu hàng loạt và được lãnh đạo đơn vị ban hành"
+    ],
+    [
+     "Có triển khai, phổ biến cho nhân viên về các quy trình cấp cứu ngoại viện.",
+     "Định kỳ giao ban chuyên môn với Trung tâm cấp cứu 115 (ít nhất 01 lần mỗi quý).",
+     "Có báo cáo đánh giá về thời gian đáp ứng* của đơn vị đối với các trường hợp cấp cứu, đặc biệt là các trường hợp nguy kịch."
+    ],
+    [
+     "Có quy định về việc phản hồi liên quan đến chuyên môn và quá trình tiếp nhận cấp cứu giữa đơn vị và cơ sở y tế tiếp nhận.",
+     "Có sáng kiến cải tiến về quy trình cấp cứu ngoại viện nhằm nâng cao chất lượng, hiệu quả hoạt động cấp cứu người bệnh.",
+     "Có 100% bác sĩ, y sĩ, điều dưỡng tham gia các chương trình đào tạo trong lĩnh vực hồi sức cấp cứu hoặc cấp cứu ngoại viện."
+    ],
+    [
+     "Có ít nhất 80% nhân viên lái xe cứu thương được huấn luyện về thực hành sơ cấp cứu định kỳ mỗi năm.",
+     "Có cấp cứu viên ngoại viện có trình độ cao đẳng trở lên."
+    ]
+   ]
+  },
+  {
+   "part": "A",
+   "partName": "Tiêu chí chất lượng đơn vị cấp cứu ngoại viện",
+   "chapter": "A1",
+   "chapterName": "Tiêu chí chung",
+   "code": "TC4",
+   "title": "Công khai, minh bạch phí cấp cứu ngoại viện.",
+   "legalBasis": null,
+   "ownerUnit": null,
+   "levels": [
+    [
+     "Trong năm, có phản ánh bức xúc của người dân liên quan đến giá thu bất hợp lý của đơn vị và cơ quan quản lý đã xác minh nội dung phản ánh là đúng."
+    ],
+    [
+     "Có công khai giá các dịch vụ do đơn vị cung cấp theo quy định.",
+     "Tất cả các trường hợp cấp cứu đều có hóa đơn hoặc phiếu thu, biên lai."
+    ],
+    [
+     "Biên lai thu phí được người bệnh/thân nhân kiểm tra, xác nhận toàn bộ nội dung; Người bệnh/thân nhân được giữ 01 bản và đơn vị lưu trữ 01 bản.",
+     "Có cung cấp bảng kê chi tiết giá tiền của từng loại dịch vụ kỹ thuật và khám bệnh, chữa bệnh, thuốc, vật tư tiêu hao người bệnh đã sử dụng."
+    ],
+    [
+     "Thực hiện hồ sơ kê khai giá dịch vụ khám bệnh, chữa bệnh ngoại viện đầy đủ và báo cáo về Sở Y tế theo quy định.",
+     "Có đăng tải đầy đủ thông tin về giá tất cả các dịch vụ, giá thuốc, giá vật tư y tế… trên trang thông tin điện tử của đơn vị.",
+     "Có phục vụ thanh toán không tiền mặt bằng thẻ ngân hàng, thanh toán điện tử…"
+    ],
+    [
+     "Có phương thức để người bệnh chủ động lấy được hóa đơn điện tử."
+    ]
+   ]
+  },
+  {
+   "part": "A",
+   "partName": "Tiêu chí chất lượng đơn vị cấp cứu ngoại viện",
+   "chapter": "A1",
+   "chapterName": "Tiêu chí chung",
+   "code": "TC5",
+   "title": "Xây dựng quy trình kỹ thuật và triển khai các biện pháp giám sát quy trình kỹ thuật.",
+   "legalBasis": null,
+   "ownerUnit": null,
+   "levels": [
+    [
+     "Chưa xây dựng quy trình kỹ thuật đối với các danh mục kỹ thuật cấp cứu ngoại viện đã được phê duyệt.",
+     "Phát hiện thấy có sai phạm trong việc áp dụng quy trình kỹ thuật, gây hậu quả người bệnh tử vong hoặc tổn thương không hồi phục nhưng không được báo cáo kịp thời."
+    ],
+    [
+     "Có danh sách danh mục kỹ thuật thực hiện trong hoạt động cấp cứu ngoại viện dựa trên danh mục kỹ thuật của đơn vị đã được cơ quan quản lý phê duyệt.",
+     "Xây dựng và ban hành hướng dẫn quy trình kỹ thuật cho ít nhất 30% danh mục kỹ thuật cấp cứu ngoại viện.",
+     "Phổ biến, hướng dẫn, tập huấn quy trình kỹ thuật cho các nhân viên có liên quan để thực hiện."
+    ],
+    [
+     "Ít nhất 50% danh mục kỹ thuật cấp cứu ngoại viện có quy trình kỹ thuật.",
+     "Nhân viên hiểu và tuân thủ quy trình kỹ thuật cấp cứu ngoại viện.",
+     "Các quy trình kỹ thuật được đặt ở vị trí dễ thấy, dễ lấy, thuận tiện cho việc tra cứu thông tin.",
+     "Có triển khai hoạt động giám sát tuân thủ các quy trình kỹ thuật bằng bảng kiểm."
+    ],
+    [
+     "Ít nhất 70% danh mục kỹ thuật cấp cứu ngoại viện có quy trình kỹ thuật.",
+     "Có phản hồi sau giám sát và có biện pháp xử lý phù hợp đối với nhân viên không tuân thủ các quy trình kỹ thuật."
+    ],
+    [
+     "Ít nhất 90% danh mục kỹ thuật cấp cứu ngoại viện có quy trình kỹ thuật.",
+     "Triển khai các biện pháp cải tiến dựa trên kết quả giám sát."
+    ]
+   ]
+  },
+  {
+   "part": "A",
+   "partName": "Tiêu chí chất lượng đơn vị cấp cứu ngoại viện",
+   "chapter": "A1",
+   "chapterName": "Tiêu chí chung",
+   "code": "TC6",
+   "title": "Xây dựng, triển khai, giám sát thực hiện hướng dẫn chẩn đoán và điều trị.",
+   "legalBasis": null,
+   "ownerUnit": null,
+   "levels": [
+    [
+     "Chưa xây dựng và ban hành hướng dẫn chẩn đoán và điều trị.",
+     "Không triển khai hoặc có sai phạm trong việc áp dụng các hướng dẫn chẩn đoán và điều trị, gây hậu quả người bệnh tử vong hoặc tổn thương không hồi phục nhưng không được báo cáo kịp thời."
+    ],
+    [
+     "Có thống kê danh sách các nguyên nhân cấp cứu ngoại viện đã thực hiện hằng năm.",
+     "Có xây dựng hướng dẫn chẩn đoán và điều trị theo danh sách các nguyên nhân cấp cứu ngoại viện."
+    ],
+    [
+     "Có ít nhất 50% nguyên nhân cấp cứu ngoại viện được xây dựng hướng dẫn chẩn đoán và điều trị.",
+     "Hướng dẫn chẩn đoán và điều trị được đặt ở vị trí dễ thấy, dễ lấy, thuận tiện cho việc tra cứu thông tin.",
+     "Phổ biến, hướng dẫn, tập huấn hướng dẫn chẩn đoán và điều trị cho các nhân viên có liên quan để thực hiện.",
+     "Tiến hành giám sát định kỳ việc tuân thủ các hướng dẫn chẩn đoán và điều trị của đơn vị."
+    ],
+    [
+     "Toàn bộ các nguyên nhân cấp cứu ngoại viện có hướng dẫn chẩn đoán và điều trị.",
+     "Có báo cáo giám sát việc tuân thủ các hướng dẫn chẩn đoán và điều trị."
+    ],
+    [
+     "Có biện pháp khắc phục, cải tiến việc tuân thủ các hướng dẫn chẩn đoán và điều trị của nhân viên dựa trên báo cáo giám sát việc tuân thủ các hướng dẫn chẩn đoán và điều trị.",
+     "Tiến hành đánh giá lại, cập nhật các hướng dẫn chẩn đoán và điều trị định kỳ hoặc khi cần thiết."
+    ]
+   ]
+  },
+  {
+   "part": "A",
+   "partName": "Tiêu chí chất lượng đơn vị cấp cứu ngoại viện",
+   "chapter": "A1",
+   "chapterName": "Tiêu chí chung",
+   "code": "TC7",
+   "title": "Hồ sơ bệnh án được lập đầy đủ, chính xác, khoa học, lưu trữ hợp lý.",
+   "legalBasis": null,
+   "ownerUnit": null,
+   "levels": [
+    [
+     "Không lập hồ sơ bệnh án cho người bệnh theo quy định.",
+     "Bệnh án có thông tin mâu thuẫn, không hợp lý.",
+     "Bệnh án có nội dung không đọc được chữ viết, bị tẩy xóa.",
+     "Phát hiện dùng mộc chữ ký hoặc mộc tên thuốc trong hồ sơ bệnh án."
+    ],
+    [
+     "Tất cả các trường hợp người bệnh cấp cứu được lập hồ sơ bệnh án trong vòng 24 giờ.",
+     "Bệnh án cấp cứu ngoại viện được lưu trữ đúng thời gian quy định."
+    ],
+    [
+     "Hồ sơ bệnh án ghi chép đầy đủ diễn tiến của người bệnh, những can thiệp của ê-kíp cấp cứu trong quá trình cấp cứu và vận chuyển.",
+     "Toàn bộ các trường hợp cấp cứu ngoại viện tại đơn vị được lập bệnh án trên Hệ thống tiếp nhận và điều phối cấp cứu."
+    ],
+    [
+     "Phân công nhân viên chịu trách nhiệm kiểm tra hồ sơ bệnh án thường quy, đánh giá việc ghi chép, chất lượng thông tin trong hồ sơ bệnh án cấp cứu ngoại viện.",
+     "Định kỳ báo cáo về ghi chép hồ sơ bệnh án trong đó có báo cáo về những lỗi thường gặp và giải pháp khắc phục."
+    ],
+    [
+     "Thực hiện cải tiến chất lượng thực trạng quản lý hồ sơ bệnh án cấp cứu ngoại viện của đơn vị."
+    ]
+   ]
+  },
+  {
+   "part": "A",
+   "partName": "Tiêu chí chất lượng đơn vị cấp cứu ngoại viện",
+   "chapter": "A1",
+   "chapterName": "Tiêu chí chung",
+   "code": "TC8",
+   "title": "Ứng dụng Hệ thống tiếp nhận và điều phối cấp cứu ngoại viện.",
+   "legalBasis": null,
+   "ownerUnit": null,
+   "levels": [
+    [
+     "Không ứng dụng Hệ thống tiếp nhận và điều phối cấp cứu tại đơn vị."
+    ],
+    [
+     "Có nhân viên (khoa cấp cứu, nhân viên phụ trách cấp cứu ngoại viện) tham gia tập huấn về sử dụng phần mềm Hệ thống tiếp nhận và điều phối cấp cứu.",
+     "Có thiết lập đầu số liên lạc với Tổng đài 115 và hoạt động 24/7."
+    ],
+    [
+     "Có quy định về việc sử dụng phần mềm Hệ thống tiếp nhận và điều phối cấp cứu.",
+     "Hoàn thành đầy đủ việc nhập thông tin số liệu hoạt động cấp cứu ngoại viện trên phần mềm Hệ thống tiếp nhận và điều phối cấp cứu."
+    ],
+    [
+     "Có giám sát, báo cáo việc áp dụng quy định về việc sử dụng phần mềm Hệ thống tiếp nhận và điều phối cấp cứu.",
+     "Có thực hiện rà soát, phản hồi các sự cố liên quan trong quá trình sử dụng phần mềm Hệ thống tiếp nhận và điều phối cấp cứu"
+    ],
+    [
+     "Phối hợp với Trung tâm Cấp cứu 115 nâng cấp và cập nhật phần mềm Hệ thống tiếp nhận và điều phối cấp cứu."
+    ]
+   ]
+  },
+  {
+   "part": "A",
+   "partName": "Tiêu chí chất lượng đơn vị cấp cứu ngoại viện",
+   "chapter": "A1",
+   "chapterName": "Tiêu chí chung",
+   "code": "TC9",
+   "title": "Bảo đảm chất lượng, an toàn trên xe cứu thương.",
+   "legalBasis": null,
+   "ownerUnit": null,
+   "levels": [
+    [
+     "Xe cứu thương phục vụ hoạt động cấp cứu ngoại viện không đáp ứng hoặc đáp ứng không đầy đủ theo quy định của Bộ Y tế.",
+     "Không bảo trì, bảo dưỡng, kiểm định xe ô tô cứu thương theo quy định."
+    ],
+    [
+     "Các bình ô-xy trên xe cứu thương được đặt trên giá đỡ và có dây ràng.",
+     "Có bình chữa cháy trên xe cứu thương đúng quy định."
+    ],
+    [
+     "Trong năm, có tổ chức huấn luyện phòng cháy, chữa cháy cho nhân viên hoặc mời chuyên gia phòng cháy chữa cháy huấn luyện, kiểm tra công tác phòng chống cháy nổ ít nhất 01 lần.",
+     "Có phương án phòng chống cháy nổ, sơ tán thoát nạn, cứu người, cứu thiết bị y tế, tài sản và chống cháy lan khi xe cứu thương bị cháy.",
+     "Có kiểm tra, giám sát chất lượng, an toàn của xe cứu thương bằng bảng kiểm định kỳ theo quý."
+    ],
+    [
+     "Có báo cáo định kỳ về giám sát chất lượng, an toàn của xe cứu thương.",
+     "Nhân viên trình bày được phương án phòng chống cháy nổ, sơ tán thoát nạn cứu người, cứu trang thiết bị y tế, tài sản và chống cháy lan khi xe cứu thương bị cháy.",
+     "Có tổ chức diễn tập sơ tán thoát nạn, cứu người, cứu thiết bị y tế, tài sản và chống cháy lan khi xe cứu thương bị cháy."
+    ],
+    [
+     "Có cải tiến nâng cao chất lượng xe cứu thương, thiết bị vận chuyển, an toàn người bệnh.",
+     "Có xe cứu thương kết cấu đặc biệt hoặc được trang bị các thiết bị hiện đại trong vận chuyển người bệnh (băng ca điện…)."
+    ]
+   ]
+  },
+  {
+   "part": "A",
+   "partName": "Tiêu chí chất lượng đơn vị cấp cứu ngoại viện",
+   "chapter": "A1",
+   "chapterName": "Tiêu chí chung",
+   "code": "TC10",
+   "title": "Tuân thủ quy định về kiểm soát nhiễm khuẩn và quản lý chất thải y tế.",
+   "legalBasis": null,
+   "ownerUnit": null,
+   "levels": [
+    [
+     "Không thu gom chất thải y tế trên xe cứu thương.",
+     "Phát hiện vi phạm về kiểm soát nhiễm khuẩn hoặc quy định quản lý chất thải y tế tại đơn vị."
+    ],
+    [
+     "Trang bị túi, thùng để thu gom chất thải rắn y tế trên xe cứu thương.",
+     "Thực hiện phân loại chất thải rắn y tế tại nguồn.",
+     "Có quy trình và thực hành đúng về kiểm soát nhiễm khuẩn bề mặt của xe cứu thương.",
+     "Dụng cụ y tế tái sử dụng được xử lý đúng quy định, đảm bảo nguyên tắc kiểm soát nhiễm khuẩn."
+    ],
+    [
+     "Quy định phân loại rác dán, treo ở vị trí dễ đọc và ngay tại nơi đặt túi/thùng rác trên xe cứu thương.",
+     "Có sẵn dung dịch vệ sinh tay chứa cồn trên xe cứu thương.",
+     "Toàn bộ nhân viên tham gia cấp cứu ngoại viện biết và tuân thủ quy trình phòng ngừa phơi nhiễm và xử lý trường hợp bị phơi nhiễm với nguồn bệnh nguy hiểm có nguy cơ nhiễm khuẩn cao."
+    ],
+    [
+     "Có giám sát tuân thủ quy trình kiểm soát nhiễm khuẩn.",
+     "Ít nhất 50% nhân viên thực hiện cấp cứu ngoại viện được tập huấn kiến thức cơ bản về kiểm soát nhiễm khuẩn."
+    ],
+    [
+     "100% nhân viên thực hiện cấp cứu ngoại viện được tập huấn kiến thức cơ bản về kiểm soát nhiễm khuẩn.",
+     "Có báo cáo giám sát và đánh giá tuân thủ vệ sinh tay, tuân thủ quy trình kiểm soát nhiễm khuẩn, quy trình kỹ thuật của nhân viên hiện trường."
+    ]
+   ]
+  }
+ ]
+}

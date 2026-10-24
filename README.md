@@ -26,6 +26,8 @@ Phần mềm cho **Dịch vụ Chuyển viện – Cấp cứu ngoại viện Me
 | Danh mục bệnh viện | 154 cơ sở KCB TP.HCM theo danh sách BHXH quý 3/2022 (mã KCB, địa chỉ, nhóm) + 11 bệnh viện tuyến cuối, mỗi nơi có danh sách khoa nhận bệnh; chọn ở "Kính gửi", báo trước bệnh viện và "Đơn vị nhận bệnh" (tự điền *Khoa – Bệnh viện*) | 8.6 |
 | ICD-10 Bộ Y tế | 13.186 mã theo danh mục Bộ Y tế; gõ mã (kể cả thiếu dấu chấm, mã có †) là hiện tên bệnh và tự điền chẩn đoán | 8.6 |
 | Kho thuốc theo số lô | Nhập kho tại từng điểm (số lô, hạn dùng, số lượng); trong phiếu chọn thuốc là tự lấy số lô hết hạn sớm nhất; ký phiếu thì trừ kho đúng lô, không đủ thì không cho ký; kiểm kê điều chỉnh có lý do | 8.6 |
+| Kho đầy đủ (QL-13, QLCL-16) | Kho điểm → cơ số trên xe → người bệnh; cơ số chuẩn theo loại xe, kíp bấm **Bù cơ số** lấy từ kho điểm theo lô hết hạn trước; phiếu cấp xe, trả kho, điều chuyển, kiểm kê, hủy; kiểm kê lệch và hủy thuốc phải **người khác duyệt**; thuốc gây nghiện/hướng thần phải ghi người chứng kiến; cảnh báo hết hạn, sắp hết hạn, dưới định mức, xe thiếu cơ số; đề xuất đặt hàng tuần | 7.5 |
+| Trang thiết bị và dụng cụ (QLCL-15) | Thiết bị theo số seri: bảo dưỡng, kiểm định, hiệu chuẩn (tự tính hạn kế tiếp), báo hỏng, điều chuyển, thanh lý; **xe thiếu, hỏng hoặc quá hạn kiểm định thiết bị bắt buộc không được gợi ý và không giao được** (trưởng ca cho đi phải ghi lý do); bộ dụng cụ dùng lại: dùng → lô tiệt khuẩn (chỉ thị đạt/không đạt) → sẵn sàng có hạn vô khuẩn | 7.5 |
 | Điểm, trạm do quản trị quyết định | Tài khoản `admin` thêm/sửa/tạm ngưng điểm (trụ sở, trạm xe, kho trung tâm, điểm trực sự kiện), đặt tọa độ trên bản đồ, chuyển xe giữa các điểm, phân nhân viên về điểm; kíp chỉ nhận được xe thuộc điểm mình | 5.5 |
 
 ## Chưa có trong bản này (theo đúng lộ trình)
@@ -69,7 +71,11 @@ npm run build && npm run start:web    # frontend http://localhost:3000
 Hoặc chạy cả 3 lớp bằng Docker: `npm run setup`, rồi `docker compose up --build`, rồi `docker compose exec api npx tsx server/src/seed.ts`.
 
 Tài khoản mẫu: `dpv01`–`dpv05` tiếp nhận cuộc gọi, `dpv06`–`dpv10` điều phối viên, `truongca`, `qlcl`, `admin`,
-kíp `bs.als`, `dd.als`, `ys.bls`, `bs.msu`, `dd.vc`. Mật khẩu là mật khẩu `npm run seed` in ra.
+kíp `bs.als`, `dd.als`, `ys.bls`, `bs.msu`, `dd.vc`; phân hệ quản trị `duoc` (kho – dược), `kythuat` (thiết bị), `ksnk`,
+`nhansu`, `ketoan`, `giamdoc`. Mật khẩu là mật khẩu `npm run seed` in ra. Admin tạo thêm tài khoản ở trang **Quản trị**.
+
+Cơ sở dữ liệu thử đã có từ bản trước: `npm run demo:ops -w server` thêm tài khoản quản trị mẫu, thiết bị mẫu cho từng xe
+(nếu không, xe sẽ bị chặn vì thiếu thiết bị bắt buộc), bù cơ số xe và bộ dụng cụ mẫu. Không chạy lệnh này trên dữ liệu thật.
 
 Thử một ca: đăng nhập `bs.als` trên máy tính bảng/điện thoại và bắt đầu ca trên xe MD-ALS-01; đăng nhập `dpv01` trên máy khác,
 bấm **Giả lập cuộc gọi** → **Nhận** → nhập địa chỉ, bấm bản đồ → trả lời câu hỏi → **Xác nhận**; đăng nhập `dpv06` để **Giao** xe.

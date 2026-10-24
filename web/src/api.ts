@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 
-export type Role = 'calltaker' | 'dispatcher' | 'supervisor' | 'crew' | 'qa' | 'admin';
+export type Role = 'calltaker' | 'dispatcher' | 'supervisor' | 'crew' | 'qa' | 'admin'
+  | 'pharmacist' | 'technician' | 'ipc' | 'hr' | 'accountant' | 'director';
 export interface User { id: string; username: string; name: string; role: Role }
 
 /** Địa chỉ backend Fastify, đặt qua NEXT_PUBLIC_API_URL trong .env (để trống = cùng địa chỉ với frontend) */
@@ -136,10 +137,18 @@ export const TIME_LABEL: Record<string, string> = {
 };
 export const ROLE_LABEL: Record<Role, string> = {
   calltaker: 'Tiếp nhận cuộc gọi', dispatcher: 'Điều phối viên', supervisor: 'Trưởng ca', crew: 'Kíp cấp cứu', qa: 'QLCL', admin: 'Quản trị',
+  pharmacist: 'Kho – dược', technician: 'Kỹ thuật thiết bị', ipc: 'Kiểm soát nhiễm khuẩn', hr: 'Hành chính – nhân sự',
+  accountant: 'Kế toán – thu ngân', director: 'Ban Giám đốc',
 };
 
 export function homeFor(role: Role | undefined): string {
   if (role === 'crew') return '/kip';
-  if (role === 'qa') return '/benh-an';
+  if (role === 'qa') return '/chat-luong';
+  if (role === 'pharmacist') return '/kho';
+  if (role === 'technician') return '/thiet-bi';
+  if (role === 'ipc') return '/chat-luong';
+  if (role === 'hr') return '/nhan-su';
+  if (role === 'accountant') return '/tai-chinh';
+  if (role === 'director') return '/bao-cao';
   return '/eoc';
 }

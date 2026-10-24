@@ -459,6 +459,7 @@ function DispatchCard({ inc, suggest, run, id, active }: { inc: any; suggest: an
   const [department, setDepartment] = useState(inc.destination_department ?? '');
   const [note, setNote] = useState('');
   const limit = suggest?.limitKm ?? 5;
+  const isSupervisor = ['supervisor', 'admin'].includes(session.user?.role ?? '');
 
   /** Giao xe; xe ngoài bán kính thì hỏi xác nhận trước (máy chủ cũng chặn nếu chưa xác nhận) */
   const assign = async (s: any) => {
@@ -487,6 +488,16 @@ function DispatchCard({ inc, suggest, run, id, active }: { inc: any; suggest: an
         </div>
       ))}
       {suggest?.advice?.map((a: string) => <div key={a} className="alert amber small" style={{ marginBottom: 6 }}>{a}</div>)}
+      {!active.length && isSupervisor && suggest?.advice?.some((a: string) => a.includes('thiếu thiết bị')) && (
+        <div className="row" style={{ marginBottom: 6 }}>
+          <button className="ghost small" onClick={() => {
+            const vehicleId = prompt('Trưởng ca cho xe thiếu thiết bị đi. Mã xe:')?.trim();
+            if (!vehicleId) return;
+            const reason = prompt(`Lý do cho ${vehicleId} đi khi thiếu thiết bị (ghi vào nhật ký):`)?.trim();
+            if (reason) run(() => api('POST', `/api/incidents/${id}/assign`, { vehicleId, equipmentOverride: reason, confirmFar: true }));
+          }}>Trưởng ca cho xe thiếu thiết bị đi…</button>
+        </div>
+      )}
       {!active.length && (
         <div className="row" style={{ marginBottom: 8 }}>
           <button className="primary" disabled={!suggest?.suggestions?.length || inc.lat == null} onClick={autoAssign}>Tự động báo xe rảnh gần nhất (≤ {limit} km)</button>

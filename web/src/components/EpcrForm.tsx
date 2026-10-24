@@ -444,14 +444,14 @@ export function EpcrForm({ draft: initial, onChange }: { draft: Draft; onChange?
                     <label className="field">Số lô
                       <select value={m.lotId ?? ''} onChange={(ev) => update((x) => { applyLot(x.medications[i], stock.find((l) => l.id === ev.target.value)); return x; })}>
                         <option value="">— Chọn lô —</option>
-                        {lots.map((l) => <option key={l.id} value={l.id}>{l.lot} · HD {l.expiry} · còn {Number(l.qty)} {l.unit}</option>)}
+                        {lots.map((l) => <option key={l.id} value={l.id}>{l.place === 'kho' ? 'Kho điểm' : 'Trên xe'} · {l.lot} · HD {l.expiry} · còn {Number(l.qty)} {l.unit}</option>)}
                       </select>
                     </label>
                   ) : <Txt label="Số lô" value={m.lot} onChange={(v) => set(`medications.${i}.lot`, v)} />}
                   <Txt label="Hạn dùng" value={m.expiry} onChange={(v) => set(`medications.${i}.expiry`, v)} />
                   <Txt label="Số lượng" type="number" value={m.qty} onChange={(v) => set(`medications.${i}.qty`, v)} />
                   <Txt label="Người dùng" value={m.by} onChange={(v) => set(`medications.${i}.by`, v)} />
-                  <Txt label="Người chứng kiến" value={m.witness} onChange={(v) => set(`medications.${i}.witness`, v)} />
+                  <Txt label={lots.some((l) => l.controlled) ? 'Người chứng kiến (bắt buộc: thuốc kiểm soát đặc biệt)' : 'Người chứng kiến'} value={m.witness} onChange={(v) => set(`medications.${i}.witness`, v)} />
                 </div>
               );
             })}

@@ -121,6 +121,54 @@ export function Admin() {
           <div className="small muted">Kíp được phân điểm chỉ nhận ca trên xe của điểm đó.</div>
         </div>
       </div>
+      <Accounts users={users} run={run} />
+    </div>
+  );
+}
+
+const NEW_USER = { username: '', fullName: '', role: 'crew' as Role, title: '', licenseNo: '', password: '' };
+
+/** Tài khoản: tạo, đổi vai trò, khóa/mở, đặt lại mật khẩu. Mật khẩu do admin đặt, chỉ lưu bản băm ở máy chủ */
+function Accounts({ users, run }: { users: UserRow[]; run: (fn: () => Promise<unknown>) => Promise<void> }) {
+  const [f, setF] = useState(NEW_USER);
+  const [q, setQ] = useState('');
+  const shown = users.filter((u) => !q || `${u.username} ${u.full_name}`.toLowerCase().includes(q.toLowerCase()));
+  const valid = /^[a-z0-9._-]{3,40}$/.test(f.username) && f.fullName.trim().length >= 2 && f.password.length >= 10;
+  return (
+    <div className="panel" style={{ overflowX: 'auto' }}>
+      <h3>Tài khoản</h3>
+      <div className="grid4">
+        <label className="field">Tên đăng nhập<input value={f.username} onChange={(e) => setF({ ...f, username: e.target.value.toLowerCase() })} placeholder="chữ thường, số, . _ -" /></label>
+        <label className="field">Họ tên<input value={f.fullName} onChange={(e) => setF({ ...f, fullName: e.target.value })} /></label>
+        <label className="field">Vai trò<select value={f.role} onChange={(e) => setF({ ...f, role: e.target.value as Role })}>
+          {(Object.keys(ROLE_LABEL) as Role[]).map((r) => <option key={r} value={r}>{ROLE_LABEL[r]}</option>)}</select></label>
+        <label className="field">Chức danh<input value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} /></label>
+        <label className="field">Số chứng chỉ hành nghề<input value={f.licenseNo} onChange={(e) => setF({ ...f, licenseNo: e.target.value })} /></label>
+        <label className="field">Mật khẩu ban đầu (≥ 10 ký tự)<input type="password" autoComplete="new-password" value={f.password} onChange={(e) => setF({ ...f, password: e.target.value })} /></label>
+      </div>
+      <div className="row" style={{ margin: '8px 0' }}>
+        <button className="primary" disabled={!valid} onClick={() => run(async () => {
+          await api('POST', '/api/users', { ...f, title: f.title || null, licenseNo: f.licenseNo || null }); setF(NEW_USER);
+        })}>Tạo tài khoản</button>
+        <input placeholder="Tìm tài khoản" value={q} onChange={(e) => setQ(e.target.value)} />
+      </div>
+      <table>
+        <thead><tr><th>Tài khoản</th><th>Vai trò</th><th>Trạng thái</th><th /></tr></thead>
+        <tbody>{shown.map((u) => (
+          <tr key={u.id} style={u.active ? undefined : { opacity: 0.55 }}>
+            <td>{u.full_name} <span className="small muted">{u.username}{u.title ? ` · ${u.title}` : ''}</span></td>
+            <td><select value={u.role} onChange={(e) => run(() => api('PATCH', `/api/users/${u.id}`, { role: e.target.value }))}>
+              {(Object.keys(ROLE_LABEL) as Role[]).map((r) => <option key={r} value={r}>{ROLE_LABEL[r]}</option>)}</select></td>
+            <td>{u.active ? 'Đang dùng' : 'Đã khóa'}</td>
+            <td className="right">
+              <button className="ghost small" onClick={() => run(() => api('PATCH', `/api/users/${u.id}`, { active: !u.active }))}>{u.active ? 'Khóa' : 'Mở khóa'}</button>{' '}
+              <button className="ghost small" onClick={() => {
+                const pw = prompt(`Mật khẩu mới cho ${u.username} (≥ 10 ký tự):`);
+                if (pw && pw.length >= 10) run(() => api('POST', `/api/users/${u.id}/password`, { password: pw }));
+              }}>Đặt lại mật khẩu</button>
+            </td>
+          </tr>))}</tbody>
+      </table>
     </div>
   );
 }

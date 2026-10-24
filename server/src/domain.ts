@@ -1,5 +1,6 @@
 import { audit, type Actor } from './audit.js';
 import { many, nextCounter, one, type Queryable, type Tx } from './db.js';
+import { equipmentGaps, gapText } from './equipment.js';
 import { haversineKm } from './fleet.js';
 import { evaluate, type Answers } from './triage/engine.js';
 import type { Priority } from './triage/protocol.js';
@@ -256,7 +257,11 @@ export async function vehicleDistanceKm(q: Queryable, vehicleId: string, scene: 
   return Math.round(haversineKm({ lat: v.lat, lng: v.lng }, { lat: scene.lat, lng: scene.lng }) * 10) / 10;
 }
 
-export interface AssignOptions { divertReason?: string | null; confirmFar?: boolean; auto?: boolean }
+export interface AssignOptions {
+  divertReason?: string | null; confirmFar?: boolean; auto?: boolean;
+  /** Trưởng ca cho xe thiếu thiết bị bắt buộc đi (ghi lý do vào nhật ký) */
+  equipmentOverride?: string | null;
+}
 
 export async function assignVehicle(tx: Tx, actor: Actor, incidentId: string, vehicleId: string, opts: AssignOptions = {}) {
   const { divertReason } = opts;
@@ -276,6 +281,11 @@ export async function assignVehicle(tx: Tx, actor: Actor, incidentId: string, ve
     await tx.query(`UPDATE incidents SET status = 'confirmed', updated_at = now() WHERE id = $1`, [cur.id]);
     await audit(tx, incidentScope(cur.id), actor, 'assignment.diverted', 'vehicle', vehicleId, { toIncident: inc.code, reason: divertReason });
   }
+  const gaps = (await equipmentGaps(tx, [vehicleId]))[vehicleId] ?? [];
+  if (gaps.length && !opts.equipmentOverride?.trim()) {
+    throw new HttpError(409, `Xe ${vehicleId} thiếu thiết bị bắt buộc: ${gapText(gaps)}. Chỉ trưởng ca được cho xe đi, kèm lý do`,
+      { code: 'EQUIPMENT', vehicleId, gaps });
+  }
   const distanceKm = await vehicleDistanceKm(tx, vehicleId, inc);
   if (distanceKm != null && distanceKm > AUTO_DISPATCH_KM && !opts.confirmFar) {
     throw new HttpError(409, `Xe ${vehicleId} cách hiện trường ${distanceKm} km (> ${AUTO_DISPATCH_KM} km): cần điều phối viên xác nhận`,
@@ -285,6 +295,7 @@ export async function assignVehicle(tx: Tx, actor: Actor, incidentId: string, ve
     [incidentId, vehicleId, actor.id]);
   await audit(tx, incidentScope(incidentId), actor, opts.auto ? 'assignment.auto' : 'assignment.created', 'vehicle', vehicleId, {
     vehicleType: v.type, divertReason: divertReason ?? null, distanceKm,
+    equipmentOverride: gaps.length ? { reason: opts.equipmentOverride, gaps: gapText(gaps) } : undefined,
     farConfirmed: distanceKm != null && distanceKm > AUTO_DISPATCH_KM ? true : undefined,
   });
   await recordTime(tx, incidentId, 'T4', new Date(), 'CAD → máy tính bảng', actor);

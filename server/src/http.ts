@@ -3,7 +3,8 @@ import type pg from 'pg';
 import type { Actor } from './audit.js';
 import type { Hub } from './events.js';
 
-export type Role = 'calltaker' | 'dispatcher' | 'supervisor' | 'crew' | 'qa' | 'admin';
+export type Role = 'calltaker' | 'dispatcher' | 'supervisor' | 'crew' | 'qa' | 'admin'
+  | 'pharmacist' | 'technician' | 'ipc' | 'hr' | 'accountant' | 'director';
 
 export interface TokenUser {
   id: string;

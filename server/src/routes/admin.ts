@@ -2,6 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { audit } from '../audit.js';
 import { many, one, withTx } from '../db.js';
+import { hashPassword } from '../crypto.js';
 import { HttpError } from '../domain.js';
 import { actorOf, guard, type Ctx } from '../http.js';
 
@@ -84,7 +85,7 @@ export function registerAdmin(app: FastifyInstance, { pool, hub }: Ctx) {
   });
 
   app.get('/api/users', admin, async () =>
-    many(pool, `SELECT u.id, u.username, u.full_name, u.title, u.role, u.active, u.station_id, s.name AS station_name
+    many(pool, `SELECT u.id, u.username, u.full_name, u.title, u.role, u.active, u.license_no, u.station_id, s.name AS station_name
                   FROM users u LEFT JOIN stations s ON s.id = u.station_id ORDER BY u.role, u.username`));
 
   /** Phân điểm làm việc cho nhân viên (để trống = làm được mọi điểm) */
@@ -99,6 +100,57 @@ export function registerAdmin(app: FastifyInstance, { pool, hub }: Ctx) {
       const u = await one(tx, 'UPDATE users SET station_id = $2 WHERE id = $1 RETURNING username', [id, b.stationId]);
       if (!u) throw new HttpError(404, 'Không tìm thấy tài khoản');
       await audit(tx, 'system', actorOf(req), 'user.station_changed', 'user', id, b);
+    });
+    return { ok: true };
+  });
+
+  /* ---------- Tài khoản: admin tạo, đổi vai trò, khóa, đặt lại mật khẩu ---------- */
+  const ROLE = z.enum(['calltaker', 'dispatcher', 'supervisor', 'crew', 'qa', 'admin', 'pharmacist', 'technician', 'ipc', 'hr', 'accountant', 'director']);
+  const password = z.string().min(10, 'Mật khẩu dài ít nhất 10 ký tự').max(200);
+
+  app.post('/api/users', admin, async (req) => {
+    const b = z.object({
+      username: z.string().trim().toLowerCase().regex(/^[a-z0-9._-]{3,40}$/, 'Tên đăng nhập 3–40 ký tự: chữ thường, số, . _ -'),
+      fullName: z.string().trim().min(2).max(120), role: ROLE, title: z.string().trim().max(80).nullish(),
+      licenseNo: z.string().trim().max(60).nullish(), stationId: z.string().nullish(), password,
+    }).parse(req.body);
+    return withTx(pool, async (tx) => {
+      if (await one(tx, 'SELECT 1 FROM users WHERE username = $1', [b.username])) throw new HttpError(409, `Tên đăng nhập ${b.username} đã có`);
+      const u = await one(tx, `INSERT INTO users(username, full_name, role, title, license_no, station_id, password_hash)
+                               VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING id, username, full_name, role, title, station_id, active`,
+      [b.username, b.fullName, b.role, b.title ?? null, b.licenseNo ?? null, b.stationId ?? null, hashPassword(b.password)]);
+      await audit(tx, 'system', actorOf(req), 'user.created', 'user', u.id, { username: b.username, role: b.role });
+      return u;
+    });
+  });
+
+  app.patch('/api/users/:id', admin, async (req) => {
+    const id = z.object({ id: z.string().uuid() }).parse(req.params).id;
+    const b = z.object({
+      fullName: z.string().trim().min(2).max(120).optional(), role: ROLE.optional(), title: z.string().trim().max(80).nullish(),
+      licenseNo: z.string().trim().max(60).nullish(), active: z.boolean().optional(),
+    }).parse(req.body);
+    if (id === req.user.id && (b.active === false || (b.role && b.role !== 'admin'))) throw new HttpError(409, 'Không tự khóa hoặc tự bỏ quyền quản trị của chính mình');
+    return withTx(pool, async (tx) => {
+      const u = await one(tx, `UPDATE users SET full_name = coalesce($2, full_name), role = coalesce($3, role),
+                                      title = CASE WHEN $6 THEN $4 ELSE title END, license_no = CASE WHEN $7 THEN $5 ELSE license_no END,
+                                      active = coalesce($8, active)
+                                WHERE id = $1 RETURNING id, username, full_name, role, title, station_id, active`,
+      [id, b.fullName ?? null, b.role ?? null, b.title ?? null, b.licenseNo ?? null, 'title' in b, 'licenseNo' in b, b.active ?? null]);
+      if (!u) throw new HttpError(404, 'Không tìm thấy tài khoản');
+      if (b.active === false) await tx.query('UPDATE crew_shifts SET ended_at = now() WHERE user_id = $1 AND ended_at IS NULL', [id]);
+      await audit(tx, 'system', actorOf(req), 'user.updated', 'user', id, b);
+      return u;
+    });
+  });
+
+  app.post('/api/users/:id/password', admin, async (req) => {
+    const id = z.object({ id: z.string().uuid() }).parse(req.params).id;
+    const b = z.object({ password }).parse(req.body);
+    await withTx(pool, async (tx) => {
+      const u = await one(tx, 'UPDATE users SET password_hash = $2 WHERE id = $1 RETURNING id', [id, hashPassword(b.password)]);
+      if (!u) throw new HttpError(404, 'Không tìm thấy tài khoản');
+      await audit(tx, 'system', actorOf(req), 'user.password_reset', 'user', id);
     });
     return { ok: true };
   });

@@ -201,8 +201,10 @@ export function registerEoc(app: FastifyInstance, { pool, hub }: Ctx) {
     const id = idParam(req);
     const b = z.object({
       vehicleId: z.string().min(1), divertReason: z.string().max(500).nullish(), confirmFar: z.boolean().optional(),
+      equipmentOverride: z.string().trim().max(500).nullish(),
     }).parse(req.body);
-    await withTx(pool, (tx) => assignVehicle(tx, actorOf(req), id, b.vehicleId, { divertReason: b.divertReason, confirmFar: b.confirmFar }));
+    if (b.equipmentOverride && !['supervisor', 'admin'].includes(req.user.role)) throw new HttpError(403, 'Chỉ trưởng ca được cho xe thiếu thiết bị đi');
+    await withTx(pool, (tx) => assignVehicle(tx, actorOf(req), id, b.vehicleId, { divertReason: b.divertReason, confirmFar: b.confirmFar, equipmentOverride: b.equipmentOverride }));
     await Promise.all([pushIncident(id), hub.publish({ type: 'vehicle', id: b.vehicleId })]);
     return incidentDetail(pool, id);
   });
@@ -217,9 +219,9 @@ export function registerEoc(app: FastifyInstance, { pool, hub }: Ctx) {
     if (inc.lat == null || inc.lng == null) throw new HttpError(409, 'Chưa có vị trí hiện trường trên bản đồ: không tính được xe gần nhất');
     const requested = (inc.final_vehicle_type ?? inc.suggested_vehicle_type) as VehicleType | null;
     const priority = (inc.final_priority ?? inc.suggested_priority) as Priority | null;
-    const { suggestions } = suggestVehicles(await loadVehicles(pool), { lat: inc.lat, lng: inc.lng }, requested, priority);
+    const { suggestions, advice } = suggestVehicles(await loadVehicles(pool), { lat: inc.lat, lng: inc.lng }, requested, priority);
     const best = suggestions[0];
-    if (!best) throw new HttpError(409, 'Không còn xe rảnh phù hợp: đưa vào hàng chờ, rút xe ca thấp hơn hoặc chuyển 115', { code: 'NO_VEHICLE' });
+    if (!best) throw new HttpError(409, 'Không còn xe rảnh phù hợp: đưa vào hàng chờ, rút xe ca thấp hơn hoặc chuyển 115', { code: 'NO_VEHICLE', advice });
     if (best.distanceKm != null && best.distanceKm > AUTO_DISPATCH_KM) {
       return { assigned: false, candidate: best, distanceKm: best.distanceKm, limitKm: AUTO_DISPATCH_KM,
         message: `Xe rảnh gần nhất là ${best.vehicleId}, cách ${best.distanceKm} km (> ${AUTO_DISPATCH_KM} km). Xác nhận để giao.` };

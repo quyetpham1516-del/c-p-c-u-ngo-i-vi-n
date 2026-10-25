@@ -44,7 +44,7 @@ function Family({ d }: { d: any }) {
       <div className="muted">Ca {d.code}</div>
       <div style={{ fontSize: 26, fontWeight: 700 }}>{STAGE[d.stage]}</div>
       {d.vehicle && <div>Xe <b>{d.vehicle.plate}</b> ({d.vehicle.type})</div>}
-      {d.eta && <div style={{ fontSize: 20 }}>Dự kiến tới sau khoảng <b>{d.eta.minutes} phút</b> <span className="small muted">(cách {d.eta.km} km, ước tính theo khoảng cách)</span></div>}
+      {d.eta && <div style={{ fontSize: 20 }}>Dự kiến tới sau khoảng <b>{d.eta.minutes} phút</b> <span className="small muted">(cách {d.eta.km} km{d.eta.road ? ' theo đường bộ' : ', ước tính theo khoảng cách'})</span></div>}
       {d.arrivedAt && d.stage === 'da_toi' && <div>Tới lúc {hm(d.arrivedAt)}</div>}
       {d.hospital && <div>Bệnh viện: <b>{d.hospital}</b></div>}
       <div className="small muted">Giữ điện thoại bên mình; kíp hoặc tổng đài có thể gọi lại để hỏi đường. Mở cửa, bật đèn, dọn lối đi giúp kíp vào nhanh.</div>

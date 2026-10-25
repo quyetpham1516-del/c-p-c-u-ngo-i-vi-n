@@ -13,7 +13,7 @@ import { takeCall } from '../telephony.js';
 import { pbxKeyOk } from './telephony.js';
 import { evaluate } from '../triage/engine.js';
 import { protocolDescriptor, type Priority, type VehicleType } from '../triage/protocol.js';
-import { suggestVehicles } from '../fleet.js';
+import { suggestWithRoads } from '../routing.js';
 import { loadVehicles } from './fleet.js';
 import { actorOf, DISPATCH_ROLES, EOC_ROLES, guard, type Ctx } from '../http.js';
 
@@ -217,7 +217,7 @@ export function registerEoc(app: FastifyInstance, { pool, hub }: Ctx) {
     if (inc.lat == null || inc.lng == null) throw new HttpError(409, 'Chưa có vị trí hiện trường trên bản đồ: không tính được xe gần nhất');
     const requested = (inc.final_vehicle_type ?? inc.suggested_vehicle_type) as VehicleType | null;
     const priority = (inc.final_priority ?? inc.suggested_priority) as Priority | null;
-    const { suggestions, advice } = suggestVehicles(await loadVehicles(pool), { lat: inc.lat, lng: inc.lng }, requested, priority);
+    const { suggestions, advice } = await suggestWithRoads(await loadVehicles(pool), { lat: inc.lat, lng: inc.lng }, requested, priority);
     const best = suggestions[0];
     if (!best) throw new HttpError(409, 'Không còn xe rảnh phù hợp: đưa vào hàng chờ, rút xe ca thấp hơn hoặc chuyển 115', { code: 'NO_VEHICLE', advice });
     if (best.distanceKm != null && best.distanceKm > AUTO_DISPATCH_KM) {

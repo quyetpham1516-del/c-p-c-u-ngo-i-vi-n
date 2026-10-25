@@ -170,6 +170,23 @@ WebSocket, phần sống còn tách khỏi hành chính); đội phát triển c
 Ghi âm nằm trên đĩa máy tổng đài; backend cần đọc được thư mục đó (cùng máy hoặc thư mục chia sẻ). Lưu giữ và sao lưu ghi âm theo quy định
 lưu hồ sơ của đơn vị.
 
+### Trung kế MobiFone
+
+Khi MobiFone cấp trung kế SIP, thêm vào `.env` rồi chạy lại `npm run asterisk:config` và khởi động lại Asterisk:
+`MEDONE_TRUNK_HOST` (IP hoặc tên máy SBC của MobiFone), `MEDONE_TRUNK_PORT` (mặc định 5060), `MEDONE_TRUNK_MODE` (`ip`: kết nối theo IP tĩnh, không đăng ký;
+`dang-ky`: tài khoản SIP qua Internet, cần `MEDONE_TRUNK_USER` và `MEDONE_TRUNK_PASSWORD`), `MEDONE_TRUNK_MATCH` (các IP khác của nhà mạng, cách nhau dấu phẩy),
+`MEDONE_TRUNK_CALLER_ID` (số hiển thị khi gọi ra), `MEDONE_TRUNK_DIAL_PREFIX` và `MEDONE_TRUNK_STRIP_ZERO=1` nếu nhà mạng yêu cầu gửi số dạng 84xxxxxxxxx.
+Cần hỏi MobiFone: kiểu kết nối (IP hay tài khoản), IP/tên SBC, IP công khai tĩnh của Medone để họ mở, codec (thường G.711 A-law), định dạng số gọi ra, số kênh đồng thời,
+đầu số 1800 trỏ về trung kế nào, và số DID của đường nóng 115 (đặt bằng `--duong-115=`). Mở cổng UDP 5060 và 10000–10200 trên tường lửa chỉ cho IP của MobiFone.
+
+## Bản đồ và chỉ đường (miễn phí)
+
+Bản đồ dùng OpenStreetMap. Thời gian xe tới hiện trường mặc định ước tính theo khoảng cách; muốn tính theo đường bộ thì chạy máy chủ OSRM
+(miễn phí, dữ liệu Việt Nam từ download.geofabrik.de/asia/vietnam.html) và đặt `MEDONE_OSRM_URL=http://127.0.0.1:5001`.
+OSRM không có giao thông thời gian thực: `MEDONE_OSRM_FACTOR=1.3` nhân thêm thời gian cho giờ cao điểm nội đô.
+Máy chủ chỉ đường tắt hoặc chậm quá 2,5 giây thì gợi ý xe quay về ước tính theo khoảng cách. Ngưỡng tự giao xe (`MEDONE_AUTO_DISPATCH_KM`) vẫn tính theo đường chim bay.
+Không dùng máy chủ thử công khai của OSRM cho vận hành thật: vị trí hiện trường sẽ bị gửi ra ngoài.
+
 ## Máy chép lời cuộc gọi
 
 Chạy một máy chủ chép lời có giao tiếp `/v1/audio/transcriptions` trên máy trong mạng nội bộ, ví dụ whisper.cpp:
@@ -202,5 +219,5 @@ Giá trị pháp lý: trong nội bộ và với đơn vị đã thỏa thuận.
 
 Tất cả nằm trong `.env` (tạo bằng `npm run setup`): `DATABASE_URL`, `MEDONE_JWT_SECRET`, `MEDONE_DATA_KEY` (mã hóa số định danh),
 `MEDONE_LOOKUP_KEY` (tìm kiếm), `MEDONE_TELEPHONY_KEY` (webhook tổng đài), `MEDONE_WEB_ORIGIN` (địa chỉ frontend được phép gọi API),
-`NEXT_PUBLIC_API_URL` (địa chỉ backend cho frontend), `NEXT_PUBLIC_VERIFY_URL` (địa chỉ công khai của trang tra cứu mã phiếu in trên QR; để trống là địa chỉ máy chủ đang mở), `MEDONE_AUTO_DISPATCH_KM` (bán kính tự báo xe, mặc định 5), `MEDONE_SMS_URL` và `MEDONE_SMS_TOKEN` (cổng SMS của nhà cung cấp: máy chủ POST JSON `{to, message, purpose, ref}` kèm `Authorization: Bearer`; để trống thì tin nằm trong hàng đợi để gửi tay), `MEDONE_ORG_NAME` (tên đơn vị ghi trên tệp FHIR gửi bệnh viện), `MEDONE_RECORDINGS_DIR` (thư mục tổng đài ghi âm), `MEDONE_ARI_URL`, `MEDONE_ARI_USER`, `MEDONE_ARI_PASSWORD` (ARI của Asterisk để gọi ra; lệnh `npm run asterisk:config` tự thêm cả bốn biến), `MEDONE_OIDC_ISSUER`, `MEDONE_OIDC_CLIENT_ID`, `MEDONE_OIDC_CLIENT_SECRET`, `MEDONE_OIDC_LABEL`, `MEDONE_OIDC_REDIRECT_URI`, `MEDONE_OIDC_USERNAME_CLAIM`, `MEDONE_OIDC_PROMPT` (đăng nhập một lần, xem dưới), `MEDONE_ASR_URL` (máy chép lời, ví dụ `http://127.0.0.1:8178/v1`), `MEDONE_ASR_KEY`, `MEDONE_ASR_MODEL` (mặc định `whisper-1`), `MEDONE_ASR_LANGUAGE` (mặc định `vi`), `MEDONE_SIGN_PROVIDER` (nhà cung cấp chữ ký số, mặc định `noi_bo`). Khóa phải dài ít nhất 32 ký tự; thiếu là backend không chạy.
+`NEXT_PUBLIC_API_URL` (địa chỉ backend cho frontend), `NEXT_PUBLIC_VERIFY_URL` (địa chỉ công khai của trang tra cứu mã phiếu in trên QR; để trống là địa chỉ máy chủ đang mở), `MEDONE_AUTO_DISPATCH_KM` (bán kính tự báo xe, mặc định 5), `MEDONE_SMS_URL` và `MEDONE_SMS_TOKEN` (cổng SMS của nhà cung cấp: máy chủ POST JSON `{to, message, purpose, ref}` kèm `Authorization: Bearer`; để trống thì tin nằm trong hàng đợi để gửi tay), `MEDONE_ORG_NAME` (tên đơn vị ghi trên tệp FHIR gửi bệnh viện), `MEDONE_RECORDINGS_DIR` (thư mục tổng đài ghi âm), `MEDONE_ARI_URL`, `MEDONE_ARI_USER`, `MEDONE_ARI_PASSWORD` (ARI của Asterisk để gọi ra; lệnh `npm run asterisk:config` tự thêm cả bốn biến), `MEDONE_OIDC_ISSUER`, `MEDONE_OIDC_CLIENT_ID`, `MEDONE_OIDC_CLIENT_SECRET`, `MEDONE_OIDC_LABEL`, `MEDONE_OIDC_REDIRECT_URI`, `MEDONE_OIDC_USERNAME_CLAIM`, `MEDONE_OIDC_PROMPT` (đăng nhập một lần, xem dưới), `MEDONE_ASR_URL` (máy chép lời, ví dụ `http://127.0.0.1:8178/v1`), `MEDONE_ASR_KEY`, `MEDONE_ASR_MODEL` (mặc định `whisper-1`), `MEDONE_ASR_LANGUAGE` (mặc định `vi`), `MEDONE_SIGN_PROVIDER` (nhà cung cấp chữ ký số, mặc định `noi_bo`), `MEDONE_OSRM_URL`, `MEDONE_OSRM_PROFILE`, `MEDONE_OSRM_FACTOR` (chỉ đường, xem trên), `MEDONE_TRUNK_*` (trung kế nhà mạng, xem trên). Khóa phải dài ít nhất 32 ký tự; thiếu là backend không chạy.
 **Mất `MEDONE_DATA_KEY` là mất khả năng đọc số CCCD đã lưu**: cất khóa trong kho khóa (HSM/KMS) và có bản sao.

@@ -10,6 +10,7 @@ import { fileURLToPath } from 'node:url';
  * generated (không đưa lên Git) và .env; không in mật khẩu ra màn hình.
  *
  *   npm run asterisk:config -- --may-le=101-110 [--api=http://127.0.0.1:8080] [--ghi-am=/duong/dan] [--duong-115=<số DID>] [--may-thu=199]
+ *   Trung kế nhà mạng (MobiFone): đặt MEDONE_TRUNK_* trong .env rồi chạy lại lệnh trên (xem trunkFromEnv).
  *   asterisk -C <thư mục generated>/asterisk.conf -f    (chạy thử ở chế độ nền trước)
  */
 
@@ -52,6 +53,96 @@ export interface PbxOptions {
   did115: string | null; ariUser: string; ariPassword: string; secrets: Record<string, string>;
   /** Phiên bản Asterisk: từ bản 21 Queue() bỏ tham số macro, vị trí tham số gosub đổi */
   major: number;
+  trunk?: Trunk | null;
+}
+
+/**
+ * Trung kế SIP của nhà mạng. MobiFone (và đa số nhà mạng Việt Nam) cấp trung kế doanh nghiệp theo một trong hai kiểu:
+ *  - ip: kết nối theo IP tĩnh (kênh riêng/VPN), không đăng ký, nhà mạng chỉ nhận cuộc gọi từ IP công khai của tổng đài Medone;
+ *  - dang-ky: tài khoản SIP qua Internet (tên đăng nhập, mật khẩu, tổng đài đăng ký định kỳ).
+ * Codec G.711 A-law (alaw) là mặc định của mạng điện thoại Việt Nam.
+ */
+export interface Trunk {
+  mode: 'ip' | 'dang-ky';
+  host: string; port: number;
+  /** Các IP máy chủ SBC của nhà mạng gửi cuộc gọi tới (nhà mạng có thể dùng nhiều IP) */
+  match: string[];
+  user: string | null; password: string | null;
+  /** Số hiển thị khi gọi ra (đầu số 1800 hoặc số cố định của trung tâm) */
+  callerId: string | null;
+  /** Thêm vào trước số gọi ra nếu nhà mạng yêu cầu (ví dụ 84, bỏ số 0 đầu thì đặt MEDONE_TRUNK_STRIP_ZERO=1) */
+  dialPrefix: string; stripZero: boolean;
+}
+
+export function trunkFromEnv(env: NodeJS.ProcessEnv = process.env): Trunk | null {
+  const host = env.MEDONE_TRUNK_HOST?.trim();
+  if (!host) return null;
+  const mode = env.MEDONE_TRUNK_MODE?.trim() === 'dang-ky' ? 'dang-ky' : 'ip';
+  const user = env.MEDONE_TRUNK_USER?.trim() || null; const password = env.MEDONE_TRUNK_PASSWORD || null;
+  if (mode === 'dang-ky' && (!user || !password)) throw new Error('Trung kế kiểu đăng ký cần MEDONE_TRUNK_USER và MEDONE_TRUNK_PASSWORD');
+  if (!/^[\w.-]+$/.test(host)) throw new Error(`MEDONE_TRUNK_HOST không hợp lệ: ${host}`);
+  const match = [host, ...(env.MEDONE_TRUNK_MATCH ?? '').split(',').map((x) => x.trim()).filter(Boolean)];
+  for (const m of match) if (!/^[\w.:/-]+$/.test(m)) throw new Error(`MEDONE_TRUNK_MATCH không hợp lệ: ${m}`);
+  const prefix = env.MEDONE_TRUNK_DIAL_PREFIX?.trim() ?? '';
+  if (!/^[0-9+]*$/.test(prefix)) throw new Error('MEDONE_TRUNK_DIAL_PREFIX chỉ gồm chữ số');
+  const callerId = env.MEDONE_TRUNK_CALLER_ID?.trim() || null;
+  if (callerId && !/^\+?\d{3,15}$/.test(callerId)) throw new Error('MEDONE_TRUNK_CALLER_ID chỉ gồm chữ số');
+  return {
+    mode, host, port: Number(env.MEDONE_TRUNK_PORT) || 5060, match, user, password, callerId,
+    dialPrefix: prefix, stripZero: env.MEDONE_TRUNK_STRIP_ZERO === '1',
+  };
+}
+
+const TRUNK_TEMPLATE = `; Trung kế nhà mạng (đường 1800 và đường nóng từ 115): đặt MEDONE_TRUNK_HOST, MEDONE_TRUNK_MODE (ip | dang-ky),
+; MEDONE_TRUNK_USER, MEDONE_TRUNK_PASSWORD, MEDONE_TRUNK_MATCH, MEDONE_TRUNK_CALLER_ID trong .env rồi chạy lại npm run asterisk:config.
+`;
+
+function renderTrunk(t: Trunk): string {
+  const reg = t.mode === 'dang-ky';
+  return `; Trung kế nhà mạng: ${t.host}:${t.port}, kiểu ${reg ? 'đăng ký tài khoản' : 'kết nối theo IP'}
+${reg ? `[nha-mang]
+type=registration
+transport=transport-udp
+server_uri=sip:${t.host}:${t.port}
+client_uri=sip:${t.user}@${t.host}
+contact_user=${t.user}
+outbound_auth=nha-mang-auth
+retry_interval=60
+forbidden_retry_interval=600
+expiration=300
+
+[nha-mang-auth]
+type=auth
+auth_type=userpass
+username=${t.user}
+password=${t.password}
+
+` : ''}[nha-mang]
+type=aor
+contact=sip:${t.host}:${t.port}
+qualify_frequency=60
+
+[nha-mang]
+type=endpoint
+transport=transport-udp
+context=medone-vao
+disallow=all
+allow=alaw,ulaw
+direct_media=no
+rtp_symmetric=yes
+force_rport=yes
+dtmf_mode=rfc4733
+aors=nha-mang
+${reg ? `outbound_auth=nha-mang-auth
+from_user=${t.user}
+from_domain=${t.host}
+` : ''}${t.callerId ? `callerid=${t.callerId} <${t.callerId}>
+` : ''}
+[nha-mang]
+type=identify
+endpoint=nha-mang
+${t.match.map((m) => `match=${m}`).join('\n')}
+`;
 }
 
 export function renderConfig(o: PbxOptions): Record<string, string> {
@@ -120,32 +211,7 @@ type=transport
 protocol=udp
 bind=0.0.0.0:5060
 ${o.exts.map((e) => endpoint(e, 'medone-noi-bo')).join('')}${o.testExt ? endpoint(o.testExt, 'medone-noi-bo') : ''}
-; Trung kế nhà mạng/nhà cung cấp (đường 1800 và đường nóng từ 115): bỏ dấu ; và điền thông tin nhà cung cấp cấp
-; [nha-mang]
-; type=registration
-; server_uri=sip:sip.nha-cung-cap.vn
-; client_uri=sip:TAI_KHOAN@sip.nha-cung-cap.vn
-; outbound_auth=nha-mang-auth
-; [nha-mang-auth]
-; type=auth
-; auth_type=userpass
-; username=TAI_KHOAN
-; password=MAT_KHAU_NHA_CUNG_CAP
-; [nha-mang]
-; type=aor
-; contact=sip:sip.nha-cung-cap.vn
-; [nha-mang]
-; type=endpoint
-; context=medone-vao
-; disallow=all
-; allow=alaw,ulaw
-; outbound_auth=nha-mang-auth
-; aors=nha-mang
-; [nha-mang]
-; type=identify
-; endpoint=nha-mang
-; match=sip.nha-cung-cap.vn
-`,
+${o.trunk ? renderTrunk(o.trunk) : TRUNK_TEMPLATE}`,
     'queues.conf': `[general]
 persistentmembers=no
 
@@ -212,7 +278,8 @@ exten => _X.,1,Set(REC=\${UNIQUEID}.wav)
 ${key}
  same => n,MixMonitor(\${REC_DIR}/\${REC},b)
  same => n,GotoIf($[\${LEN(\${EXTEN})} <= 6]?noi-bo)
- same => n,Dial(PJSIP/\${EXTEN}@nha-mang,60)
+ same => n,Set(SO=${o.trunk?.stripZero ? '\${EXTEN:1}' : '\${EXTEN}'})
+${o.trunk?.callerId ? ` same => n,Set(CALLERID(num)=${o.trunk.callerId})\n` : ''} same => n,Dial(PJSIP/${o.trunk?.dialPrefix ?? ''}\${SO}@nha-mang,60)
  same => n,Hangup()
  same => n(noi-bo),Dial(PJSIP/\${EXTEN},60)
  same => n,Hangup()
@@ -287,13 +354,16 @@ function main() {
 
   const files = renderConfig({
     dir, exts, testExt, api: arg('api', `http://127.0.0.1:${process.env.PORT || 8080}`), telephonyKey, recordings,
-    did115: arg('duong-115', '') || null, ariUser, ariPassword, secrets, major: asteriskMajor(),
+    did115: arg('duong-115', '') || null, ariUser, ariPassword, secrets, major: asteriskMajor(), trunk: trunkFromEnv(),
   });
   for (const [name, body] of Object.entries(files)) writeFileSync(`${dir}/${name}`, body, { mode: 0o600 });
   console.log(`Đã sinh cấu hình Asterisk ở ${dir}`);
   console.log(`Máy lẻ điều phối: ${exts.join(', ')}${testExt ? `; máy thử ${testExt} (gọi 1800 để giả lập cuộc gọi đến)` : ''}`);
   console.log(`Mật khẩu máy lẻ: tệp ${secretFile} (không in ra đây)`);
   console.log(`Ghi âm lưu ở: ${recordings}`);
+  const t = trunkFromEnv();
+  console.log(t ? `Trung kế nhà mạng: ${t.host}:${t.port}, kiểu ${t.mode === 'dang-ky' ? 'đăng ký tài khoản' : 'kết nối theo IP'} (mật khẩu không in ra đây)`
+    : 'Chưa có trung kế nhà mạng (MEDONE_TRUNK_HOST): chỉ gọi được giữa các máy lẻ và máy thử');
   if (add.length) console.log(`Đã thêm vào .env: ${add.map((x) => x.split('=')[0]).join(', ')}. Khởi động lại máy chủ Medone để nhận.`);
   console.log(`Chạy tổng đài: asterisk -C ${dir}/asterisk.conf`);
 }

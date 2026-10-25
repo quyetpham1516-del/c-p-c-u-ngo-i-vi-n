@@ -1,11 +1,12 @@
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import { z } from 'zod';
+import { suggestWithRoads } from '../routing.js';
 import { assertCanStartShift } from '../hr.js';
 import { audit } from '../audit.js';
 import { many, one, withTx } from '../db.js';
 import { ackAssignment, AUTO_DISPATCH_KM, crewStatus, getIncident, HttpError, incidentScope, incidentSummary, recordTime, setVehicleStatus } from '../domain.js';
 import {
-  estimateFree, haversineKm, STATUS_LABEL, statusMedians, suggestVehicles, travelMinutes, VEHICLE_LABEL, type VehicleRow,
+  estimateFree, haversineKm, STATUS_LABEL, statusMedians, travelMinutes, VEHICLE_LABEL, type VehicleRow,
 } from '../fleet.js';
 import { equipmentGaps, gapText } from '../equipment.js';
 import { fleetCompliance, recordGps } from '../ops.js';
@@ -87,7 +88,7 @@ export function registerFleet(app: FastifyInstance, { pool, hub }: Ctx) {
     const scene = inc.lat != null && inc.lng != null ? { lat: inc.lat, lng: inc.lng } : null;
     const requested = (inc.final_vehicle_type ?? inc.suggested_vehicle_type) as VehicleType | null;
     const priority = (inc.final_priority ?? inc.suggested_priority) as Priority | null;
-    const r = suggestVehicles(await loadVehicles(pool), scene, requested, priority);
+    const r = await suggestWithRoads(await loadVehicles(pool), scene, requested, priority);
     return { ...r, limitKm: AUTO_DISPATCH_KM, suggestions: r.suggestions.map((s) => ({ ...s, far: s.distanceKm != null && s.distanceKm > AUTO_DISPATCH_KM })) };
   });
 

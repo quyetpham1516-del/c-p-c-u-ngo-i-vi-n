@@ -542,7 +542,7 @@ function DispatchCard({ inc, suggest, run, id, active }: { inc: any; suggest: an
           {suggest?.suggestions?.slice(0, 6).map((s: any) => (
             <tr key={s.vehicleId}>
               <td><b>{s.vehicleId}</b> <span className="small muted">{s.type}</span>{s.note && <div className="small muted">{s.note}</div>}</td>
-              <td className="mono small">{s.etaMin != null ? `~${s.etaMin} ph · ${s.distanceKm} km` : '—'} {s.far && <span className="badge far">xa hơn {limit} km</span>}</td>
+              <td className="mono small">{s.etaMin != null ? `~${s.etaMin} ph · ${s.roadKm != null ? `${s.roadKm} km đường` : `${s.distanceKm} km`}` : '—'} {s.far && <span className="badge far">xa hơn {limit} km</span>}</td>
               <td className="right"><button className={s.far ? '' : 'primary'} onClick={() => assign(s)}>Giao</button></td>
             </tr>
           ))}

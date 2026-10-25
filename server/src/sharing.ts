@@ -1,6 +1,7 @@
 import { createHash, randomBytes } from 'node:crypto';
 import { many, one, type Queryable } from './db.js';
 import { haversineKm, travelMinutes } from './fleet.js';
+import { roadRoute } from './routing.js';
 import { initials } from './safety.js';
 
 /**
@@ -35,9 +36,12 @@ async function activeVehicle(q: Queryable, incidentId: string) {
                   WHERE a.incident_id = $1 AND a.ended_at IS NULL ORDER BY a.assigned_at DESC LIMIT 1`, [incidentId]);
 }
 
-const eta = (from: { lat: number | null; lng: number | null } | null, to: { lat: number | null; lng: number | null } | null) => {
+const eta = async (from: { lat: number | null; lng: number | null } | null, to: { lat: number | null; lng: number | null } | null) => {
   if (!from || !to || from.lat == null || from.lng == null || to.lat == null || to.lng == null) return null;
-  const km = haversineKm({ lat: from.lat, lng: from.lng }, { lat: to.lat, lng: to.lng });
+  const a = { lat: from.lat, lng: from.lng }; const b = { lat: to.lat, lng: to.lng };
+  const r = await roadRoute(a, b);
+  if (r) return { km: r.km, minutes: Math.round(r.min), road: true };
+  const km = haversineKm(a, b);
   return { km: Math.round(km * 10) / 10, minutes: Math.round(travelMinutes(km)) };
 };
 
@@ -56,7 +60,7 @@ export async function shareView(q: Queryable, link: any) {
     return {
       ...base, ended: false as const, stage, vehicle,
       arrivedAt: times.T8 ?? null,
-      eta: stage === 'dang_toi' ? eta(v, inc) : null,
+      eta: stage === 'dang_toi' ? await eta(v, inc) : null,
       hospital: stage === 'chuyen_vien' ? inc.destination : null,
     };
   }
@@ -83,7 +87,7 @@ export async function shareView(q: Queryable, link: any) {
     vehicle,
     leftSceneAt: times.T10 ?? null,
     arrivedAt: times.T12 ?? null,
-    eta: !times.T12 && inc.status === 'transporting' ? eta(v, h) : null,
+    eta: !times.T12 && inc.status === 'transporting' ? await eta(v, h) : null,
     response: link.response ? { value: link.response, by: link.response_by, note: link.response_note, at: link.responded_at } : null,
   };
 }

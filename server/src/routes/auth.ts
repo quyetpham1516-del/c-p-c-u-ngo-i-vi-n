@@ -5,6 +5,7 @@ import { verifyPassword } from '../crypto.js';
 import { one, withTx } from '../db.js';
 import { HttpError } from '../domain.js';
 import { guardSetup, type Ctx, type TokenUser } from '../http.js';
+import { findSsoUser, finishLogin, ssoConfig, startLogin } from '../sso.js';
 import {
   checkTotp, getSecurity, MFA_LOCK_MINUTES, MFA_MAX_FAILED, mfaRequired, newRecoveryCodes, newTotpSecret, otpauthUri, recoveryHash, totpKey,
 } from '../security.js';
@@ -38,6 +39,52 @@ export function registerAuth(app: FastifyInstance, { pool }: Ctx) {
     await withTx(pool, async (tx) => {
       await tx.query('UPDATE users SET last_login_at = now() WHERE id = $1', [u.id]);
       await audit(tx, 'system', { id: u.id, name: u.full_name }, 'auth.login', 'user', u.id, { ip: req.ip, mfa: false });
+    });
+    return r;
+  });
+
+  /* ---------- Đăng nhập một lần (OpenID Connect) ---------- */
+
+  app.get('/api/auth/sso', async () => {
+    const s = ssoConfig();
+    return s ? { enabled: true, label: s.label } : { enabled: false };
+  });
+
+  app.post('/api/auth/sso/start', async () => {
+    const s = ssoConfig();
+    if (!s) throw new HttpError(404, 'Chưa bật đăng nhập một lần');
+    return { url: await startLogin(pool, s) };
+  });
+
+  /** Máy chủ SSO chuyển về trang đăng nhập kèm code và state; trang gửi tiếp lên đây */
+  app.post('/api/auth/sso/callback', async (req, reply) => {
+    const s = ssoConfig();
+    if (!s) throw new HttpError(404, 'Chưa bật đăng nhập một lần');
+    const b = z.object({ code: z.string().min(1).max(4096), state: z.string().min(10).max(200) }).parse(req.body);
+    const claims = await finishLogin(pool, s, b.code, b.state);
+    const found = await withTx(pool, async (tx) => {
+      const f = await findSsoUser(tx, s, claims);
+      if (!f.user) {
+        await audit(tx, 'system', { id: null, name: f.username ?? String(claims.sub) }, 'auth.sso_rejected', 'user', null, { ip: req.ip, username: f.username });
+      } else if (f.linkedNow) {
+        await audit(tx, 'system', { id: f.user.id, name: f.user.full_name }, 'auth.sso_linked', 'user', f.user.id, { issuer: s.issuer });
+      }
+      return f;
+    });
+    if (!found.user) {
+      return reply.code(403).send({ error: found.username
+        ? `Tài khoản "${found.username}" chưa có trong Medone, đã bị khóa hoặc đã nối với người khác. Nhờ quản trị kiểm tra.`
+        : 'Máy chủ đăng nhập một lần không gửi tên đăng nhập; nhờ quản trị kiểm tra cấu hình' });
+    }
+    const u = found.user;
+    if (u.totp_enabled_at) {
+      // Người đã cài xác thực hai lớp của Medone vẫn nhập mã 6 số như đăng nhập bằng mật khẩu
+      return { mfaRequired: true, challenge: app.jwt.sign({ id: u.id, typ: 'mfa_challenge' } as TokenUser, { expiresIn: CHALLENGE_TTL }) };
+    }
+    const r = await issue(u);
+    await withTx(pool, async (tx) => {
+      await tx.query('UPDATE users SET last_login_at = now() WHERE id = $1', [u.id]);
+      await audit(tx, 'system', { id: u.id, name: u.full_name }, 'auth.login', 'user', u.id, { ip: req.ip, mfa: false, sso: true });
     });
     return r;
   });

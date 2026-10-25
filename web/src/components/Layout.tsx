@@ -9,6 +9,7 @@ import { SosBanner } from './Sos';
 const LINKS: { to: string; label: string; roles: Role[] }[] = [
   { to: '/eoc', label: 'Điều phối', roles: ['calltaker', 'dispatcher', 'supervisor', 'admin'] },
   { to: '/bang-xe', label: 'Bảng đội xe', roles: ['calltaker', 'dispatcher', 'supervisor', 'qa', 'admin'] },
+  { to: '/vung-phu', label: 'Vùng phủ', roles: ['dispatcher', 'supervisor', 'qa', 'admin', 'director'] },
   { to: '/kip', label: 'Ứng dụng kíp', roles: ['crew'] },
   { to: '/benh-an', label: 'Bệnh án', roles: ['crew', 'calltaker', 'dispatcher', 'supervisor', 'qa', 'admin'] },
   { to: '/kho', label: 'Kho thuốc', roles: ['dispatcher', 'supervisor', 'qa', 'admin', 'pharmacist', 'director'] },

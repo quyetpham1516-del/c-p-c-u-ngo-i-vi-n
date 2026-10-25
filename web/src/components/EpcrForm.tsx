@@ -5,6 +5,7 @@ import { useVehicleStock, type StockLot } from '../catalog';
 import { HospitalPicker } from './HospitalPicker';
 import { IcdInput } from './IcdInput';
 import { PatientPicker } from './PatientPicker';
+import { SignaturesSection } from './Signatures';
 
 /** Các thẻ đi theo đúng thứ tự các khối trên mẫu "Bệnh án cấp cứu ngoại viện" */
 const TABS = ['Thông tin, điều phối', 'ABCDE và can thiệp', 'Ngừng tuần hoàn', 'SAMPLE, khám, chẩn đoán', 'Theo dõi', 'Em bé (sanh rớt)', 'Giao nhận bệnh', 'Ký phiếu'] as const;
@@ -630,7 +631,7 @@ export function EpcrForm({ draft: initial, onChange }: { draft: Draft; onChange?
             </label>
             {e.disposition?.type === 'refused' && (
               <div className="grid2">
-                <Chk label="Người bệnh/người nhà đã ký cam kết" value={e.disposition?.refusalSigned} onChange={(v) => set('disposition.refusalSigned', v)} />
+                <Chk label="Đã ký cam kết trên giấy (khi không ký được trên máy)" value={e.disposition?.refusalSigned} onChange={(v) => set('disposition.refusalSigned', v)} />
                 <Txt label="Người chứng kiến" value={e.disposition?.refusalWitness} onChange={(v) => set('disposition.refusalWitness', v)} />
               </div>
             )}
@@ -654,6 +655,8 @@ export function EpcrForm({ draft: initial, onChange }: { draft: Draft; onChange?
                 </select>
               </label>
             </div>
+            <SignaturesSection value={e.signatures ?? []} locked={locked} onChange={(v) => set('signatures', v.length ? v : undefined)}
+              suggest={e.disposition?.type === 'refused' ? 'tu_choi_van_chuyen' : e.disposition?.type === 'transported' ? 'nhan_ban_giao' : undefined} />
             <div className="grid2">
               <div className="col">
                 <h3>Đơn vị giao bệnh</h3>

@@ -7,6 +7,7 @@ import { many, one, withTx, type Queryable } from '../db.js';
 import { HttpError, incidentScope, newBaNumber, newTransferNumber, patientScope, recordTime, TIME_LABEL } from '../domain.js';
 import { EpcrSchema, missingForSign } from '../epcr.js';
 import { actorOf, guard, REVIEW_ROLES, type Ctx, type Role } from '../http.js';
+import { contentHash, newVerifyCode, signatureHash } from '../safety.js';
 import { consumeForTransfer } from '../stock.js';
 import { privilegeGaps } from '../training.js';
 
@@ -264,7 +265,10 @@ export function registerRecords(app: FastifyInstance, { pool, hub }: Ctx) {
       const miss = missingForSign(epcr);
       if (miss.length) throw new HttpError(422, 'Còn thiếu thông tin bắt buộc', miss);
       await consumeForTransfer(tx, actor, id, epcr.medications);
-      await tx.query(`UPDATE transfers SET status = 'signed', signed_by = $2, signed_at = now(), updated_at = now() WHERE id = $1`, [id, actor.id]);
+      // Chữ ký điện tử: băm từng chữ ký để phát hiện sửa về sau; phiếu nhận mã xác thực in kèm QR cho bệnh viện tra cứu
+      const signed = { ...epcr, signatures: epcr.signatures?.map((s) => ({ ...s, hash: signatureHash(s) })) };
+      await tx.query(`UPDATE transfers SET status = 'signed', signed_by = $2, signed_at = now(), updated_at = now(), epcr = $3,
+                             verify_code = $4, content_hash = $5 WHERE id = $1`, [id, actor.id, signed, newVerifyCode(), contentHash(signed)]);
       await createChargeForTransfer(tx, actor, id);
       const scope = t.incident_id ? incidentScope(t.incident_id) : 'system';
       await audit(tx, scope, actor, 'transfer.signed', 'transfer', id, { number: t.transfer_number, version: t.version });
@@ -294,7 +298,9 @@ export function registerRecords(app: FastifyInstance, { pool, hub }: Ctx) {
       if (t.status !== 'signed') throw new HttpError(409, 'Phiếu chưa ký thì sửa trực tiếp, không cần bổ sung');
       await tx.query('INSERT INTO transfer_amendments(transfer_id, version, reason, epcr, author_id) VALUES ($1,$2,$3,$4,$5)',
         [id, t.version, b.reason, t.epcr, actor.id]);
-      await tx.query('UPDATE transfers SET epcr = $2, version = version + 1, updated_at = now() WHERE id = $1', [id, b.epcr]);
+      // Chữ ký của người bệnh, người nhà đã cố định lúc ký phiếu: bản bổ sung giữ nguyên, không thêm bớt
+      const epcr = { ...b.epcr, signatures: t.epcr?.signatures };
+      await tx.query('UPDATE transfers SET epcr = $2, version = version + 1, content_hash = $3, updated_at = now() WHERE id = $1', [id, epcr, contentHash(epcr)]);
       await audit(tx, t.incident_id ? incidentScope(t.incident_id) : 'system', actor, 'transfer.amended', 'transfer', id, { fromVersion: t.version, reason: b.reason });
     });
     return { ok: true };

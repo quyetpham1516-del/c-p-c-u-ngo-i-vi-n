@@ -1,6 +1,7 @@
 import type pg from 'pg';
-import { createPool } from './db.js';
+import { createPool, withTx } from './db.js';
 import { migrate } from './migrate.js';
+import { seedQcSets } from './qc.js';
 import { BUNDLED_HOSPITALS, BUNDLED_ICD, HOSPITAL_DEPTS, importHospitals, importIcd } from './tools/importers.js';
 
 /**
@@ -231,6 +232,8 @@ export async function seedCatalog(pool: pg.Pool, opts: { force?: boolean } = {})
     await pool.query(`INSERT INTO price_lists(name, vehicle_type, base_fee, base_km, per_km, wait_per_hour, night_surcharge_pct)
                       VALUES ($1, $2, $3, $4, $5, $6, 20)`, [`Bảng giá mẫu ${vt} (cần cập nhật)`, vt, base, baseKm, perKm, wait]);
   }
+  // Bộ tiêu chí chất lượng tham khảo (đơn vị CCNV 10 tiêu chí, TTCC 115 TP.HCM 41 tiêu chí) nếu chưa có; quản lý chất lượng nhân bản để sửa theo Medone
+  await withTx(pool, (tx) => seedQcSets(tx));
   const counts = (await pool.query(`SELECT (SELECT count(*) FROM hospitals)::int AS hospitals, (SELECT count(*) FROM drugs)::int AS drugs,
                                            (SELECT count(*) FROM icd10)::int AS icd`)).rows[0];
   return { ...counts, newHospitals: hosp.hospitals, icdLoaded: icd };

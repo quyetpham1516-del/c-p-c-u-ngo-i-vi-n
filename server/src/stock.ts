@@ -101,8 +101,8 @@ export async function vehicleParStatus(q: Queryable, vehicleId: string) {
   if (!v) throw new HttpError(404, 'Không tìm thấy xe');
   const rows = await many(q, `
     SELECT d.id AS drug_id, d.name AS drug_name, d.unit, d.controlled, p.qty::float AS par,
-           coalesce((SELECT sum(l.qty) FROM stock_lots l WHERE l.vehicle_id = $1 AND l.drug_id = d.id AND l.expiry >= current_date), 0)::float AS on_vehicle,
-           coalesce((SELECT sum(l.qty) FROM stock_lots l WHERE l.station_id = $3 AND l.vehicle_id IS NULL AND l.drug_id = d.id AND l.expiry >= current_date), 0)::float AS in_station
+           coalesce((SELECT sum(l.qty) FROM stock_lots l WHERE l.vehicle_id = $1 AND l.drug_id = d.id AND l.expiry >= vn_today()), 0)::float AS on_vehicle,
+           coalesce((SELECT sum(l.qty) FROM stock_lots l WHERE l.station_id = $3 AND l.vehicle_id IS NULL AND l.drug_id = d.id AND l.expiry >= vn_today()), 0)::float AS in_station
       FROM par_levels p JOIN drugs d ON d.id = p.drug_id
      WHERE p.vehicle_type = $2 ORDER BY d.name`, [vehicleId, v.type, v.station_id]);
   const items = rows.map((r) => ({ ...r, missing: Math.max(0, r.par - r.on_vehicle) }));
@@ -120,7 +120,7 @@ export async function restockVehicle(tx: Tx, actor: Actor, vehicleId: string, wi
   for (const it of par.items.filter((i) => i.missing > 0)) {
     let need = it.missing;
     const lots = await many(tx, `SELECT id, qty::float FROM stock_lots
-                                  WHERE station_id = $1 AND vehicle_id IS NULL AND drug_id = $2 AND qty > 0 AND expiry >= current_date
+                                  WHERE station_id = $1 AND vehicle_id IS NULL AND drug_id = $2 AND qty > 0 AND expiry >= vn_today()
                                   ORDER BY expiry, received_at`, [par.stationId, it.drug_id]);
     for (const l of lots) {
       if (need <= 0) break;
@@ -250,7 +250,7 @@ export async function lotsForVehicle(q: Queryable, vehicleId: string) {
            CASE WHEN l.vehicle_id IS NULL THEN 'kho' ELSE 'xe' END AS place
       FROM stock_lots l JOIN drugs d ON d.id = l.drug_id JOIN vehicles v ON v.id = $1
      WHERE (l.vehicle_id = v.id OR (l.vehicle_id IS NULL AND l.station_id = v.station_id))
-       AND l.qty > 0 AND l.expiry >= current_date AND d.active
+       AND l.qty > 0 AND l.expiry >= vn_today() AND d.active
      ORDER BY d.name, (l.vehicle_id IS NULL), l.expiry, l.received_at`, [vehicleId]);
 }
 
@@ -287,14 +287,14 @@ export async function stockAlerts(q: Queryable, stationId: string | null, days =
   const [expired, expiring, belowMin, vehicles, pending] = await Promise.all([
     many(q, `SELECT l.id, l.station_id, l.vehicle_id, l.lot, l.expiry, l.qty::float, d.name AS drug_name, d.unit
                FROM stock_lots l JOIN drugs d ON d.id = l.drug_id
-              WHERE l.qty > 0 AND l.expiry < current_date AND ($1::text IS NULL OR l.station_id = $1) ORDER BY l.expiry`, [stationId]),
-    many(q, `SELECT l.id, l.station_id, l.vehicle_id, l.lot, l.expiry, l.qty::float, d.name AS drug_name, d.unit, (l.expiry - current_date) AS days_left
+              WHERE l.qty > 0 AND l.expiry < vn_today() AND ($1::text IS NULL OR l.station_id = $1) ORDER BY l.expiry`, [stationId]),
+    many(q, `SELECT l.id, l.station_id, l.vehicle_id, l.lot, l.expiry, l.qty::float, d.name AS drug_name, d.unit, (l.expiry - vn_today()) AS days_left
                FROM stock_lots l JOIN drugs d ON d.id = l.drug_id
-              WHERE l.qty > 0 AND l.expiry >= current_date AND l.expiry < current_date + $2::int AND ($1::text IS NULL OR l.station_id = $1)
+              WHERE l.qty > 0 AND l.expiry >= vn_today() AND l.expiry < vn_today() + $2::int AND ($1::text IS NULL OR l.station_id = $1)
               ORDER BY l.expiry`, [stationId, days]),
     many(q, `SELECT m.station_id, d.id AS drug_id, d.name AS drug_name, d.unit, m.min_qty::float,
                     coalesce((SELECT sum(l.qty) FROM stock_lots l WHERE l.station_id = m.station_id AND l.vehicle_id IS NULL
-                               AND l.drug_id = m.drug_id AND l.expiry >= current_date), 0)::float AS on_hand
+                               AND l.drug_id = m.drug_id AND l.expiry >= vn_today()), 0)::float AS on_hand
                FROM stock_minimums m JOIN drugs d ON d.id = m.drug_id
               WHERE ($1::text IS NULL OR m.station_id = $1)`, [stationId]).then((r) => r.filter((x) => x.on_hand < x.min_qty)),
     many(q, `SELECT id FROM vehicles WHERE ($1::text IS NULL OR station_id = $1) ORDER BY id`, [stationId]),
@@ -321,7 +321,7 @@ export async function orderSuggestion(q: Queryable, stationId: string) {
        GROUP BY l.drug_id),
     onhand AS (
       SELECT drug_id, sum(qty) AS qty FROM stock_lots
-       WHERE station_id = $1 AND vehicle_id IS NULL AND expiry >= current_date GROUP BY drug_id)
+       WHERE station_id = $1 AND vehicle_id IS NULL AND expiry >= vn_today() GROUP BY drug_id)
     SELECT d.id AS drug_id, d.name AS drug_name, d.unit,
            coalesce(u.used, 0)::float AS used_7d, coalesce(m.min_qty, 0)::float AS min_qty, coalesce(o.qty, 0)::float AS on_hand
       FROM drugs d

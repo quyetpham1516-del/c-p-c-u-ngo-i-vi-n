@@ -24,14 +24,14 @@ export async function equipmentGaps(q: Queryable, vehicleIds?: string[]): Promis
   const rows = await many(q, `
     SELECT v.id AS vehicle_id, r.equipment_type_id AS type_id, t.name AS type, r.qty AS need,
            count(e.id) FILTER (WHERE e.status = 'hoat_dong'
-                                 AND (e.next_inspection IS NULL OR e.next_inspection >= current_date)
-                                 AND (e.next_calibration IS NULL OR e.next_calibration >= current_date))::int AS have,
+                                 AND (e.next_inspection IS NULL OR e.next_inspection >= vn_today())
+                                 AND (e.next_calibration IS NULL OR e.next_calibration >= vn_today()))::int AS have,
            coalesce(array_agg(
              e.serial || ': ' || CASE
                WHEN e.status <> 'hoat_dong' THEN CASE e.status WHEN 'hong' THEN 'hỏng' WHEN 'bao_tri' THEN 'đang bảo trì' ELSE 'thanh lý' END
-               WHEN e.next_inspection < current_date THEN 'quá hạn kiểm định ' || e.next_inspection
+               WHEN e.next_inspection < vn_today() THEN 'quá hạn kiểm định ' || e.next_inspection
                ELSE 'quá hạn hiệu chuẩn ' || e.next_calibration END
-           ) FILTER (WHERE e.id IS NOT NULL AND (e.status <> 'hoat_dong' OR e.next_inspection < current_date OR e.next_calibration < current_date)), '{}') AS issues
+           ) FILTER (WHERE e.id IS NOT NULL AND (e.status <> 'hoat_dong' OR e.next_inspection < vn_today() OR e.next_calibration < vn_today())), '{}') AS issues
       FROM vehicles v
       JOIN vehicle_required_equipment r ON r.vehicle_type = v.type
       JOIN equipment_types t ON t.id = r.equipment_type_id
@@ -88,7 +88,7 @@ export async function createEquipment(tx: Tx, actor: Actor, b: {
  * báo hỏng, sửa xong, chuyển chỗ, thanh lý.
  */
 export async function equipmentEvent(tx: Tx, actor: Actor, id: string, b: {
-  kind: 'bao_duong' | 'kiem_dinh' | 'hieu_chuan' | 'bao_hong' | 'sua_xong' | 'dieu_chuyen' | 'thanh_ly';
+  kind: 'kiem_tra' | 've_sinh' | 'bao_duong' | 'kiem_dinh' | 'hieu_chuan' | 'bao_hong' | 'sua_xong' | 'dieu_chuyen' | 'thanh_ly';
   note?: string | null; certNo?: string | null; nextDue?: string | null; stationId?: string | null; vehicleId?: string | null;
 }) {
   const e = await one(tx, `SELECT e.*, t.name AS type_name, t.maintenance_days, t.inspection_days, t.calibration_days
@@ -97,6 +97,12 @@ export async function equipmentEvent(tx: Tx, actor: Actor, id: string, b: {
   if (e.status === 'thanh_ly') throw new HttpError(409, 'Thiết bị đã thanh lý');
   let nextDue: string | null = null;
   switch (b.kind) {
+    case 'kiem_tra':
+      // Kiểm tra nhanh đầu ca (quét QR): chỉ xác nhận thiết bị đang hoạt động tốt; thiết bị hỏng phải báo hỏng hoặc sửa xong trước
+      if (e.status !== 'hoat_dong') throw new HttpError(409, 'Thiết bị đang không ở trạng thái hoạt động; báo kỹ thuật xử lý trước');
+      break;
+    case 've_sinh':
+      break;
     case 'bao_duong':
       nextDue = b.nextDue ?? addDays(e.maintenance_days);
       await tx.query(`UPDATE equipment SET next_maintenance = $2, status = CASE WHEN status = 'bao_tri' THEN 'hoat_dong' ELSE status END WHERE id = $1`, [id, nextDue]);
@@ -140,10 +146,10 @@ export async function equipmentEvent(tx: Tx, actor: Actor, id: string, b: {
 /** Thiết bị đến hạn bảo dưỡng, kiểm định, hiệu chuẩn trong N ngày tới (kể cả đã quá hạn) */
 export async function equipmentDue(q: Queryable, days = 30, stationId: string | null = null) {
   return many(q, `
-    SELECT e.id, e.serial, e.model, e.station_id, e.vehicle_id, e.status, t.name AS type_name, x.kind, x.due, (x.due - current_date) AS days_left
+    SELECT e.id, e.serial, e.model, e.station_id, e.vehicle_id, e.status, t.name AS type_name, x.kind, x.due, (x.due - vn_today()) AS days_left
       FROM equipment e JOIN equipment_types t ON t.id = e.type_id
       CROSS JOIN LATERAL (VALUES ('bao_duong', e.next_maintenance), ('kiem_dinh', e.next_inspection), ('hieu_chuan', e.next_calibration)) AS x(kind, due)
-     WHERE e.status <> 'thanh_ly' AND x.due IS NOT NULL AND x.due < current_date + $1::int
+     WHERE e.status <> 'thanh_ly' AND x.due IS NOT NULL AND x.due < vn_today() + $1::int
        AND ($2::text IS NULL OR e.station_id = $2)
      ORDER BY x.due`, [days, stationId]);
 }

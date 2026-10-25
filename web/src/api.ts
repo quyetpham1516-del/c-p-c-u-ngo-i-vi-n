@@ -4,8 +4,25 @@ export type Role = 'calltaker' | 'dispatcher' | 'supervisor' | 'crew' | 'qa' | '
   | 'pharmacist' | 'technician' | 'ipc' | 'hr' | 'accountant' | 'director';
 export interface User { id: string; username: string; name: string; role: Role }
 
-/** Địa chỉ backend Fastify, đặt qua NEXT_PUBLIC_API_URL trong .env (để trống = cùng địa chỉ với frontend) */
-export const API_BASE = (process.env.NEXT_PUBLIC_API_URL ?? '').replace(/\/$/, '');
+/**
+ * Địa chỉ backend Fastify, đặt qua NEXT_PUBLIC_API_URL trong .env (để trống = cùng địa chỉ với frontend).
+ * Nếu .env để localhost mà trang được mở bằng địa chỉ khác (điện thoại quét tem QR qua IP mạng nội bộ của máy chủ),
+ * thì gọi backend ở chính địa chỉ đó, giữ nguyên cổng, vì "localhost" trên điện thoại là chính điện thoại.
+ */
+export const API_BASE = resolveApiBase((process.env.NEXT_PUBLIC_API_URL ?? '').replace(/\/$/, ''));
+
+function resolveApiBase(configured: string): string {
+  if (!configured || typeof window === 'undefined') return configured;
+  try {
+    const u = new URL(configured);
+    const local = (h: string) => h === 'localhost' || h === '127.0.0.1' || h === '[::1]';
+    if (local(u.hostname) && !local(window.location.hostname)) {
+      u.hostname = window.location.hostname;
+      return u.toString().replace(/\/$/, '');
+    }
+  } catch { /* để nguyên */ }
+  return configured;
+}
 
 function wsUrl(): string {
   const base = API_BASE ? new URL(API_BASE) : new URL(location.href);

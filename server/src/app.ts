@@ -18,6 +18,7 @@ import { registerStock } from './routes/stock.js';
 import { registerQuality } from './routes/quality.js';
 import { registerHr } from './routes/hr.js';
 import { registerFinance } from './routes/finance.js';
+import { registerQc } from './routes/qc.js';
 import { registerReports } from './routes/reports.js';
 import type { Ctx } from './http.js';
 
@@ -29,7 +30,7 @@ export async function buildApp(pool: pg.Pool, opts: { logger?: boolean } = {}) {
   await hub.start();
   const ctx: Ctx = { pool, hub };
 
-  await app.register(cors, { origin: config.webOrigins });
+  await app.register(cors, { origin: (origin, cb) => cb(null, corsAllowed(origin)) });
   await app.register(jwt, { secret: config.jwtSecret, sign: { expiresIn: '14h' } });
   await app.register(websocket);
 
@@ -67,6 +68,7 @@ export async function buildApp(pool: pg.Pool, opts: { logger?: boolean } = {}) {
   registerHr(app, ctx);
   registerFinance(app, ctx);
   registerReports(app, ctx);
+  registerQc(app, ctx);
   registerAdmin(app, ctx);
 
   app.setNotFoundHandler((_req, reply) => reply.code(404).send({ error: 'Không tìm thấy' }));
@@ -75,4 +77,14 @@ export async function buildApp(pool: pg.Pool, opts: { logger?: boolean } = {}) {
     await hub.stop();
   });
   return { app, ctx };
+}
+
+const LAN_HOST = /^(10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+|[a-z0-9-]+\.local)$/i;
+
+/** Nguồn được gọi API từ trình duyệt: danh sách MEDONE_WEB_ORIGIN, cộng địa chỉ mạng nội bộ nếu bật MEDONE_ALLOW_LAN */
+export function corsAllowed(origin: string | undefined): boolean {
+  if (!origin) return true; // không phải trình duyệt (curl, ứng dụng), CORS không áp dụng
+  if (config.webOrigins.includes(origin)) return true;
+  if (!config.allowLan) return false;
+  try { return LAN_HOST.test(new URL(origin).hostname); } catch { return false; }
 }

@@ -1,0 +1,1589 @@
+{
+ "code": "TC-CCNV",
+ "version": "2024",
+ "facilityKind": "ccnv",
+ "name": "Bộ tiêu chí chất lượng Trung tâm Cấp cứu 115 TP.HCM (bản tham khảo)",
+ "source": "Sở Y tế TP.HCM, Công văn 6249/SYT-NVY ngày 04/07/2024; khung theo Quyết định 6858/QĐ-BYT ngày 18/11/2016",
+ "criteria": [
+  {
+   "part": "A",
+   "partName": "Hướng đến người bệnh",
+   "chapter": "A1",
+   "chapterName": "Chỉ dẫn, đón tiếp, hướng dẫn người bệnh",
+   "code": "A1.1",
+   "title": "Người bệnh được hướng dẫn, cung cấp thông tin rõ ràng, cụ thể về các dịch vụ do hệ thống cấp cứu ngoại viện cung cấp và dễ dàng tiếp cận khi cần",
+   "legalBasis": "Luật Khám bệnh, chữa bệnh số 15/2023/QH15 ngày 09 tháng 01 năm 2023;\nQuyết định số 01/2008/QĐ-BYT ngày 21 tháng 01 năm 2008 của Bộ Y tế về việc ban hành Quy chế cấp cứu, hồi sức tích cực và chống độc.",
+   "ownerUnit": "NVY",
+   "levels": [
+    [
+     "Chưa có hình thức cung cấp thông tin cơ bản (số điện thoại, địa điểm trụ sở) đối với hoạt động cấp cứu 115 và hệ thống cấp cứu ngoại viện cho người dân."
+    ],
+    [
+     "Cung cấp đầy đủ thông tin về các dịch vụ cấp cứu ngoại viện (cấp cứu ngoại viện, chuyển viện, vận chuyển người bệnh về nhà, phục vụ lễ hội - sự kiện, đào tạo sơ cấp cứu...) do Trung tâm cung cấp.",
+     "Có hình thức hướng dẫn rõ ràng, cụ thể về cách liên hệ với các cơ sở trong hệ thống cấp cứu ngoại viện như số Tổng đài 115, số điện thoại của các cơ sở cấp cứu ngoại viện."
+    ],
+    [
+     "Cung cấp đầy đủ thông tin về hệ thống cấp cứu ngoại viện bao gồm danh sách, địa điểm, số điện thoại liên lạc.",
+     "Cung cấp đầy đủ thông tin về các dịch vụ (cấp cứu ngoại viện, chuyển viện, vận chuyển người bệnh về nhà, phục vụ lễ hội sự kiện, đào tạo sơ cấp cứu...) do hệ thống cấp cứu ngoại viện cung cấp."
+    ],
+    [
+     "Có hình thức công khai đầy đủ về quy trình vận hành, điều phối trong hệ thống cấp cứu ngoại viện.",
+     "Các thông tin về hệ thống cấp cứu ngoại viện được tra cứu dễ dàng trên trang thông tin điện tử của Trung tâm.",
+     "Danh sách các bệnh viện có Trung tâm cấp cứu ngoại viện thuộc mạng lưới cấp cứu ngoại viện, các cơ sở cấp cứu ngoại viện được cập nhật khi có thay đổi."
+    ],
+    [
+     "Phối hợp với tất cả các bệnh viện công lập để truyền thông cho người dân về hệ thống cấp cứu ngoại viện bằng nhiều hình thức (bảng thông báo tại khoa cấp cứu, khoa khám bệnh; đăng bản tin trên trang tin điện tử…).",
+     "Phối hợp với cơ quan, đơn vị khác để tuyên truyền, phổ biến, cung cấp thông tin về hệ thống cấp cứu ngoại viện với nhiều hình thức khác nhau."
+    ]
+   ]
+  },
+  {
+   "part": "A",
+   "partName": "Hướng đến người bệnh",
+   "chapter": "A1",
+   "chapterName": "Chỉ dẫn, đón tiếp, hướng dẫn người bệnh",
+   "code": "A1.2",
+   "title": "Cải tiến quy trình cấp cứu ngoại viện",
+   "legalBasis": "Thông tư số 19/2013/TT-BYT ngày 12 tháng 7 năm 2013 của Bộ Y tế hướng dẫn thực hiện quản lý chất lượng dịch vụ khám bệnh, chữa bệnh tại bệnh viện;\nQuyết định số 01/2008/QĐ-BYT ngày 21 tháng 01 năm 2008 của Bộ Y tế về việc ban hành Quy chế cấp cứu, hồi sức tích cực và chống độc.",
+   "ownerUnit": "NVY",
+   "levels": [
+    [
+     "Trong năm, có trường hợp người bệnh gọi Cấp cứu 115 nhưng không được tiếp cận và cấp cứu kịp thời hoặc né tránh, từ chối tiếp cận người bệnh của kíp cấp cứu làm ảnh hưởng nghiêm trọng đến người bệnh (sau khi xác minh là đúng).",
+     "Trong năm, có sự cố cấp cứu gây ảnh hưởng nghiêm trọng đến người bệnh do không thực hiện đúng quy trình cấp cứu."
+    ],
+    [
+     "Có xây dựng quy trình cấp cứu ngoại viện (quy trình kích hoạt, tiếp cận người bệnh, bàn giao người bệnh đối với cấp cứu thông thường và cấp cứu hàng loạt do tai nạn, thảm họa, ngộ độc thực phẩm, …).",
+     "Có quy định về phân loại và cấp cứu người bệnh theo mức độ ưu tiên trong trường hợp cấp cứu hàng loạt.",
+     "Có xây dựng quy trình xử lý đối với người bệnh tử vong."
+    ],
+    [
+     "Thực hiện đầy đủ các bước theo các quy trình cấp cứu ngoại viện đã được ban hành.",
+     "Thực hiện giám sát thời gian đáp ứng của hệ thống cấp cứu ngoại viện:",
+     "Thời gian từ lúc tiếp nhận cuộc gọi đến xuất xe.",
+     "Thời gian từ lúc xuất xe đến lúc tiếp cận hiện trường.",
+     "Thời gian xử trí cấp cứu tại hiện trường.",
+     "Thời gian từ lúc rời khỏi hiện trường đến bệnh viện.",
+     "Thời gian bàn giao bệnh tại bệnh viện.",
+     "Có xây dựng quy định phản hồi về chuyên môn và tiếp nhận phản hồi giữa cơ sở vận chuyển và cơ sở tiếp nhận."
+    ],
+    [
+     "Có phân tích, đánh giá về thời gian đáp ứng của hệ thống cấp cứu đối với các trường hợp cấp cứu, đặc biệt là các trường hợp nguy kịch.",
+     "Định kỳ mỗi năm tiến hành rà soát quy trình hiện hành, đề xuất điều chỉnh, cập nhật khi cần thiết và có phổ biến cho tất cả các nhân viên.",
+     "Định kỳ giao ban chuyên môn giữa Trung tâm cấp cứu 115 với các đơn vị trong hệ thống cấp cứu ngoại viện (ít nhất 01 lần mỗi quý)."
+    ],
+    [
+     "Có tổng kết được những vấn đề cần rút kinh nghiệm từ những phản hồi giữa cơ sở cấp cứu ngoại viện và cơ sở tiếp nhận.",
+     "Có biện pháp can thiệp để rút ngắn thời gian đáp ứng của hệ thống cấp cứu.",
+     "Có đánh giá hiệu quả của biện pháp can thiệp rút ngắn thời gian đáp ứng của hệ thống cấp cứu."
+    ]
+   ]
+  },
+  {
+   "part": "A",
+   "partName": "Hướng đến người bệnh",
+   "chapter": "A1",
+   "chapterName": "Chỉ dẫn, đón tiếp, hướng dẫn người bệnh",
+   "code": "A1.3",
+   "title": "Bảo đảm các điều kiện cấp cứu",
+   "legalBasis": "Luật giao thông đường bộ số 23/2008/QH12 ngày 13 tháng 11 năm 2008;\nLuật Khám bệnh, chữa bệnh số 15/2023/QH15 ngày 09 tháng 01 năm 2023;\nThông tư số 27/2017/TT-BYT ngày 28 tháng 6 năm 2017 của Bộ Y tế quy định tiêu chuẩn và sử dụng xe ô tô cứu thương;\nThông tư số 07/2020/TT-BYT ngày 14 tháng 5 năm 2020 của Bộ Y tế quy định chi tiết hướng dẫn về tiêu chuẩn, định mức sử dụng xe ô tô chuyên dùng trong lĩnh vực y tế;\nQuyết định số 01/2008/QĐ-BYT ngày 21 tháng 01 năm 2008 của Bộ Y tế về việc ban hành Quy chế cấp cứu, hồi sức tích cực và chống độc;\nQuyết định số 3385/QĐ-BYT ngày 18 tháng 9 năm 2012 của Bộ Y tế ban hành Danh mục vali thuốc cấp cứu, dụng cụ cấp cứu, thuốc thiết yếu và trang thiết bị thiết yếu trang bị cho một kíp cấp cứu ngoại viện trên xe ô tô cứu thương.",
+   "ownerUnit": "NVY",
+   "levels": [
+    [
+     "Xe cứu thương, ê kíp cấp cứu không sẵn sàng hoạt động khi có người bệnh gọi Cấp cứu 115.",
+     "Có trường hợp thiếu thuốc, trang thiết bị y tế, xe cứu thương để tiếp cận và cấp cứu làm ảnh hưởng nghiêm trọng đến sức khỏe người bệnh.",
+     "Có tình trạng tài xế lái xe quá 10 giờ trong 24 giờ hoặc lái xe liên tục quá 04 giờ."
+    ],
+    [
+     "Có quy định phối hợp giữa các thành viên trong ê kíp cấp cứu.",
+     "Đảm bảo đầy đủ danh mục thuốc cấp cứu, trang thiết bị, vật tư tiêu hao, phương tiện phòng hộ khi thực hiện cấp cứu ngoại viện."
+    ],
+    [
+     "Có bác sĩ, y sĩ, điều dưỡng tham gia hoạt động cấp cứu ngoại viện đã được đào tạo theo chương trình “Cấp cứu ban đầu ngoài bệnh viện, xử trí bệnh cấp cứu và chấn thương”.",
+     "Nhân viên lái xe được huấn luyện về thực hành sơ cấp cứu.",
+     "Ê kíp cấp cứu sử dụng thành thạo các thiết bị theo xe cứu thương.",
+     "Các trang thiết bị cấp cứu, xe cứu thương được kiểm tra thường xuyên và luôn trong tình trạng sẵn sàng sử dụng."
+    ],
+    [
+     "Thực hiện kiểm tra hoạt động mạng lưới, trạm cấp cứu vệ tinh định kỳ, đảm bảo ít nhất 01 lần trong năm.",
+     "Có ít nhất 50% bác sĩ, y sĩ, điều dưỡng tham gia hoạt động cấp cứu ngoại viện đã được đào tạo theo chương trình “Cấp cứu ban đầu ngoài bệnh viện, xử trí bệnh cấp cứu và chấn thương”.",
+     "Có ít nhất 50% nhân viên lái xe tham gia hoạt động cấp cứu ngoại viện được huấn luyện về thực hành sơ cấp cứu.",
+     "Có tiến hành đánh giá kết quả cấp cứu người bệnh, xác định các vấn đề tồn tại, ưu, nhược điểm trong cấp cứu người bệnh.",
+     "Có nhân viên cấp cứu có trình độ cao đẳng trở lên về cấp cứu viên ngoại viện hoặc cử nhân điều dưỡng định hướng cấp cứu ngoại viện."
+    ],
+    [
+     "Có sử dụng kết quả đánh giá kết quả cấp cứu để cải tiến công tác cấp cứu người bệnh.",
+     "Có ít nhất 80% bác sĩ, y sĩ, điều dưỡng đã được đào tạo theo chương trình “Cấp cứu ban đầu ngoài bệnh viện, xử trí bệnh cấp cứu và chấn thương”.",
+     "Có 80% nhân viên lái xe được huấn luyện về thực hành sơ cấp cứu.",
+     "Có nhân viên cấp cứu có trình độ đại học trở lên về chuyên ngành cấp cứu ngoại viện."
+    ]
+   ]
+  },
+  {
+   "part": "A",
+   "partName": "Hướng đến người bệnh",
+   "chapter": "A1",
+   "chapterName": "Chỉ dẫn, đón tiếp, hướng dẫn người bệnh",
+   "code": "A1.4",
+   "title": "Đảm bảo chất lượng phương tiện vận chuyển cấp cứu",
+   "legalBasis": "Thông tư số 53/2014/TT-BGTVT ngày 20 tháng 10 năm 2014 của Bộ Giao thông vận tải quy định về bảo dưỡng, sửa chữa phương tiện giao thông cơ giới đường bộ.\nThông tư số 27/2017/TT-BYT ngày 28 tháng 6 năm 2017 của Bộ Y tế quy định tiêu chuẩn và sử dụng xe ô tô cứu thương;\nThông tư số 07/2020/TT-BYT ngày 14 tháng 5 năm 2020 của Bộ Y tế quy định chi tiết hướng dẫn về tiêu chuẩn, định mức sử dụng xe ô tô chuyên dùng trong lĩnh vực y tế;\nThông tư số 03/2023/TT- BYT ngày 7 tháng 2 năm 2023 của Bộ Y tế ban hành Hướng dẫn vị trí việc làm, định mức số lượng người làm việc, cơ cấu  viên chức theo chức danh nghề nghiệp trong đơn vị sự nghiệp y tế công lập.\nQuyết định số 3385/QĐ-BYT ngày 18 tháng 9 năm 2012 của Bộ Y tế ban hành Danh mục vali thuốc cấp cứu, dụng cụ cấp cứu, thuốc thiết yếu và trang thiết bị thiết yếu trang bị cho một kíp cấp cứu ngoại viện trên xe ô tô cứu thương.",
+   "ownerUnit": "KHTC",
+   "levels": [
+    [
+     "Không có đủ trang thiết bị y tế trên xe ô tô cứu thương theo tiêu chuẩn do Bộ Y tế quy định.",
+     "Không bảo trì, bảo dưỡng, kiểm định xe ô tô cứu thương theo quy định."
+    ],
+    [
+     "Đảm bảo số lượng xe cứu thương theo quy định của Bộ Y tế.",
+     "Xe cứu thương có đủ giấy tờ theo quy định để lưu hành (giấy đăng ký xe, giấy chứng nhận kiểm định an toàn kỹ thuật, bảo hiểm trách nhiệm dân sự).",
+     "Đảm bảo điều kiện vệ sinh, kiểm soát nhiễm khuẩn trên xe cứu thương.",
+     "Có đủ trang thiết bị y tế, vật tư y tế, thuốc cấp cứu trên xe theo đúng quy định của Bộ Y tế, hoặc danh mục của Trung tâm ban hành.",
+     "Có rà soát, thay thế xe cứu thương cũ hết thời hạn sử dụng."
+    ],
+    [
+     "Xe cứu thương được trang bị thiết bị y tế chuyên dụng cho cấp cứu ngoại viện nhằm nâng cao chất lượng hoạt động cấp cứu (ví dụ máy sốc điện, máy thở, máy hút, monitor theo dõi, hệ thống oxy…).",
+     "Có kế hoạch hàng năm thực hiện rà soát, phát triển số lượng xe cứu thương đưa vào hoạt động.",
+     "Có ít nhất 50% xe cứu thương có gắn hệ thống định vị toàn cầu (GPS)."
+    ],
+    [
+     "Có ít nhất 80% xe cứu thương có gắn hệ thống định vị toàn cầu (GPS).",
+     "Duy trì tính năng GPS trên xe cứu thương, và theo dõi được lộ trình của trường hợp cấp cứu.",
+     "Xe cứu thương được trang bị thêm ít nhất 01 thiết bị chuyên dụng cho cấp cứu ngoại viện (ngoài thiết bị chuẩn) để nâng cao hiệu quả hoạt động cấp cứu.",
+     "Toàn bộ xe cứu thương được trang bị thiết bị thông minh ứng dụng vào việc tiếp cận người bệnh nhanh chóng."
+    ],
+    [
+     "Toàn bộ xe cứu thương có gắn hệ thống định vị toàn cầu (GPS).",
+     "Xe cứu thương được trang bị thêm thiết bị y tế chuyên dụng, hiện đại: máy siêu âm xách tay, máy ép tim tự động…",
+     "Có trang bị thêm camera trong khoang người bệnh.",
+     "Có xe ô tô cứu thương có kết cấu đặc biệt.",
+     "Có triển khai các loại hình phương tiện vận chuyển cấp cứu khác ngoài phương tiện cấp cứu truyền thống (xe mô tô cứu thương, tàu cứu thương, trực thăng…)"
+    ]
+   ]
+  },
+  {
+   "part": "A",
+   "partName": "Hướng đến người bệnh",
+   "chapter": "A2",
+   "chapterName": "Quyền và lợi ích của người bệnh",
+   "code": "A2.1",
+   "title": "Người dân có ý kiến phàn nàn, thắc mắc hoặc khen ngợi được Trung tâm tiếp nhận, phản hồi, giải quyết kịp thời",
+   "legalBasis": "Chỉ thị số 09/CT-BYT ngày 22 tháng 11 năm 2013 của Bộ trưởng Bộ Y tế về tăng cường và xử lý kiến nghị phản ánh của người dân về chất lượng dịch vụ khám bệnh chữa bệnh thông qua đường dây nóng;\nQuyết định số 1993/QĐ-BYT ngày 19 tháng 5 năm 2016 của Bộ trưởng Bộ Y tế ban hành Quy chế sử dụng phần mềm để theo dõi, đôn đốc việc tiếp nhận và xử lý ý kiến phản ánh của người dân qua tổng đài trực đường dây nóng Bộ Y tế (1900- 9095);\nQuyết định số 8170/QĐ-SYT ngày 15 tháng 12 năm 2022 của Sở Y tế ban hành quy chế trực đường dây nóng của Sở Y tế.",
+   "ownerUnit": "NVY",
+   "levels": [
+    [
+     "Không có số điện thoại đường dây nóng hoặc không công khai số điện thoại đường dây nóng."
+    ],
+    [
+     "Có kế hoạch và bản danh sách phân công người trực đường dây nóng trong và ngoài giờ hành chính (24/24 giờ).",
+     "Luôn có người trực đường dây nóng tiếp nhận các ý kiến phản ánh của người dân trong và ngoài giờ hành chính."
+    ],
+    [
+     "Không phát hiện thấy hiện tượng không liên lạc được với số đường dây nóng của Trung tâm trong vòng 30 phút.",
+     "Có hình thức ghi lại các ý kiến phản hồi của người dân và phương hướng, kết quả xử lý (ghi lại bằng sổ, máy tính, hoặc phần mềm quản lý theo dõi…).",
+     "Có sổ (hoặc bản danh sách) thống kê theo thời gian trong năm đầy đủ, trung thực các ý kiến về Trung tâm đã được đăng tải trên các phương tiện thông tin đại chúng, mạng xã hội và các đơn kiện có liên quan đến Trung tâm, bao gồm ý kiến tích cực và tiêu cực.",
+     "Các ý kiến của người dân được chuyển đến các cá nhân, bộ phận có liên quan và được phản hồi hoặc giải quyết kịp thời."
+    ],
+    [
+     "Có báo cáo thống kê, phân tích các vấn đề người dân thường xuyên phàn nàn, thắc mắc; tần số các bộ phận và nhân viên có nhiều người dân phàn nàn, thắc mắc hoặc khen ngợi để có giải pháp xử lý và xác định vấn đề ưu tiên cải tiến.",
+     "Có báo cáo phân tích “nguyên nhân gốc rễ” các vấn đề người dân thường phàn nàn, thắc mắc xảy ra do lỗi của cá nhân hoặc do lỗi chung của toàn Trung tâm, lỗi chung của ngành (lỗi hệ thống)."
+    ],
+    [
+     "Có tiến hành cải tiến chất lượng Trung tâm dựa trên kết quả phân tích các nguyên nhân phàn nàn, thắc mắc của người dân.",
+     "Có sáng kiến xây dựng, áp dụng các hình thức khác để lấy ý kiến phản hồi người bệnh chủ động, phong phú và sát thực tế hơn.",
+     "Có các hình thức và có thực hiện khen thưởng, kỷ luật đối với nhân viên làm tốt hoặc chưa tốt từ kết quả phản hồi của người dân.",
+     "Có báo cáo và đưa ra giải pháp khắc phục về các lỗi hệ thống, có gửi văn bản báo cáo cho cơ quan quản lý trong trường hợp vượt quá khả năng của Trung tâm.",
+     "Có hệ thống giám sát để phát hiện kịp thời những rủi ro liên quan đến quyền và lợi ích của người bệnh để ngăn chặn hoặc can thiệp kịp thời."
+    ]
+   ]
+  },
+  {
+   "part": "A",
+   "partName": "Hướng đến người bệnh",
+   "chapter": "A2",
+   "chapterName": "Quyền và lợi ích của người bệnh",
+   "code": "A2.2",
+   "title": "Khảo sát, đánh giá sự hài lòng của người sử dụng dịch vụ cấp cứu",
+   "legalBasis": "Thông tư số 19/2013/TT-BYT ngày 12 tháng 7 năm 2013 của Bộ Y tế hướng dẫn thực hiện quản lý chất lượng dịch vụ khám bệnh, chữa bệnh tại bệnh viện;\nQuyết định số 56/QĐ-BYT ngày 08 tháng 01 năm 2024 của Bộ Y tế về ban hành hướng dẫn về phương pháp đo lường sự hài lòng của người dân đối với dịch vụ y tế công giai đoạn 2024 – 2030;\nQuyết định số 3869/QĐ-BYT ngày 28 tháng 8 năm 2019 của Bộ Y tế về các mẫu phiếu và hướng dẫn khảo sát hài lòng người bệnh và nhân viên y tế;\nQuyết định số 2866/QĐ-UBND ngày 24 tháng 8 năm 2022 của Ủy ban nhân dân Thành phố về phê duyệt Đề án đo lường chất lượng hoạt động và cung cấp dịch vụ công tại các cơ quan sự nghiệp công lập trong lĩnh vực y tế trên địa bàn Thành phố Hồ Chí Minh giai đoạn 2022 – 2025.",
+   "ownerUnit": "NVY",
+   "levels": [
+    [
+     "Không tiến hành khảo sát, lấy ý kiến thăm dò hoặc không đánh giá sự hài lòng của người sử dụng dịch vụ cấp cứu."
+    ],
+    [
+     "Có quy định, hướng dẫn về việc khảo sát, đánh giá hài lòng của người sử dụng dịch vụ cấp cứu.",
+     "Có bộ câu hỏi khảo sát, đánh giá sự hài lòng của người sử dụng dịch vụ cấp cứu (tự xây dựng hoặc tham khảo từ các bộ câu hỏi khác).",
+     "Có tài liệu hướng dẫn phương pháp khảo sát, đánh giá sự hài lòng của người sử dụng dịch vụ cấp cứu, trong đó có quy định về thời gian tiến hành đánh giá, người đánh giá, đối tượng được đánh giá."
+    ],
+    [
+     "Thực hiện khảo sát, đánh giá sự hài lòng của người sử dụng dịch vụ cấp cứu ít nhất 02 lần trong năm*:",
+     "Nếu có dưới 50 lượt sử dụng dịch vụ/tháng, mỗi lần khảo sát sẽ phỏng vấn toàn bộ số lượt sử dụng dịch vụ cho đến đủ 30 người.",
+     "Nếu có từ 50 đến dưới 100 lượt sử dụng dịch vụ/tháng, mỗi lần khảo sát sẽ phỏng vấn tối thiểu 30 người.",
+     "Nếu có từ 100 đến dưới 300 lượt sử dụng dịch vụ/tháng, mỗi lần khảo sát sẽ phỏng vấn tối thiểu 40 người.",
+     "Nếu có từ 300 đến dưới 500 lượt sử dụng dịch vụ/tháng, mỗi lần khảo sát sẽ phỏng vấn tối thiểu 50 người.",
+     "Nếu có trên 500 lượt sử dụng dịch vụ/tháng, cỡ mẫu khảo sát tương ứng với số lượt cung cấp dịch vụ tại thời điểm khảo sát.",
+     "Nội dung khảo sát bao gồm những khía cạnh liên quan như: điều phối viên, cấp cứu viên, quy trình, các phương tiện trang thiết bị cấp cứu và bảo mật thông tin của người bệnh.",
+     "Có phân tích số liệu và tổng hợp báo cáo kết quả đánh giá sự hài lòng."
+    ],
+    [
+     "Có hình thức công bố tỷ lệ hài lòng của người sử dụng dịch vụ cấp cứu ít nhất qua một phương tiện truyền thông cho người dân và nhân viên của Trung tâm biết.",
+     "Có thực hiện phân tích, tổng hợp, báo cáo các góp ý của người sử dụng dịch vụ cấp cứu qua nhiều hình thức phản ánh khác nhau."
+    ],
+    [
+     "Áp dụng kết quả phân tích để xây dựng các giải pháp cải tiến chất lượng.",
+     "Có nghiên cứu khoa học hoặc sáng kiến liên quan đến nâng cao hài lòng khách hàng."
+    ]
+   ]
+  },
+  {
+   "part": "A",
+   "partName": "Hướng đến người bệnh",
+   "chapter": "A2",
+   "chapterName": "Quyền và lợi ích của người bệnh",
+   "code": "A2.3",
+   "title": "Công khai, minh bạch phí cấp cứu ngoại viện",
+   "legalBasis": "Luật Khám bệnh, chữa bệnh số 15/2023/QH15 ngày 09 tháng 01 năm 2023;\nLuật Giá số 16/2023/QH15 ngày 19 tháng 6 năm 2023;\nThông tư số 13/2023/TT-BYT ngày 29 tháng 6 năm 2023 của Bộ Y tế quy định khung giá và phương pháp định giá dịch vụ khám bệnh, chữa bệnh theo yêu cầu do cơ sở khám bệnh, chữa bệnh của nhà nước cung cấp.",
+   "ownerUnit": "KHTC",
+   "levels": [
+    [
+     "Có phản ánh bức xúc của người dân liên quan đến giá thu bất hợp lý của Trung tâm và cơ quan quản lý đã xác minh nội dung phản ánh là đúng.",
+     "Thu phí không có hoá đơn hoặc phiếu thu hoặc biên lai.",
+     "Không có hình thức công khai giá của các dịch vụ kỹ thuật đang thực hiện tại Trung tâm."
+    ],
+    [
+     "Có công khai giá dịch vụ theo yêu cầu do Trung tâm cung cấp như: huấn luyện sơ, cấp cứu; đáp ứng y tế cho các sự kiện; chuyển bệnh theo yêu cầu…",
+     "Có hình thức công khai đầy đủ thông tin về các loại dịch vụ kỹ thuật và giá dịch vụ do hệ thống cấp cứu ngoại viện cung cấp.",
+     "Tất cả các trường hợp cấp cứu đều có hóa đơn hoặc phiếu thu, biên lai."
+    ],
+    [
+     "Biên lai thu phí thể hiện rõ phần chi phí mà người bệnh phải đóng và được miễn giảm (nếu có).",
+     "Biên lai thu phí có giá tiền của từng nhóm dịch vụ (khám bệnh, chữa bệnh, danh mục kỹ thuật, thuốc, vật tư tiêu hao và phí vận chuyển cấp cứu) đã sử dụng cho người bệnh khi thanh toán.",
+     "Biên lai thu phí được người bệnh/thân nhân kiểm tra, xác nhận toàn bộ nội dung; người bệnh/thân nhân được giữ 01 bản và Trung tâm lưu trữ 01 bản.",
+     "Cung cấp bảng kê chi tiết giá tiền của từng loại dịch vụ kỹ thuật và khám bệnh, chữa bệnh, thuốc, vật tư tiêu hao đã sử dụng cho người bệnh khi yêu cầu."
+    ],
+    [
+     "Có đăng tải đầy đủ thông tin về giá tất cả các dịch vụ, giá thuốc, giá vật tư y tế… trên trang thông tin điện tử của Trung tâm.",
+     "Thực hiện hồ sơ kê khai giá dịch vụ khám bệnh, chữa bệnh đầy đủ và báo cáo về Sở Y tế theo quy định.",
+     "Phục vụ thanh toán các dịch vụ như thẻ ngân hàng, thanh toán điện tử, quét mã, …"
+    ],
+    [
+     "Bảng kê chi tiết giá tiền của từng loại dịch vụ kỹ thuật cấp cứu và khám bệnh, chữa bệnh, thuốc, vật tư tiêu hao được tích hợp vào bệnh án điện tử.",
+     "Có phương thức để người bệnh chủ động lấy được hóa đơn điện tử."
+    ]
+   ]
+  },
+  {
+   "part": "B",
+   "partName": "Phát triển nguồn nhân lực",
+   "chapter": "B1",
+   "chapterName": "Số lượng và cơ cấu nhân lực",
+   "code": "B1.1",
+   "title": "Xây dựng kế hoạch phát triển nhân lực",
+   "legalBasis": "Bộ Luật Lao động số 45/2019/QH14 ngày 20 tháng 11 năm 2019;\nLuật Viên chức số 58/2010/QH12 ngày 15 tháng 11 năm 2010 và Luật Sửa đổi, bổ sung một số điều của Luật cán bộ, công chức và luật viên chức số 52/2019/QH14 ngày 25 tháng 11 năm 2019.",
+   "ownerUnit": "TCCB",
+   "levels": [
+    [
+     "Không xây dựng kế hoạch phát triển nhân lực y tế tổng thể và hàng năm."
+    ],
+    [
+     "Xây dựng kế hoạch phát triển nhân lực y tế tổng thể và hàng năm có các mục tiêu và chỉ số cụ thể.",
+     "Trong bản kế hoạch có đề cập đầy đủ các nội dung liên quan đến tuyển dụng, sử dụng, đào tạo cập nhật kiến thức, duy trì, phát triển nguồn nhân lực theo định hướng phát triển nhân lực theo đề án vị trí việc làm."
+    ],
+    [
+     "Triển khai các nội dung trong bản kế hoạch phát triển nhân lực y tế theo lộ trình đã đề ra.",
+     "Có quy định bằng văn bản nhằm thu hút, ưu đãi đối với nguồn nhân lực làm công tác chuyên môn y tế khó tuyển.",
+     "Mỗi mục tiêu trong bản kế hoạch có ít nhất 01 chỉ số theo dõi để đánh giá việc thực hiện kết quả đạt được.",
+     "Có ít nhất 50% chỉ số đạt được theo kế hoạch."
+    ],
+    [
+     "Tiến hành đánh giá việc thực hiện kế hoạch phát triển nhân lực y tế hàng năm.",
+     "Có ít nhất 75% chỉ số đạt được theo kế hoạch.",
+     "Có triển khai các giải pháp để khắc phục mục tiêu chưa hoàn thành."
+    ],
+    [
+     "Có ít nhất 90% chỉ số đạt được theo kế hoạch.",
+     "Cập nhật, bổ sung, cải tiến bản kế hoạch phát triển nhân lực y tế hàng năm dựa trên kết quả đánh giá việc thực hiện kế hoạch phát triển nhân lực y tế."
+    ]
+   ]
+  },
+  {
+   "part": "B",
+   "partName": "Phát triển nguồn nhân lực",
+   "chapter": "B1",
+   "chapterName": "Số lượng và cơ cấu nhân lực",
+   "code": "B1.2",
+   "title": "Bảo đảm cơ cấu chức danh nghề nghiệp của nhân lực",
+   "legalBasis": "Nghị định số 106/2020/NĐ-CP ngày 10 tháng 9 năm 2020 về vị trí việc làm và số lượng người làm việc trong đơn vị sự nghiệp công lập;\nThông tư số 03/2023/TT-BYT ngày 17 tháng 02 năm 2023 về hướng dẫn vị trí việc làm, định mức số lượng người làm việc, cơ cấu viên chức theo chức danh nghề nghiệp trong đơn vị sự nghiệp y tế công lập.",
+   "ownerUnit": "TCCB",
+   "levels": [
+    [
+     "Chưa xây dựng Đề án vị trí việc làm hoặc đã xây dựng nhưng chưa được phê duyệt.",
+     "Phát hiện thấy Trung tâm tuyển dụng nhưng không có tiêu chí cụ thể hoặc không đúng tiêu chí quy định trong Đề án vị trí việc làm."
+    ],
+    [
+     "Bản mô tả công việc của các chức danh nghề nghiệp được rà soát, cập nhật thường xuyên hoặc ít nhất 02 năm 01 lần.",
+     "Có thống kê số lượng vị trí việc làm, cơ cấu chức danh nghề nghiệp theo từng hạng."
+    ],
+    [
+     "Tính toán, dự báo được nhu cầu nhân lực cần bổ sung, thay thế số người sẽ về hưu và có kế hoạch bổ sung, tuyển dụng cụ thể cho các vị trí đó.",
+     "Điều chuyển, tuyển dụng, bổ sung y, bác sĩ, điều dưỡng cho các khoa để đảm bảo nhân sự các khoa hoạt động."
+    ],
+    [
+     "Đã tuyển dụng ít nhất 80% số nhân sự theo đúng Đề án vị trí việc làm đã xây dựng.",
+     "Hàng năm có báo cáo đánh giá tình hình nhân lực của Trung tâm và đề xuất, triển khai các giải pháp khắc phục những mặt hạn chế."
+    ],
+    [
+     "Đã tuyển dụng ít nhất 100% số nhân sự theo đúng Đề án vị trí việc làm đã xây dựng.",
+     "Có đánh giá kết quả thực hiện công việc hàng năm của các vị trí việc làm và tiến hành sửa đổi, bổ sung các vị trí việc làm dựa trên kết quả đánh giá hàng năm."
+    ]
+   ]
+  },
+  {
+   "part": "B",
+   "partName": "Phát triển nguồn nhân lực",
+   "chapter": "B2",
+   "chapterName": "Chất lượng nguồn nhân lực",
+   "code": "B2.1",
+   "title": "Duy trì và phát triển bền vững chất lượng nguồn nhân lực",
+   "legalBasis": "Luật Khám bệnh, chữa bệnh số 15/2023/QH15 ngày 09 tháng 01 năm 2023;\nLuật Sửa đổi, bổ sung một số điều của Luật cán bộ, công chức và luật viên chức số 52/2019/QH14 ngày 25 tháng 11 năm 2019;\nLuật Viên chức số 58/2010/QH12 ngày 15 tháng 11 năm 2010;\nNghị định số 101/2017/NĐ-CP ngày 01 tháng 9 năm 2017 của Chính phủ về đào tạo, bồi dưỡng cán bộ, công chức, viên chức;\nThông tư số 32/2023/TT-BYT ngày23 tháng 12 năm 2023 Bộ Y tế quy định chi tiết một số điều của Luật Khám bệnh, chữa bệnh.",
+   "ownerUnit": "TCCB",
+   "levels": [
+    [
+     "Không có kế hoạch đào tạo, đào tạo cập nhật kiến thức để phát triển kỹ năng nghề nghiệp và trình độ chuyên môn cho nhân viên.",
+     "Không có nhân viên tham gia cập nhật kiến thức y khoa liên tục.",
+     "Phát hiện có người hành nghề khám bệnh, chữa bệnh tại cơ sở chưa có chứng chỉ hành nghề/giấy phép hành nghề hoặc đang trong thời gian bị đình chỉ hành nghề.",
+     "Có người hành nghề khám bệnh, chữa bệnh không đúng phạm vi chuyên môn ghi trong chứng chỉ hành nghề/giấy phép hành nghề."
+    ],
+    [
+     "Trong kế hoạch đào tạo hoặc quy chế chi tiêu nội bộ có qui định hỗ trợ (bằng hình thức vật chất, phi vật chất như học phí, phương tiện khen thưởng, …) cho nhân viên được cử đi đào tạo.",
+     "Có biện pháp theo dõi thu thập số giờ học, cập nhật kiến thức của từng nhân viên theo quy định.",
+     "Tổ chức các hình thức kiểm tra tay nghề, chuyên môn cho nhân viên, đặc biệt là bác sĩ, y sĩ, điều dưỡng dưới 05 năm công tác.",
+     "Có ít nhất 30% nhân viên tham gia cập nhật kiến thức y khoa liên tục tối thiểu 120 giờ tín chỉ trong 05 năm liên tục.",
+     "Niêm yết công khai tại cơ sở hoặc trên trang tin điện tử của cơ sở (nếu có) danh sách, văn bằng chuyên môn và chứng chỉ hành nghề/giấy phép hành nghề của tất cả người hành nghề tại cơ sở.",
+     "Mọi thay đổi về nhân sự hành nghề tại cơ sở phải cập nhật vào phần mềm quản lý hành nghề của Sở Y tế trong vòng 10 ngày kể từ khi cấp mới/thay đổi nội dung giấy phép hoạt động khám bệnh, chữa bệnh hoặc có hợp đồng lao động (ký lần đầu/ký lại) với nhân sự.",
+     "Nhân viên làm việc ngoài giờ hành chính tại cơ sở phải có văn bản chấp thuận của thủ trưởng cơ quan nơi đang công tác."
+    ],
+    [
+     "Có quy định hỗ trợ (một phần hoặc toàn bộ) học phí cho nhân viên được cử đi đào tạo nâng cao trình độ chuyên môn.",
+     "Có ít nhất 50% nhân viên tham gia cập nhật kiến thức y khoa liên tục tối thiểu 120 giờ tín chỉ trong 05 năm liên tục.",
+     "Có kế hoạch đào tạo, nâng cao trình độ đối với chức danh nghề nghiệp cấp cứu viên ngoại viện.",
+     "Kế hoạch đào tạo phải phù hợp với kế hoạch phát triển chuyên môn của Trung tâm.",
+     "Bố trí vị trí việc làm phù hợp cho nhân viên sau khi hoàn thành chương trình đào tạo.",
+     "Có cơ chế, chính sách thu hút, tuyển dụng và duy trì nguồn nhân lực y tế có chất lượng làm việc ổn định, lâu dài và yên tâm cống hiến.",
+     "Tổ chức thực hành cho cấp cứu viên ngoại viện đúng quy định (cơ sở có bản công bố đáp ứng yêu cầu là cơ sở hướng dẫn thực hành gửi cơ quan có thẩm quyền, đơn đề nghị thực hành, hợp đồng thực hành, quyết định phân công người hướng dẫn, người hướng dẫn phải đủ điều kiện hướng dẫn, nhận xét cuối khóa thực hành của người hướng dẫn, …).",
+     "Bác sĩ người nước ngoài khi hành nghề tại Việt Nam hoặc/và bác sĩ Việt Nam khi khám bệnh, chữa bệnh cho người nước ngoài phải tuân thủ quy định về khám bệnh, chữa bệnh cho người nước ngoài."
+    ],
+    [
+     "Có ít nhất 80% nhân viên được cập nhật kiến thức y khoa liên tục tối thiểu 120 giờ tín chỉ trong 05 năm liên tục.",
+     "Có hình thức khuyến khích, khen thưởng nhân viên đạt thành tích khi tham gia kiểm tra tay nghề tại Trung tâm.",
+     "Hàng năm, Trung tâm cử tối thiểu 10% số lượng người làm việc được đào tạo bồi dưỡng, nâng cao trình độ chuyên môn."
+    ],
+    [
+     "Toàn bộ nhân viên được cập nhật kiến thức y khoa liên tục tối thiểu 120 giờ tín chỉ trong 05 năm liên tục.",
+     "Có phần mềm theo dõi thu thập số giờ học cập nhật kiến thức của từng nhân viên theo quy định.",
+     "Hàng năm, Trung tâm cử tối thiểu 20% số lượng người làm việc được đào tạo bồi dưỡng, nâng cao trình độ chuyên môn.",
+     "Toàn bộ những người được cử đi học quay trở lại Trung tâm làm việc theo thời gian cam kết.",
+     "Không có trường hợp bồi hoàn kinh phí đào tạo.",
+     "100% bác sĩ có trình độ chuyên khoa 1 trở lên."
+    ]
+   ]
+  },
+  {
+   "part": "B",
+   "partName": "Phát triển nguồn nhân lực",
+   "chapter": "B2",
+   "chapterName": "Chất lượng nguồn nhân lực",
+   "code": "B2.2",
+   "title": "Nâng cao kỹ năng giao tiếp, ứng xử, y đức",
+   "legalBasis": "Luật Khám bệnh, chữa bệnh số 15/2023/QH15 ngày 09 tháng 01 năm 2023;\nThông tư số 07/2014/TT-BYT ngày 25 tháng 02 năm 2014 của Bộ Y tế quy định về Quy tắc ứng xử của công chức, viên chức, người lao động làm việc tại các cơ sở y tế;\nQuyết định số 67/2017/QĐ-UBND ngày 29 tháng 12 năm 2017 của Ủy ban nhân dân Thành phố Hồ Chí Minh về việc ban hành quy định quy tắc ứng xử của cán bộ, công chức, viên chức và người lao động làm việc trong cơ quan hành chính, đơn vị sự nghiệp công lập.",
+   "ownerUnit": "TCCB",
+   "levels": [
+    [
+     "Không có kế hoạch nâng cao kỹ năng ứng xử, giao tiếp, y đức cho nhân viên.",
+     "Có trường hợp vi phạm y đức nghiêm trọng, gây ảnh hưởng đến uy tín ngành y."
+    ],
+    [
+     "Bản kế hoạch có đặt ra các chỉ tiêu/chỉ số cụ thể liên quan đến ứng xử, giao tiếp, y đức để phấn đấu.",
+     "Đã triển khai kế hoạch nâng cao kỹ năng ứng xử, giao tiếp, y đức."
+    ],
+    [
+     "Có cam kết giữa nhân viên với lãnh đạo Trung tâm và giữa tập thể Trung tâm với các cơ quan quản lý về nâng cao tinh thần trách nhiệm, thái độ ứng xử, giao tiếp, y đức của nhân viên với người bệnh.",
+     "Hoạt động nâng cao kỹ năng ứng xử, giao tiếp cho nhân viên phải có các nội dung về kỹ năng tư vấn, riêng điều phối viên điều phối cấp cứu 115 có thêm nội dung nâng cao kỹ năng giao tiếp qua điện thoại."
+    ],
+    [
+     "Có tiến hành đánh giá việc triển khai nâng cao thái độ ứng xử, giao tiếp, y đức theo định kỳ hàng năm và có báo cáo về hình thức/phương pháp đánh giá và kết quả đánh giá.",
+     "Tổ chức ít nhất 01 lớp tập huấn nâng cao kỹ năng ứng xử, giao tiếp, y đức tại Trung tâm cho nhân viên.",
+     "Có thư cảm ơn/thư khen của người bệnh/người nhà đánh giá cao về tinh thần trách nhiệm, thái độ ứng xử, giao tiếp, y đức của nhân viên."
+    ],
+    [
+     "Có ít nhất 70% nhân viên tham gia các lớp tập huấn nâng cao kỹ năng ứng xử, giao tiếp, y đức.",
+     "Đánh giá thực hiện kế hoạch nâng cao thái độ ứng xử, giao tiếp, y đức của nhân viên có các chỉ số đạt kết quả tốt; có xu hướng tăng dần theo thời gian.",
+     "Không có đơn thư khiếu nại, tố cáo về thái độ ứng xử, giao tiếp, y đức của nhân viên.",
+     "Có cá nhân hoặc vụ việc tiêu biểu về y đức, được các phương tiện truyền thông đăng tải ca ngợi, biểu dương; là tấm gương sáng cho các cá nhân, đơn vị khác học tập."
+    ]
+   ]
+  },
+  {
+   "part": "B",
+   "partName": "Phát triển nguồn nhân lực",
+   "chapter": "B3",
+   "chapterName": "Chế độ đãi ngộ và điều kiện, môi trường làm việc",
+   "code": "B3.1",
+   "title": "Bảo đảm chính sách tiền lương, chế độ đãi ngộ cho nhân viên",
+   "legalBasis": "Nghị định số 204/2004/NĐ-CP ngày 14 tháng 12 năm 2004 của Chính phủ về chế độ tiền lương đối với Cán bộ, Công chức, Viên chức và Lực lượng vũ trang;\nNghị định số 60/2021/NĐ-CP ngày 21 tháng 6 năm 2021 của Chính phủ quy định cơ chế tự chủ tài chính của đơn vị sự nghiệp công lập;\nThông tư số 05/2005/TT-BNV ngày 05 tháng 01 năm 2005 của Bộ Nội vụ hướng dẫn thực hiện chế độ phụ cấp trách nhiệm đối với Cán bộ, Công chức, Viên chức;\nThông tư số 23/2005/TT-BYT ngày 25 tháng 8 năm 2005 của Bộ Y tế về Hướng dẫn xếp hạng các đơn vị sự nghiệp y tế;\nThông tư số 02/2012/TTLT-BYT-BNV-BTC liên tịch Bộ Y tế, Bộ Nội vụ và Bộ Tài chính ngày 19 tháng 01 năm 2012 và Nghị Định số 56/2011/NĐ-CP ngày 04 tháng 7 năm 2011 qui định chế độ phụ cấp ưu đãi theo nghề tại các cơ sở y tế công lập.",
+   "ownerUnit": "TCCB",
+   "levels": [
+    [
+     "Có nhân viên hưởng lương dưới mức lương tối thiểu hoặc trả lương cho người lao động không đúng quy định của pháp luật.",
+     "Có nhân viên đang làm việc tại Trung tâm đã hết giai đoạn thử việc từ 3 tháng trở lên nhưng không được ký hợp đồng lao động."
+    ],
+    [
+     "Toàn bộ nhân viên làm việc từ 03 tháng trở lên đều được hưởng lương hoặc các thu nhập hợp pháp khác do Trung tâm chi trả.",
+     "Bảo đảm đóng bảo hiểm xã hội cho toàn bộ nhân viên, người lao động.",
+     "Toàn bộ nhân viên được đảm bảo trả lương đúng hạn và đầy đủ số tiền theo như quy định."
+    ],
+    [
+     "Có xây dựng quy chế chi tiêu nội bộ và được lấy ý kiến rộng rãi tại hội nghị viên chức người lao động.",
+     "Toàn bộ nhân viên trong chỉ tiêu được đảm bảo tăng lương theo đúng quy định.",
+     "Toàn bộ nhân viên được hưởng các khoản phụ cấp và nguồn thu nhập tăng thêm hợp pháp theo quy chế chi tiêu nội bộ."
+    ],
+    [
+     "Thí điểm chi trả nguồn thu nhập tăng thêm dựa trên kết quả công việc đối với 01 chức danh nghề nghiệp hoặc ít nhất tại 01 khoa, phòng.",
+     "Thực hiện nâng lương trước thời hạn cho những cá nhân tiêu biểu, có thành tích và cống hiến cho Trung tâm."
+    ],
+    [
+     "Có hình thức chi trả nguồn thu nhập tăng thêm dựa trên kết quả công việc cho toàn bộ chức danh nghề nghiệp.",
+     "Có đánh giá hiệu quả triển khai áp dụng chi trả nguồn thu nhập tăng thêm dựa trên kết quả công việc."
+    ]
+   ]
+  },
+  {
+   "part": "B",
+   "partName": "Phát triển nguồn nhân lực",
+   "chapter": "B3",
+   "chapterName": "Chế độ đãi ngộ và điều kiện, môi trường làm việc",
+   "code": "B3.2",
+   "title": "Bảo đảm điều kiện làm việc, vệ sinh lao động cho nhân viên",
+   "legalBasis": "Luật An toàn, vệ sinh lao động số 84/2015/QH13 ngày 25 tháng 6 năm 2015;\nNghị định số 39/2016/NĐ-CP ngày 15 tháng 5 năm 2016 của Chính phủ quy định chi tiết thi hành một số điều của luật an toàn, vệ sinh lao động;\nNghị định số 44/2016/NĐ-CP ngày 15 tháng 5 năm 2016 của Chính phủ quy định chi tiết một số điều của luật an toàn, vệ sinh lao động về hoạt động kiểm định kỹ thuật an toàn lao động, huấn luyện an toàn, vệ sinh lao động và quan trắc môi trường lao động;\nQuyết định số 50/2017/QĐ-TTg ngày 31 tháng 12 năm 2017 của Thủ tướng Chính phủ quy định tiêu chuẩn định mức sử dụng máy móc, thiết bị;\nThông tư số 19/2016/TT-BYT ngày 30 tháng 6 năm 2016 của Bộ Y tế về hướng dẫn quản lý vệ sinh lao động và sức khỏe người lao động.",
+   "ownerUnit": "TCCB",
+   "levels": [
+    [
+     "Không bảo đảm điều kiện về cơ sở vật chất, phòng ốc (nhà dột, nát, không đủ điện, nước sinh hoạt…nhưng không được khắc phục kịp thời) cho nhân viên.",
+     "Không bảo đảm điều kiện về trang thiết bị văn phòng, bàn ghế làm việc.",
+     "Không có thiết bị phòng cháy chữa cháy."
+    ],
+    [
+     "Có biển hiệu, biển tên các khoa, phòng rõ ràng, dễ quan sát.",
+     "Bảo đảm điều kiện về trang thiết bị văn phòng, bàn ghế làm việc đầy đủ.",
+     "Có đầy đủ trang thiết bị y tế cơ bản cần thiết phục vụ y tế chuyên môn, trang thiết bị không đảm bảo yêu cầu chuyên môn được thay thế kịp thời.",
+     "Nhân viên được cấp đầy đủ các phương tiện bảo hộ mang tính liên quan trực tiếp đến an toàn nhân viên như khẩu trang, găng tay, quần áo..."
+    ],
+    [
+     "Cung cấp đầy đủ trang phục cho toàn bộ nhân viên tại Trung tâm.",
+     "Có sẵn phương tiện, thuốc, hoá chất để sơ cấp cứu kịp thời cho nhân viên trong trường hợp bị phơi nhiễm nghề nghiệp.",
+     "Nhân viên được cập nhật thông tin mới hoặc tập huấn về vệ sinh an toàn lao động, lưu ý phòng tránh các tình huống vấn đề mới phát sinh như các bệnh truyền nhiễm nguy hiểm,…",
+     "Trung tâm có tiến hành khảo sát/đánh giá định kỳ về mức độ hài lòng của nhân viên với các điều kiện cơ sở vật chất, điều kiện làm việc, bảo hộ lao động…"
+    ],
+    [
+     "Trang phục cho các chức danh nghề nghiệp khác nhau về kiểu dáng, ký hiệu hoặc màu sắc để có thể phân biệt rõ ràng giữa các đối tượng.",
+     "Trung tâm lập hồ sơ vệ sinh lao động, đo kiểm tra môi trường lao động định kỳ theo quy định.",
+     "Có phân tích kết quả khảo sát sự hài lòng của nhân viên."
+    ],
+    [
+     "Kết quả khảo sát xác định được những vấn đề nhân viên chưa hài lòng.",
+     "Tiến hành can thiệp cải thiện điều kiện lao động cho nhân viên dựa trên các kết quả khảo sát/đánh giá...",
+     "Tổ chức và hỗ trợ một phần cho nhân viên mua bảo hiểm trách nhiệm nghề nghiệp."
+    ]
+   ]
+  },
+  {
+   "part": "B",
+   "partName": "Phát triển nguồn nhân lực",
+   "chapter": "B3",
+   "chapterName": "Chế độ đãi ngộ và điều kiện, môi trường làm việc",
+   "code": "B3.3",
+   "title": "Quan tâm, cải thiện sức khỏe, đời sống tinh thần của nhân viên",
+   "legalBasis": "Luật An toàn, vệ sinh lao động số 84/2015/QH13 ngày 25 tháng 6 năm 2015;\nThông tư số 19/2016/TT-BYT ngày 30 tháng 6 năm 2016 của Bộ trưởng Bộ Y tế về hướng dẫn quản lý vệ sinh lao động và sức khỏe người lao động;\nThông tư số 28/2016/TT-BYT ngày 30 tháng 6 năm 2016 của Bộ Y tế hướng dẫn quản lý bệnh nghề nghiệp;\nThông tư số 32/2023/TT-BYT ngày 31 tháng 12 năm 2023 của Bộ Y tế quy định chi tiết một số điều của Luật Khám bệnh, chữa bệnh.",
+   "ownerUnit": "TCCB",
+   "levels": [
+    [
+     "Không tiến hành khám sức khỏe định kỳ cho nhân viên.",
+     "Phát hiện nhân viên của Trung tâm trực quá 24 giờ."
+    ],
+    [
+     "Lập hồ sơ quản lý sức khỏe cho từng nhân viên."
+    ],
+    [
+     "Có tổ chức khám sức khỏe định kỳ hàng năm cho toàn bộ nhân viên Trung tâm và khám bệnh nghề nghiệp cho các nhân viên.",
+     "Bảo đảm chế độ nghỉ dưỡng/nghỉ phép cho nhân viên theo đúng quy định.",
+     "Tổ chức các hình thức nghỉ dưỡng/tham quan tập thể cho nhân viên hàng năm."
+    ],
+    [
+     "Quản lý và theo dõi hồ sơ sức khỏe của toàn bộ nhân viên Trung tâm theo thời gian.",
+     "Hồ sơ sức khỏe của toàn bộ nhân viên Trung tâm được quản lý bằng công nghệ thông tin.",
+     "Có các hình thức, phương tiện nâng cao sức khỏe thể chất và tinh thần cho nhân viên như sân tập và dụng cụ thể thao.",
+     "Có tổ chức các hoạt động/phong trào thể thao và văn hóa văn nghệ, giải trí, động viên tinh thần cho nhân viên."
+    ],
+    [
+     "Hàng năm có báo cáo về tình trạng sức khỏe nhân viên, phần mềm quản lý hồ sơ sức khỏe của nhân viên có chiết xuất ra được các biểu đồ, diễn biến tình trạng sức khỏe, cơ cấu bệnh tật của nhân viên.",
+     "Kết quả phân tích có đưa ra được các cảnh báo nguy cơ bệnh tật cho các đối tượng nhân viên dựa vào phân tích hồ sơ sức khỏe.",
+     "Áp dụng kết quả phân tích vào can thiệp nâng cao tình trạng sức khỏe cho nhân viên Trung tâm.",
+     "Có các khu thể thao và giải trí lành mạnh dành cho nhân viên Trung tâm (nằm trong hoặc ngoài khuôn viên Trung tâm)."
+    ]
+   ]
+  },
+  {
+   "part": "B",
+   "partName": "Phát triển nguồn nhân lực",
+   "chapter": "B3",
+   "chapterName": "Chế độ đãi ngộ và điều kiện, môi trường làm việc",
+   "code": "B3.4",
+   "title": "Tạo dựng môi trường làm việc tích cực",
+   "legalBasis": "Luật Khiếu nại số 02/2011/QH13 ngày 11 tháng 11 năm 2011;\nLuật Tố cáo số 25/2018/QH14 ngày 12 tháng 6 năm 2018;\nLuật Thực hiện dân chủ ở cơ sở số 10/2022/QH15 ngày 10 tháng 11 năm 2022.",
+   "ownerUnit": "TCCB",
+   "levels": [
+    [
+     "Có đơn thư khiếu nại, tố cáo của nhân viên về các hiện tượng mất dân chủ, mất đoàn kết, tiêu cực…"
+    ],
+    [
+     "Đã xây dựng quy chế dân chủ cơ sở.",
+     "Quy chế dân chủ cơ sở được lấy ý kiến rộng rãi tại hội nghị viên chức, người lao động."
+    ],
+    [
+     "Có các quy định và triển khai các hình thức thi đua, khen thưởng, động viên, khuyến khích các nhân viên thực hiện tốt công việc đạt chất lượng cao; không phân biệt vị trí công tác.",
+     "Hình thức động viên, khuyến khích nhân viên đa dạng (bằng tiền, hiện vật, danh hiệu, cơ hội đi học, bổ nhiệm…).",
+     "Có xây dựng các tiêu chí cụ thể về tăng lương, khen thưởng, bổ nhiệm, kỷ luật… nhân viên và công bố công khai cho toàn thể nhân viên được biết."
+    ],
+    [
+     "Có tiến hành khảo sát hàng năm đánh giá của nhân viên về môi trường làm việc.",
+     "Nhân viên được làm việc trong môi trường thân thiện*.",
+     "Nhân viên được lãnh đạo Trung tâm quan tâm; được tôn trọng và đối xử bình đẳng*.",
+     "Có phòng thư viện, các sách, tạp chí y học, văn bản thư điện tử,… và tạo điều kiện để nhân viên tiếp cận thường xuyên."
+    ],
+    [
+     "Thực hiện khen thưởng, bổ nhiệm công khai minh bạch đúng cho các đối tượng hoạt động thực sự tích cực, hiệu quả (không dựa trên phân bổ chỉ tiêu khen thưởng, bổ nhiệm theo cơ cấu)*.",
+     "Áp dụng các kết quả khảo sát đánh giá của nhân viên vào việc cải tiến, tạo dựng môi trường làm việc tích cực cho nhân viên."
+    ]
+   ]
+  },
+  {
+   "part": "B",
+   "partName": "Phát triển nguồn nhân lực",
+   "chapter": "B4",
+   "chapterName": "Lãnh đạo trung tâm",
+   "code": "B4.1",
+   "title": "Xây dựng kế hoạch, chiến lược phát triển Trung tâm và công bố công khai",
+   "legalBasis": "Quyết định số 01/2008/QĐ-BYT ngày 21 tháng 01 năm 2008 của Bộ Y tế về việc ban hành Quy chế cấp cứu, hồi sức tích cực và chống độc.",
+   "ownerUnit": "TCCB",
+   "levels": [
+    [
+     "Chưa xây dựng kế hoạch phát triển tổng thể."
+    ],
+    [
+     "Đã xây dựng kế hoạch phát triển tổng thể.",
+     "Công bố công khai kế hoạch đã xây dựng cho toàn bộ nhân viên."
+    ],
+    [
+     "Trong kế hoạch phát triển tổng thể có kế hoạch cụ thể theo từng giai đoạn (giai đoạn ngắn hạn 1, 2 năm; giai đoạn dài hạn 5 năm hoặc trên 5 năm).",
+     "Đã xây dựng kế hoạch hoạt động chi tiết hằng năm căn cứ vào kế hoạch 5 năm và xác định những vấn đề ưu tiên phát triển Trung tâm.",
+     "Trung tâm đã triển khai thực hiện theo các kế hoạch ngắn hạn và dài hạn.",
+     "Trong kế hoạch có các chỉ số đích và mốc thời gian, lộ trình cụ thể để thực hiện.",
+     "Trong kế hoạch có các giải pháp cụ thể và nguồn lực để đạt được mục tiêu phát triển của Trung tâm."
+    ],
+    [
+     "Đã triển khai đầy đủ các nội dung trong kế hoạch ngắn hạn và dài hạn.",
+     "Tiến hành đo lường các chỉ số trong bản kế hoạch phát triển.",
+     "Có bản danh mục kết quả thực hiện các chỉ số trong bản kế hoạch theo năm.",
+     "Có sơ kết việc đánh giá triển khai kế hoạch phát triển.",
+     "Có xác định được những nội dung chưa thực hiện được theo đúng kế hoạch và xây dựng được giải pháp khắc phục.",
+     "Có xác định những nội dung không khả thi và đề xuất điều chỉnh kế hoạch."
+    ],
+    [
+     "Triển khai các giải pháp khắc phục và huy động nguồn lực để thực hiện những nội dung chưa hoàn thành theo đúng kế hoạch.",
+     "Điều chỉnh kế hoạch dựa trên kết quả đánh giá việc triển khai thực hiện, đặc biệt điều chỉnh những nội dung không hoặc ít tính khả thi.",
+     "Đã xây dựng và được phê duyệt chiến lược phát triển như mở rộng quy mô, nâng cấp Trung tâm; thực hiện được các kỹ thuật cao, chuyên sâu; phát triển thành cơ sở đào tạo, trung tâm cấp cứu khu vực…",
+     "Công bố công khai chiến lược phát triển đã xây dựng."
+    ]
+   ]
+  },
+  {
+   "part": "B",
+   "partName": "Phát triển nguồn nhân lực",
+   "chapter": "B4",
+   "chapterName": "Lãnh đạo trung tâm",
+   "code": "B4.2",
+   "title": "Triển khai thực hiện văn bản chỉ đạo",
+   "legalBasis": "Nghị định số 130/2018/NĐ-CP ngày 27 tháng 9 năm 2018 của Chính phủ về quy định chi tiết thi hành luật giao dịch điện tử về chữ ký số và dịch vụ chứng thực chữ ký số;\nNghị định số 30/2020/NĐ-CP ngày 05 tháng 3 năm 2020 của Chính phủ về công tác văn thư;\nThông tư số 41/2017/TT-BTTTT ngày 19 tháng 12 năm 2017 của Bộ Thông tin và Truyền thông về quy định sử dụng chữ ký số cho văn bản điện tử trong cơ quan nhà nước.",
+   "ownerUnit": "VPS",
+   "levels": [
+    [
+     "Không phân công cho nhân viên hoặc bộ phận đầu mối tiếp nhận và cập nhật các văn bản có liên quan đến hoạt động Trung tâm.",
+     "Phát hiện thấy Trung tâm không cập nhật một hoặc nhiều văn bản chỉ đạo của cấp trên mang tính bắt buộc thực hiện."
+    ],
+    [
+     "Đã triển khai đầy đủ, đúng tiến độ thực hiện các văn bản chỉ đạo dành cho Trung tâm do các cấp quản lý có thẩm quyền ban hành đến lãnh đạo Trung tâm, lãnh đạo các khoa, phòng và người lao động có liên quan đến văn bản đó.",
+     "Có phân công nhân sự đầu mối hoặc bộ phận chịu trách nhiệm tiếp nhận, cập nhật các văn bản chỉ đạo có liên quan đến hoạt động của Trung tâm."
+    ],
+    [
+     "Có quy trình tiếp nhận, phân loại, xử lý văn bản chỉ đạo, trong đó có quy định rõ thời gian, cách thức xử lý văn bản được Ban Giám đốc Trung tâm phê duyệt ban hành và được cập nhật.",
+     "Không có tình trạng có văn bản đến nhưng không được lãnh đạo xử lý.",
+     "Có bảng danh sách thống kê các văn bản chỉ đạo của Bộ Y tế, Cục Quản lý Khám, chữa bệnh, Sở Y tế và cơ quan chính quyền khác trong năm.",
+     "Có sử dụng chứng thư điện tử trong các hồ sơ, tài liệu điện tử tại Trung tâm."
+    ],
+    [
+     "Đã triển khai thực hiện đầy đủ các hoạt động cụ thể đáp ứng yêu cầu của văn bản chỉ đạo (Trung tâm cung cấp bằng chứng cho một số văn bản ví dụ đã triển khai).",
+     "Áp dụng phần mềm tin học văn phòng (excel) hoặc phần mềm chuyên dụng để quản lý và triển khai văn bản."
+    ],
+    [
+     "Có phản hồi bằng văn bản với cơ quan quản lý về đóng góp ý kiến đối với dự thảo các văn bản quy phạm pháp luật.",
+     "Áp dụng phần mềm chuyên dụng quản lý văn bản điện tử, văn bản được gửi tới ngay tất cả các đối tượng nhận văn bản để thực hiện thông qua hệ thống phần mềm sau khi văn bản được lãnh đạo Trung tâm tiếp nhận và xử lý."
+    ]
+   ]
+  },
+  {
+   "part": "B",
+   "partName": "Phát triển nguồn nhân lực",
+   "chapter": "B4",
+   "chapterName": "Lãnh đạo trung tâm",
+   "code": "B4.3",
+   "title": "Bảo đảm chất lượng nguồn nhân lực quản lý",
+   "legalBasis": "Luật Viên chức số 58/2010/QH12 ngày 15 tháng 11 năm 2010;\nThông tư số 03/2023/TT-BNV ngày 30 tháng 4 năm 2023 về Hướng dẫn một số quy định của Nghị định số 101/2017/NĐ-CP ngày 01 tháng 9 năm 2017 của Chính phủ về đào tạo, bồi dưỡng cán bộ, công chức, viên chức và Nghị định số 89/2021/NĐ-CP ngày 18 tháng 10 năm 2021 của Chính phủ sửa đổi, bổ sung một số điều của Nghị định số 101/2017/NĐ-CP của Chính phủ về đào tạo, bồi dưỡng cán bộ, công chức, viên chức;\nThông tư số 32/2023/TT-BYT ngày 31 tháng 12 năm 2023 của Bộ Y tế về Quy định chi tiết một số điều của Luật khám bệnh, chữa bệnh.",
+   "ownerUnit": "TCCB",
+   "levels": [
+    [
+     "Chưa có tiêu chuẩn, quy trình tuyển dụng, bổ nhiệm đội ngũ lãnh đạo, quản lý của Trung tâm.",
+     "Có đơn thư khiếu nại, tố cáo về việc tuyển dụng, bổ nhiệm đội ngũ cán bộ quản lý vi phạm các quy định hiện hành (đã xác minh và phát hiện sai phạm)."
+    ],
+    [
+     "Xây dựng tiêu chuẩn, tiêu chí hoặc yêu cầu tối thiểu cho các yêu cầu lãnh đạo, quản lý của Trung tâm, khoa, phòng và công khai cho nhân viên.",
+     "Có ít nhất 20% “người quản lý” đã tham gia cập nhật kiến thức y khoa liên tục và có chứng chỉ về quản lý.",
+     "Xây dựng các quy trình bổ nhiệm cho các vị trí lãnh đạo, quản lý và công bố công khai cho nhân viên."
+    ],
+    [
+     "Thực hiện bổ nhiệm các vị trí lãnh đạo, quản lý đúng tiêu chuẩn và quy trình.",
+     "Tất cả “người quản lý” sử dụng thành thạo máy tính và các phần mềm tin học văn phòng.",
+     "Có ít nhất 50% “người quản lý” có thể giao tiếp thông thường bằng tiếng Anh (hoặc có chứng chỉ tiếng Anh từ bằng B hoặc tương đương trở lên).",
+     "Có ít nhất 40% “người quản lý” đã tham gia cập nhật kiến thức y khoa liên tục và có chứng chỉ về quản lý."
+    ],
+    [
+     "Có ít nhất 70% “người quản lý” có thể giao tiếp thông thường bằng tiếng Anh (hoặc có chứng chỉ tiếng Anh bằng B hoặc tương đương trở lên).",
+     "Toàn bộ “người quản lý” có đủ năng lực cơ bản về tin học đáp ứng yêu cầu công việc.",
+     "Có ít nhất 60% “người quản lý” đã tham gia cập nhật kiến thức y khoa liên tục và có chứng chỉ về quản lý."
+    ],
+    [
+     "Có ít nhất 80% “người quản lý” tham gia cập nhật kiến thức y khoa liên tục và có chứng chỉ về quản lý.",
+     "Có ít nhất 30% “người quản lý” có trình độ chuyên môn từ chuyên khoa 2 hoặc tương đương trở lên.",
+     "Lãnh đạo Trung tâm, khoa, phòng chỉ kiêm nhiệm thêm tối đa một chức vụ quản lý khác.",
+     "Thí điểm hình thức thi tuyển (như trình bày kế hoạch phát triển) các vị trí lãnh đạo quản lý Trung tâm có sự giám sát công khai của cơ quan quản lý, đại diện người quản lý ban thanh tra nhân dân,…"
+    ]
+   ]
+  },
+  {
+   "part": "B",
+   "partName": "Phát triển nguồn nhân lực",
+   "chapter": "B4",
+   "chapterName": "Lãnh đạo trung tâm",
+   "code": "B4.4",
+   "title": "Bồi dưỡng, phát triển đội ngũ lãnh đạo và quản lý kế cận",
+   "legalBasis": "Luật Viên chức số 58/2010/QH12 ngày 15 tháng 11 năm 2010.",
+   "ownerUnit": "TCCB",
+   "levels": [
+    [
+     "Chưa có quy hoạch vị trí lãnh đạo và quản lý."
+    ],
+    [
+     "Đã có quy hoạch vị trí lãnh đạo và quản lý.",
+     "Xây dựng kế hoạch đào tạo dựa trên quy hoạch cán bộ lãnh đạo, quản lý đã được phê duyệt."
+    ],
+    [
+     "Bổ nhiệm vị trí lãnh đạo và quản lý theo đúng quy hoạch.",
+     "Có tổ chức bàn giao công việc giữa vị trí lãnh đạo và những công việc chưa hoàn thành.",
+     "Giám đốc mới được bổ nhiệm trong vòng 01 năm sau khi Giám đốc cũ nghỉ quản lý hoặc chuyển nhiệm vụ mới."
+    ],
+    [
+     "Xây dựng kế hoạch tuyển chọn, bồi dưỡng đội ngũ lãnh đạo kế cận.",
+     "Đã bổ nhiệm đầy đủ các vị trí lãnh đạo theo quy định và theo quy hoạch của Trung tâm.",
+     "Có kế hoạch và cử viên chức trong diện quy hoạch đi đào tạo nâng cao năng lực quản lý, lý luận chính trị."
+    ],
+    [
+     "Các cán bộ trong diện quy hoạch có trình độ quản lý, lý luận chính trị, ngoại ngữ đáp ứng yêu cầu vị trí quản lý và có thể thay thế lãnh đạo, quản lý đương nhiệm ngay lập tức khi cần thiết hoặc trong tình huống khẩn cấp.",
+     "Vị trí Ban Giám đốc được phát triển từ nguồn nhân lực của Trung tâm, trong diện quy hoạch của Trung tâm."
+    ]
+   ]
+  },
+  {
+   "part": "C",
+   "partName": "Hoạt động chuyên môn",
+   "chapter": "C1",
+   "chapterName": "An ninh, trật tự và an toàn cháy nổ",
+   "code": "C1.1",
+   "title": "Bảo đảm an ninh, trật tự tại Trung tâm",
+   "legalBasis": "Công văn số 4919/BYT-KCB ngày 28 tháng 7 năm 2014 của Bộ Y tế về việc tăng cường và bảo đảm an ninh, trật tự bệnh viện.",
+   "ownerUnit": "VPS",
+   "levels": [
+    [
+     "Không có đủ bảo vệ trực 24/24 hoặc phát hiện thấy bảo vệ bỏ trực trong ca làm việc.",
+     "Có trường hợp bảo vệ Trung tâm xô xát khách hàng và nhân viên, ảnh hưởng nghiêm trọng đến uy tín Trung tâm."
+    ],
+    [
+     "Có xây dựng phương án, kế hoạch bảo vệ, trong đó có nêu số lượng người, vị trí cần bảo vệ, tần suất đi tuần…",
+     "Khuôn viên Trung tâm có tường rào kín bao quanh; các cổng vào đều có người bảo vệ; không có lỗ hổng cho đi lại tự do.",
+     "Có hình thức kiểm soát được người ra vào Trung tâm."
+    ],
+    [
+     "Lực lượng bảo vệ đã được đào tạo chuyên nghiệp hoặc tập huấn nghiệp vụ bảo vệ tại các Trung tâm có trình độ và chức năng đào tạo nghiệp vụ bảo vệ (có chứng chỉ, giấy chứng nhận tham gia khóa tập huấn…).",
+     "Có hình thức kiểm soát được người ra vào Trung tâm.",
+     "Có văn bản phối hợp (hoặc ký biên bản cam kết) với cơ quan an ninh địa phương về việc hỗ trợ, bảo đảm giữ gìn an ninh, trật tự tại Trung tâm và khu vực quanh Trung tâm.",
+     "Có biện pháp chủ động phát hiện, ngăn chặn trộm cắp như đi tuần tra theo định kỳ, lập danh sách các đối tượng đã trộm cắp, theo dõi đối tượng nghi vấn hoặc các biện pháp chủ động khác.",
+     "Lực lượng bảo vệ luôn thường trực và can thiệp kịp thời các vụ việc hành hung, gây rối hoặc đập phá tài sản, đồ đạc của người bệnh hoặc thân nhân, nhân viên."
+    ],
+    [
+     "Có hệ thống camera an ninh tự động theo dõi toàn Trung tâm.",
+     "Có bộ phận thường trực theo dõi camera an ninh.",
+     "Có đội an ninh phản ứng nhanh do Trung tâm thành lập hoặc thuê công ty bảo vệ túc trực 24/24 giờ để đối phó với các sự cố bất thường xảy ra, có diễn tập ít nhất 1 lần trong năm.",
+     "Lực lượng bảo vệ được trang bị các phương tiện liên lạc nội bộ như máy bộ đàm."
+    ],
+    [
+     "Các khoa, phòng, hành lang… được trang bị khóa từ (hoặc khóa số) luôn trong trạng thái đóng; chỉ được mở bằng thẻ từ hoặc mã số.",
+     "Nhân viên được trang bị thẻ từ để mở khóa các khoa, phòng, hành lang. Thẻ có tên, ảnh, mã số nhân viên hoặc bằng vân tay."
+    ]
+   ]
+  },
+  {
+   "part": "C",
+   "partName": "Hoạt động chuyên môn",
+   "chapter": "C1",
+   "chapterName": "An ninh, trật tự và an toàn cháy nổ",
+   "code": "C1.2",
+   "title": "Bảo đảm an toàn điện và phòng cháy, chữa cháy",
+   "legalBasis": "Luật Phòng cháy và Chữa cháy số 27/2001/QH10 ngày 20 tháng 6 năm 2001;\nLuật số 40/2013/QH13 về sửa đổi, bổ sung một số điều của Luật phòng cháy và chữa cháy ngày 22 tháng 11 năm 2013;\nNghị định số 136/2020/NĐ-CP ngày 24 tháng 11 năm 2020 của Chính phủ quy định chi tiết một số điều và biện pháp thi hành Luật Phòng cháy và chữa cháy và Luật sửa đổi, bổ sung một số điều của Luật phòng cháy và chữa cháy;\nThông tư số 41/2013/TT-BLĐTBXH ngày 30 tháng 12 năm 2013 của Bộ Lao động - Thương binh và xã hội ban hành quy chuẩn kỹ thuật quốc gia về an toàn lao động đối với công việc hàn hơi;\nThông tư số 148/2020/TT-BCA ngày 31 tháng 12 năm 2020 của Bộ Công An sửa đổi, bổ sung một số điều của Thông tư số 57/2015/TT-BCA ngày 26 tháng 10 năm 2015 của Bộ trưởng Bộ Công An hướng dẫn về trang bị phương tiện phòng cháy và chữa cháy đối với phương tiện giao thông cơ giới đường bộ.",
+   "ownerUnit": "VPS",
+   "levels": [
+    [
+     "Có xảy ra sự cố cháy, nổ nghiêm trọng, gây thiệt hại tài sản, trang thiết bị hoặc con người.",
+     "Có sự cố mất điện, gây ảnh hưởng đến hoạt động chuyên môn và hậu quả nghiêm trọng đối với người bệnh (có trường hợp người bệnh tử vong hoặc biến chứng do mất điện làm trang thiết bị y tế không hoạt động, hoặc mất điện không bảo đảm ánh sáng, gây nhầm thuốc, hóa chất…).",
+     "Có hiện tượng câu, mắc và sử dụng điện tùy tiện, tự ý sửa chữa thay thế các thiết bị về điện, để chất dễ cháy gần cầu dao, át-tô-mát, bảng điện và đường dây dẫn điện.",
+     "Có hiện tượng các bình ô-xy đang chứa ô-xy chưa sử dụng để ngoài sân, hành lang… có thể tiếp xúc trực tiếp với ánh nắng mặt trời.",
+     "Không có các họng nước cứu hỏa, bể nước dự phòng cho chữa cháy trong khuôn viên Trung tâm."
+    ],
+    [
+     "Có quy định, nội quy về an toàn phòng cháy chữa cháy và sẵn có tại các khoa, phòng.",
+     "Có phân công một phòng đầu mối chịu trách nhiệm về công tác phòng cháy, chữa cháy.",
+     "Phòng đầu mối tiến hành thường xuyên hoặc định kỳ kiểm tra phát hiện các nhược điểm, thiếu sót về phòng cháy và có biện pháp khắc phục kịp thời.",
+     "Đã khắc phục hoàn toàn hoặc (và) không phát hiện thấy các nguy cơ cao mất an toàn về điện như có dây điện rách vỏ (hoặc dây không có vỏ) trong phòng, hành lang hoặc ổ điện đặt cạnh vòi nước...",
+     "Các bình ô-xy và hóa chất có nguy cơ dễ cháy, nổ được bảo quản trong nhà kho thoáng, mát và có mái che tránh tiếp xúc trực tiếp với ánh nắng mặt trời.",
+     "Các bình ô-xy trên xe cứu thương được đặt trên giá đỡ và có dây ràng.",
+     "Sẵn có bình chữa cháy tại các khoa, phòng, hành lang, xe cứu thương theo hướng dẫn, quy định của Trung tâm và cơ quan công an.",
+     "Các họng nước cứu hỏa và bể nước dự phòng cho chữa cháy trong khuôn viên Trung tâm bảo đảm luôn sẵn có nước."
+    ],
+    [
+     "Có nhân viên chuyên trách phụ trách điện và an toàn điện, được đào tạo từ trình độ trung cấp trở lên.",
+     "Có phân công ít nhất một nhân viên chịu trách nhiệm về công tác phòng cháy, chữa cháy và đã tham dự tập huấn phòng cháy, chữa cháy.",
+     "Có mời cơ quan công an, chuyên gia đến hướng dẫn, tư vấn, kiểm tra, diễn tập… về công tác phòng chống cháy nổ ít nhất 01 lần trong năm và có biên bản kiểm tra.",
+     "Có tổ chức huấn luyện phòng cháy, chữa cháy cho ít nhất 50% nhân viên 01 lần trong năm hoặc mời chuyên gia, cơ quan công an đến hướng dẫn, huấn luyện, kiểm tra công tác phòng chống cháy nổ ít nhất 01 lần trong năm.",
+     "Có phương án phòng chống cháy nổ, sơ tán thoát nạn, cứu người, cứu trang thiết bị y tế, tài sản và chống cháy lan.",
+     "Có cảnh báo cháy nổ và cấm lửa tại các vị trí, khu vực có nguy cơ cao như bình, kho chứa ô-xy, nơi chứa nhiên liệu gas, xăng, dầu và các máy móc có nguy cơ cháy nổ cao khác.",
+     "Có chuông báo cháy, đèn khẩn cấp luôn trong tình trạng hoạt động. Các hệ thống được kiểm tra vận hành thử ít nhất 02 lần trong năm và hoạt động tốt."
+    ],
+    [
+     "Có chứng nhận về phòng cháy, chữa cháy do cơ quan có thẩm quyền cấp (đối với công trình mới xây, cải tạo cần có biên bản nghiệm thu hệ thống phòng cháy chữa cháy do cơ quan có thẩm quyền cấp).",
+     "Đã khắc phục toàn bộ các nhược điểm (nếu có) được nêu trong biên bản.",
+     "Có bản sơ đồ cửa và cầu thang thoát hiểm tại các hành lang đầy đủ.",
+     "Các bình chữa cháy được đặt ở vị trí gần với nhân viên, thuận tiện trong sử dụng (ví dụ đặt trong các hộp kính ở gần cửa phòng hành chính của khoa, phòng).",
+     "Trang bị hệ thống cầu dao tự ngắt cho các máy móc thiết bị y tế.",
+     "Có hệ thống báo cháy, chuông báo cháy tự động tại tất cả các khoa, phòng.",
+     "Có hệ thống máy phát điện dự phòng.",
+     "Có diễn tập phòng cháy chữa cháy ít nhất 01 lần trong năm trên quy mô toàn Trung tâm. Nhân viên sử dụng được các phương tiện chữa cháy sẵn có và biết được phương án sơ tán thoát nạn, cứu người, cứu trang thiết bị y tế, tài sản và chống cháy lan.",
+     "Không có sự cố cháy, nổ trong năm cần dùng bình cứu hỏa."
+    ],
+    [
+     "Trang bị hệ thống cầu dao tự ngắt cho toàn bộ hệ thống điện và riêng cho từng khối nhà, từng tầng.",
+     "Không có sự cố chập điện trong năm.",
+     "Trang bị hệ thống phun nước chữa cháy tự động cùng hệ thống cảm biến khói cháy tại tất cả các khoa, phòng.",
+     "Có hệ thống máy phát điện dự phòng và tự động kích hoạt trong vòng 01 phút nếu như điện lưới bị cắt hoặc gặp sự cố.",
+     "Thiết kế các khối nhà cao tầng có cửa thoát hiểm và cầu thang bộ thoát hiểm trong trường hợp khẩn cấp, cháy nổ (nếu có).",
+     "Có tham gia bảo hiểm cháy, nổ."
+    ]
+   ]
+  },
+  {
+   "part": "C",
+   "partName": "Hoạt động chuyên môn",
+   "chapter": "C2",
+   "chapterName": "Quản lý hồ sơ bệnh án",
+   "code": "C2.1",
+   "title": "Hồ sơ bệnh án, đơn thuốc được lập đầy đủ, chính xác, khoa học",
+   "legalBasis": "Luật Khám bệnh, chữa bệnh số 15/2023/QH15 ngày 09 tháng 01 năm 2023;\nThông tư số 32/2023/TT-BYT ngày 23 tháng 12 năm 2023 của Bộ Y tế quy định chi tiết một số điều của Luật Khám bệnh, chữa bệnh;\nQuyết định số 3970/QĐ-BYT ngày 24 tháng 9 năm 2015 của Bộ trưởng Bộ Y tế ban hành “Bảng phân loại thống kê quốc tế về bệnh tật và các vấn đề sức khỏe có liên quan” phiên bản lần thứ 10 (ICD 10).",
+   "ownerUnit": "NVY",
+   "levels": [
+    [
+     "Phát hiện có trường hợp người bệnh cấp cứu không được lập hồ sơ bệnh án trong vòng 24 giờ.",
+     "Có sai sót thông tin, tẩy xóa nội dung ghi chép trong hồ sơ bệnh án.",
+     "Bệnh án có nội dung không đọc được chữ viết."
+    ],
+    [
+     "Có lập hồ sơ bệnh án cho người bệnh cấp cứu, bảo đảm đầy đủ các thông tin cơ bản cần thiết và hoàn chỉnh hồ sơ bệnh án theo quy định.",
+     "Hồ sơ bệnh án ghi chép đầy đủ diễn tiến của người bệnh, những can thiệp của kíp cấp cứu trong quá trình cấp cứu và vận chuyển.",
+     "Hồ sơ bệnh án bảo đảm được bác sĩ điều trị duyệt và chịu trách nhiệm về nội dung thông tin.",
+     "Có tập huấn cho nhân viên cấp cứu về “Bảng phân loại thống kê quốc tế về bệnh tật và các vấn đề sức khỏe có liên quan”, cách ghi mã bệnh chính và bệnh kèm theo."
+    ],
+    [
+     "Có phân công nhân viên chịu trách nhiệm kiểm tra hồ sơ bệnh án thường quy, đánh giá việc ghi chép, chất lượng thông tin…",
+     "Sẵn có bảng mã ICD 10 hoặc bảng mã tương đương cho các bệnh thường gặp tại Trung tâm.",
+     "Bảng mã được in rõ ràng, lành lặn, dễ đọc, đặt ở vị trí dễ quan sát hoặc dễ lấy.",
+     "Các thông tin bệnh được mã hóa chính xác theo bảng mã ICD 10 hoặc bảng mã tương đương khi chẩn đoán và sau khi có kết luận."
+    ],
+    [
+     "Có quy định và tiến hành kiểm tra ngẫu nhiên chất lượng hồ sơ bệnh án và nhập mã ICD 10 hoặc bảng mã tương đương.",
+     "Có tiến hành đánh giá (hoặc nghiên cứu) về chất lượng hồ sơ bệnh án và xác định tỷ lệ nhập sai mã theo bảng mã ICD 10 hoặc bảng mã tương đương (ví dụ có bảng kiểm đánh giá chất lượng bệnh án từ hình thức đến nội dung).",
+     "Có bản kết quả đánh giá, trong đó chỉ ra được những lỗi thường gặp của hồ sơ bệnh án, tỷ lệ nhập sai mã theo bảng mã ICD 10 hoặc bảng mã tương đương, nguyên nhân chính và các giải pháp."
+    ],
+    [
+     "Áp dụng kết quả đánh giá, các giải pháp đã đề xuất vào việc cải tiến chất lượng lập hồ sơ bệnh án và nhập mã bảng mã ICD 10 hoặc bảng mã tương đương.",
+     "Thí điểm triển khai bệnh án điện tử tại Trung tâm.",
+     "Có đánh giá sơ bộ kết quả triển khai thí điểm bệnh án điện tử, xác định những khó khăn, bất cập cần khắc phục.",
+     "Triển khai sử dụng và lưu trữ hồ sơ bệnh án điện tử thay cho hồ sơ bệnh án giấy tại Trung tâm và được công bố chính thức trên trang thông tin của Bộ Y tế."
+    ]
+   ]
+  },
+  {
+   "part": "C",
+   "partName": "Hoạt động chuyên môn",
+   "chapter": "C2",
+   "chapterName": "Quản lý hồ sơ bệnh án",
+   "code": "C2.2",
+   "title": "Hồ sơ bệnh án được quản lý chặt chẽ, đầy đủ, khoa học",
+   "legalBasis": "Luật Khám bệnh, chữa bệnh số 15/2023/QH15 ngày 09 tháng 01 năm 2023;\nThông tư số 53/2017/TT-BYT ngày 29 tháng 12 năm 2017 của Bộ Y tế về quy định về thời hạn bảo quản hồ sơ, tài liệu chuyên môn nghiệp vụ ngành y tế;\nQuyết định số 1904/QĐ-BYT ngày 30 tháng 5 năm 2014 của Bộ trưởng Bộ Y tế về việc ban hành tài liệu Hướng dẫn quy trình kỹ thuật chuyên ngành hồi sức cấp cứu và chống độc.",
+   "ownerUnit": "NVY",
+   "levels": [
+    [
+     "Có tình trạng bệnh án để bừa bãi, lộn xộn, ẩm ướt...",
+     "Không tìm được một bệnh án theo yêu cầu trong vòng 30 phút tại nơi lưu trữ trong khuôn viên Trung tâm."
+    ],
+    [
+     "Bệnh án được lưu trữ cẩn thận, đủ thời gian theo quy định.",
+     "Kho lưu trữ bệnh án thông thoáng, ngăn nắp, bảo đảm chống ẩm, chống cháy, chống mưa, lụt.",
+     "Kho lưu trữ bệnh án bảo đảm chống chuột, tổ mối và côn trùng khác.",
+     "Có sổ lưu trữ (hoặc phần mềm) để quản lý số lượng bệnh án lưu trữ.",
+     "Thông tin hồ sơ bệnh án được trích sao theo quy định của Luật Khám bệnh, chữa bệnh."
+    ],
+    [
+     "Có giá, ngăn, tủ rõ ràng sắp xếp theo trình tự thống nhất (do Trung tâm tự quy định) theo thời gian.",
+     "Có sổ lưu trữ (hoặc phần mềm excel) để tra cứu và xác định một bệnh án bất kỳ nằm ở vị trí nào (ngăn, giá, tủ) trong kho.",
+     "Không có trường hợp người bệnh bị lộ thông tin cá nhân (tên, tuổi, ảnh, nơi công tác...) trên các phương tiện thông tin đại chúng về quá trình điều trị (trừ các trường hợp được sự đồng ý của người bệnh)."
+    ],
+    [
+     "Các thông tin hành chính và tóm tắt nội dung chuyên môn chính của bệnh án được nhập vào phần mềm máy tính để lưu trữ, quản lý. Các thông tin về bệnh tật trong những lần cấp cứu trước được truy cập dễ dàng trong các lần tiếp sau.",
+     "Có thể lấy một thông tin của một bệnh án bất kỳ theo: mã bệnh án, tên người bệnh, mã bệnh, ngày cấp cứu (trong phạm vi 02 năm).",
+     "Mỗi người bệnh đã từng được cấp cứu ngoại viện có một mã xác định."
+    ],
+    [
+     "Toàn bộ nội dung của bệnh án được lưu trữ trên phần mềm máy tính.",
+     "Tiến hành đánh giá thực trạng quản lý hồ sơ bệnh án của Trung tâm, và chỉ ra được những khó khăn cần giải quyết.",
+     "Áp dụng đánh giá vào việc cải tiến chất lượng quản lý hồ sơ bệnh án."
+    ]
+   ]
+  },
+  {
+   "part": "C",
+   "partName": "Hoạt động chuyên môn",
+   "chapter": "C3",
+   "chapterName": "Ứng dụng công nghệ thông tin",
+   "code": "C3.1",
+   "title": "Quản lý cơ sở dữ liệu và thông tin y tế",
+   "legalBasis": "Quyết định số 4888/QĐ-BYT ngày 18 tháng 10 năm 2019 của Bộ Y tế về phê duyệt Đề án ứng dụng và phát triển công nghệ thông tin y tế thông minh giai đoạn 2019-2025;\nChỉ thị số 02/CT-BYT ngày 25 tháng 02 năm 2009 của Bộ Y tế về việc đẩy mạnh ứng dụng và phát triển công nghệ thông tin trong ngành Y tế;\nCông văn số 102/CNTT-YTĐTI ngày 12 tháng 3 năm 2018 của Cục Công nghệ Thông tin về tăng cường ứng dụng thông tin tại cơ sở khám bệnh, chữa bệnh.",
+   "ownerUnit": "CNTT",
+   "levels": [
+    [
+     "Không có phân công bộ phận quản lý thông tin y tế."
+    ],
+    [
+     "Lập danh mục chỉ số thông tin của Trung tâm, bao gồm các chỉ số về hoạt động và chất lượng của Trung tâm.",
+     "Có hệ thống biểu mẫu chuẩn hóa và thống nhất toàn bộ Trung tâm về báo cáo số liệu hoạt động chuyên môn để phục vụ công tác quản lý.",
+     "Có các cách thức quản lý hoạt động của Trung tâm bằng các hình thức như: sổ sách, phần mềm.",
+     "Có xuất được một số chỉ số thống kê từ phần mềm điều phối cấp cứu của Trung tâm (theo quy định)."
+    ],
+    [
+     "Hoàn thành đầy đủ việc nhập thông tin số liệu hoạt động và báo cáo cho các cơ quan quản lý theo quy định.",
+     "Có phần mềm thống kê hoặc phần mềm quản lý hoạt động của Trung tâm có khả năng kết xuất dữ liệu sang excel hoặc định dạng khác để phân tích.",
+     "Sử dụng số liệu và thông tin từ phần mềm chuyên môn, nghiệp vụ giúp cho lãnh đạo quản lý và điều hành.",
+     "Báo cáo tổng hợp số liệu và thông tin từ phần mềm chuyên môn nghiệp vụ phục vụ cho công tác quản lý điều hành định kỳ (ngày, tuần, tháng, quý, năm)."
+    ],
+    [
+     "Có theo dõi các chỉ số thông tin của Trung tâm, bao gồm các chỉ số về tổ chức, hoạt động, chuyên môn và các chỉ số khác (ví dụ số lượt cuộc gọi, số cuộc gọi nhỡ, nhân lực...) theo thời gian (tuần, tháng, quý, năm).",
+     "Có thực hiện phân tích dữ liệu để cung cấp thông tin y tế giúp công tác quản trị và công tác hoạt động chuyên môn.",
+     "Kết xuất các thông tin phục vụ báo cáo, nghiên cứu… trực tiếp từ phần mềm như mô hình bệnh tật cấp cứu; cơ cấu tài chính, thuốc, vật tư… theo năm, quý, tháng, tuần, ngày.",
+     "Xây dựng được công cụ, phương pháp để giám sát chất lượng số liệu, bảo đảm độ tin cậy, trung thực của dữ liệu và giám sát chất lượng số liệu thường xuyên …"
+    ],
+    [
+     "Có công cụ tự động phân tích thông tin, đưa ra thống kê và dự báo để trợ giúp cho lãnh đạo quản lý hoạt động Trung tâm.",
+     "Có sử dụng kết quả thông tin từ dữ liệu để nâng cao chất lượng hoạt động chuyên môn tại Trung tâm.",
+     "Có ứng dụng hệ thống thông tin hỗ trợ điều phối cấp cứu tích hợp được tính năng cảnh báo điểm kẹt xe, hướng dẫn đến trạm cấp cứu vệ tinh gần, phù hợp nhất.",
+     "Hệ thống thông tin hỗ trợ điều phối cấp cứu có tính năng chuyên biệt dành cho lái xe thao tác trên thiết bị thông minh."
+    ]
+   ]
+  },
+  {
+   "part": "C",
+   "partName": "Hoạt động chuyên môn",
+   "chapter": "C3",
+   "chapterName": "Ứng dụng công nghệ thông tin",
+   "code": "C3.2",
+   "title": "Thực hiện các giải pháp ứng dụng công nghệ thông tin trong quản lý và hoạt động chuyên môn",
+   "legalBasis": "Quyết định số 4888/QĐ-BYT ngày 18 tháng 10 năm 2019 của Bộ Y tế về phê duyệt Đề án ứng dụng và phát triển công nghệ thông tin y tế thông minh giai đoạn 2019-2025;\nChỉ thị số 02/CT-BYT ngày 25 tháng 02 năm 2009 của Bộ Y tế về việc đẩy mạnh ứng dụng và phát triển công nghệ thông tin trong ngành Y tế;\nCông văn số 102/CNTT-YTĐTI ngày 12 tháng 3 năm 2018 của Cục Công nghệ Thông tin về tăng cường ứng dụng thông tin tại cơ sở khám bệnh, chữa bệnh.",
+   "ownerUnit": "CNTT",
+   "levels": [
+    [
+     "Không có hệ thống máy tính nối mạng.",
+     "Không ứng dụng phần mềm quản lý nghiệp vụ và chuyên môn."
+    ],
+    [
+     "Có nhân viên phụ trách công nghệ thông tin trình độ từ trung cấp trở lên.",
+     "Có nối mạng internet, cho phép toàn bộ nhân viên có khả năng truy cập internet.",
+     "Triển khai ít nhất hai phân hệ phần mềm quản lý nghiệp vụ và chuyên môn."
+    ],
+    [
+     "Có phòng/tổ công nghệ thông tin hoặc có cán bộ chuyên trách phụ trách công nghệ thông tin có trình độ cao đẳng/đại học về công nghệ thông tin.",
+     "Trung tâm xây dựng hệ thống máy tính nối mạng nội bộ và ứng dụng phần mềm quản lý chuyên môn trên mạng nội bộ.",
+     "Có các phần mềm quản lý chuyên môn, hoạt động với những phân hệ cơ bản sau:",
+     "Quản lý tài chính/kế toán",
+     "Quản lý văn bản",
+     "Quản lý nhân sự"
+    ],
+    [
+     "Có phần mềm quản lý chuyên môn, hoạt động với phân hệ cơ bản sau:",
+     "Quản lý thống kê số liệu",
+     "Quản lý đào tạo, nghiên cứu khoa học",
+     "Quản lý hạ tầng kỹ thuật và trang thiết bị",
+     "Quản lý hồ sơ công việc",
+     "Quản lý trang thiết bị y tế, quản lý dược, quản lý hóa chất vật liệu tiêu hao",
+     "Quản lý tài sản",
+     "Có cán bộ chuyên trách phụ trách công nghệ thông tin có trình độ đại học hoặc sau đại học về công nghệ thông tin.",
+     "Phần mềm công nghệ thông tin có thể kết xuất các chỉ số một cách trực tiếp."
+    ],
+    [
+     "Quản lý toàn bộ các hoạt động chuyên môn, hồ sơ bệnh án bằng công nghệ thông tin.",
+     "Có chứng thực điện tử (chữ ký điện tử/vân tay/mã số… có thể được truy cứu và chịu trách nhiệm về mặt pháp lý).",
+     "Toàn bộ các bộ phận đều được nối mạng nội bộ và sử dụng thống nhất một phần mềm duy nhất hoặc nếu sử dụng nhiều phần mềm phải có phương thức trao đổi dữ liệu tự động kết nối giữa các phần mềm.",
+     "Đồng bộ hóa toàn bộ dữ liệu của các bộ phận và máy móc, trang thiết bị y tế."
+    ]
+   ]
+  },
+  {
+   "part": "C",
+   "partName": "Hoạt động chuyên môn",
+   "chapter": "C4",
+   "chapterName": "Năng lực thực hiện kỹ năng chuyên môn",
+   "code": "C4.1",
+   "title": "Thực hiện danh mục kỹ thuật theo phân tuyến kỹ thuật",
+   "legalBasis": "Luật Khám bệnh, chữa bệnh số 15/2023/QH15 ngày 09 tháng 01 năm 2023;\nThông tư số 32/2023/TT-BYT ngày 23 tháng 12 năm 2023 Bộ Y tế quy định chi tiết một số điều của Luật Khám bệnh, chữa bệnh;\nThông tư số 43/2013/TT-BYT ngày 11 tháng 12 năm 2013 của Bộ Y tế về Quy định chi tiết phân tuyến chuyên môn kỹ thuật đối với hệ thống cơ sở khám bệnh, chữa bệnh;\nThông tư số 21/2017/TT-BYT ngày 10 tháng 5 năm 2017 của Bộ Y tế sửa đổi, bổ sung danh mục kỹ thuật trong khám bệnh, chữa bệnh ban hành kèm theo Thông tư số 43/2013/TT-BYT ngày 11 tháng 12 năm 2013 của Bộ trưởng Bộ y tế quy định chi tiết phân tuyến chuyên môn kỹ thuật đối với hệ thống cơ sở khám bệnh, chữa bệnh.",
+   "ownerUnit": "NVY",
+   "levels": [
+    [
+     "Thực hiện kỹ thuật khám bệnh, chữa bệnh ngoài danh mục kỹ thuật đã được phê duyệt."
+    ],
+    [
+     "Công khai danh mục kỹ thuật đã được phê duyệt cho người bệnh, nhân viên biết và dễ dàng tra cứu.",
+     "Đảm bảo luôn sẵn sàng về nhân lực, trang thiết bị để thực hiện đầy đủ danh mục kỹ thuật đã được phê duyệt.",
+     "Khi thay đổi nhân sự thực hiện kỹ thuật có báo cáo về Sở Y tế để xem xét thẩm định, phê duyệt lại các kỹ thuật có liên quan.",
+     "Được phê duyệt bổ sung ít nhất 01 kỹ thuật trong năm."
+    ],
+    [
+     "Có văn bản phân công cho người hành nghề được thực hiện các danh mục kỹ thuật cụ thể.",
+     "Ít nhất 50% danh mục kỹ thuật được phê duyệt có triển khai thực hiện trong năm.",
+     "Được phê duyệt bổ sung ít nhất 03 kỹ thuật trong năm."
+    ],
+    [
+     "Ít nhất 70% danh mục kỹ thuật được phê duyệt có triển khai thực hiện trong năm.",
+     "Được phê duyệt bổ sung ít nhất 05 kỹ thuật trong năm.",
+     "Có tổ chức đào tạo, đào tạo lại đối với các kỹ thuật thường xuyên thực hiện (tối thiểu 02 năm 01 lần)."
+    ],
+    [
+     "Thực hiện được tất cả các kỹ thuật hồi sức cấp cứu ngoại viện theo danh mục của Bộ Y tế.",
+     "Được phê duyệt bổ sung ít nhất 07 kỹ thuật trong năm.",
+     "Cập nhật, điều chỉnh danh mục kỹ thuật và được Sở Y tế phê duyệt."
+    ]
+   ]
+  },
+  {
+   "part": "C",
+   "partName": "Hoạt động chuyên môn",
+   "chapter": "C4",
+   "chapterName": "Năng lực thực hiện kỹ năng chuyên môn",
+   "code": "C4.2",
+   "title": "Xây dựng quy trình kỹ thuật và triển khai các biện pháp giám sát chất lượng",
+   "legalBasis": "Thông tư số 50/2014/TT-BYT ngày 26 tháng 12 năm 2014 của Bộ Y tế quy định việc phân loại phẫu thuật, thủ thuật và định mức nhân lực trong từng ca phẫu thuật, thủ thuật;\nThông tư số 19/2013/TT-BYT ngày 12 tháng 7 năm 2013 của Bộ Y tế hướng dẫn thực hiện quản lý chất lượng dịch vụ khám bệnh, chữa bệnh tại bệnh viện;\nQuyết định số 1904/QĐ-BYT ngày 30 tháng 5 năm 2014 của Bộ Y tế về việc ban hành tài liệu Hướng dẫn quy trình kỹ thuật chuyên ngành hồi sức cấp cứu và chống độc.",
+   "ownerUnit": "NVY",
+   "levels": [
+    [
+     "Chưa xây dựng quy trình kỹ thuật đối với các danh mục kỹ thuật đã được phê duyệt.",
+     "Phát hiện thấy có sai phạm trong việc áp dụng quy trình kỹ thuật, gây hậu quả người bệnh tử vong hoặc tổn thương không hồi phục nhưng không được tự nguyện báo cáo kịp thời (báo cáo về cơ quan quản lý trước khi phương tiện truyền thông đưa tin)."
+    ],
+    [
+     "Xây dựng ít nhất 50% quy trình kỹ thuật theo danh mục kỹ thuật đã được phê duyệt.",
+     "Các quy trình kỹ thuật được Hội đồng khoa học kỹ thuật của Trung tâm thẩm định và được Ban Giám đốc Trung tâm phê duyệt.",
+     "Các quy trình kỹ thuật được đặt ở vị trí dễ thấy, dễ lấy, thuận tiện cho việc tra cứu thông tin."
+    ],
+    [
+     "Xây dựng ít nhất 70% quy trình kỹ thuật theo danh mục kỹ thuật đã được phê duyệt.",
+     "Lập danh sách các quy trình kỹ thuật khám bệnh, chữa bệnh được thực hiện mang tính thường quy.",
+     "Phổ biến, hướng dẫn, tập huấn quy trình kỹ thuật cho các nhân viên có liên quan để thực hiện.",
+     "Xây dựng bảng kiểm giám sát việc tuân thủ các quy trình kỹ thuật cho một số quy trình quan trọng (theo đánh giá của Trung tâm, căn cứ trên phạm vi tác động, ảnh hưởng tới hoạt động chuyên môn…)."
+    ],
+    [
+     "Xây dựng ít nhất 95% quy trình kỹ thuật theo danh mục kỹ thuật đã được phê duyệt.",
+     "Tiến hành giám sát việc tuân thủ các quy trình kỹ thuật dựa trên các bảng kiểm đã xây dựng của Trung tâm.",
+     "Có bản báo cáo giám sát việc tuân thủ các quy trình kỹ thuật dựa trên các bảng kiểm, trong đó có tỷ lệ tuân thủ của các khoa lâm sàng.",
+     "Công bố báo cáo về việc tuân thủ các quy trình kỹ thuật cho nhân viên (trong đó có tỷ lệ tuân thủ quy trình kỹ thuật của từng khoa, phòng) bằng các hình thức như bản tin nội bộ, gửi báo cáo, thư điện tử…."
+    ],
+    [
+     "Tiến hành đánh giá hoặc nghiên cứu việc triển khai áp dụng các quy trình kỹ thuật tại Trung tâm, trong đó có đánh giá, phân tích các sự cố y khoa (nếu có) xảy ra khi thực hiện kỹ thuật.",
+     "Áp dụng kết quả đánh giá (hoặc nghiên cứu) để chỉnh sửa, cải tiến quy trình kỹ thuật nhằm hạn chế các sự cố y khoa xảy ra và cải tiến chất lượng lâm sàng.",
+     "Chia sẻ kinh nghiệm cải tiến quy trình kỹ thuật, áp dụng kỹ thuật cao, kỹ thuật mới cho cơ quan quản lý và các cơ sở y tế khác bằng các hình thức như báo cáo, viết sách, bài báo khoa học…."
+    ]
+   ]
+  },
+  {
+   "part": "C",
+   "partName": "Hoạt động chuyên môn",
+   "chapter": "C4",
+   "chapterName": "Năng lực thực hiện kỹ năng chuyên môn",
+   "code": "C4.3",
+   "title": "Xây dựng hướng dẫn chẩn đoán và điều trị",
+   "legalBasis": "Thông tư số 19/2013/TT-BYT ngày 12 tháng 7 năm 2013 của Bộ Y tế hướng dẫn thực hiện quản lý chất lượng dịch vụ khám bệnh, chữa bệnh tại bệnh viện.\nThông tư số 21/2013/TT-BYT ngày 08 tháng 8 năm 2013 của Bộ Y tế quy định về tổ chức và hoạt động của hội đồng thuốc và điều trị.",
+   "ownerUnit": "NVY",
+   "levels": [
+    [
+     "Chưa xây dựng hướng dẫn chẩn đoán và điều trị áp dụng tại Trung tâm."
+    ],
+    [
+     "Xây dựng hướng dẫn chẩn đoán và điều trị đảm bảo đủ 10 nguyên nhân cấp cứu ngoại viện thường gặp.",
+     "Hướng dẫn chẩn đoán và điều trị được đặt ở vị trí dễ thấy, dễ lấy, thuận tiện cho việc tra cứu thông tin."
+    ],
+    [
+     "Có ít nhất 50% các nguyên nhân cấp cứu ngoại viện có hướng dẫn chẩn đoán và điều trị.",
+     "Hướng dẫn chẩn đoán và điều trị được Hội đồng Khoa học công nghệ thông qua, Ban Giám đốc ký ban hành và áp dụng thống nhất tại Trung tâm."
+    ],
+    [
+     "Có ít nhất 70% các nguyên nhân cấp cứu ngoại viện có Hướng dẫn chẩn đoán và điều trị.",
+     "Tiến hành đánh giá lại và cập nhật, cải tiến các hướng dẫn chẩn đoán và điều trị định kỳ hoặc khi cần thiết."
+    ],
+    [
+     "Có ít nhất 90% các nguyên nhân cấp cứu ngoại viện có hướng dẫn chẩn đoán và điều trị.",
+     "Tiến hành đánh giá hoặc nghiên cứu hiệu quả việc triển khai áp dụng các hướng dẫn chẩn đoán và điều trị tại Trung tâm, trong đó có đánh giá, phân tích các sự cố y khoa (nếu có) xảy ra.",
+     "Áp dụng kết quả đánh giá (hoặc nghiên cứu) để chỉnh sửa, cải tiến các hướng dẫn chẩn đoán và điều trị nhằm hạn chế các sự cố y khoa xảy ra và cải tiến chất lượng lâm sàng.",
+     "Chia sẻ kinh nghiệm cải tiến các hướng dẫn chẩn đoán và điều trị cho cơ quan quản lý và các đơn vị khác bằng các hình thức như báo cáo, viết bài báo khoa học…"
+    ]
+   ]
+  },
+  {
+   "part": "C",
+   "partName": "Hoạt động chuyên môn",
+   "chapter": "C4",
+   "chapterName": "Năng lực thực hiện kỹ năng chuyên môn",
+   "code": "C4.4",
+   "title": "Áp dụng các hướng dẫn chẩn đoán và điều trị đã ban hành và giám sát việc thực hiện",
+   "legalBasis": "Thông tư số 19/2013/TT-BYT ngày 12 tháng 7 năm 2013 của Bộ Y tế hướng dẫn thực hiện quản lý chất lượng dịch vụ khám bệnh, chữa bệnh tại bệnh viện;\nThông tư số 21/2013/TT-BYT ngày 08 tháng 8 năm 2013 của Bộ Y tế quy định về tổ chức và hoạt động của hội đồng thuốc và điều trị;\nQuyết định số 1904/QĐ-BYT ngày 30 tháng 5 năm 2014 của Bộ Y tế về việc ban hành tài liệu Hướng dẫn quy trình kỹ thuật chuyên ngành hồi sức cấp cứu và chống độc.",
+   "ownerUnit": "NVY",
+   "levels": [
+    [
+     "Không triển khai thực hiện các hướng dẫn chẩn đoán và điều trị đã ban hành.",
+     "Không có biện pháp và không triển khai theo dõi, giám sát việc tuân thủ các Hướng dẫn chẩn đoán và điều trị.",
+     "Có sai phạm trong việc áp dụng các hướng dẫn chẩn đoán và điều trị, gây hậu quả người bệnh tử vong hoặc tổn thương không hồi phục nhưng không được báo cáo kịp thời."
+    ],
+    [
+     "Có quy định về việc áp dụng các hướng dẫn chẩn đoán và điều trị và theo dõi việc tuân thủ.",
+     "Nhân viên được phổ biến thực hiện hướng dẫn chẩn đoán và điều trị."
+    ],
+    [
+     "Nhân viên tuân thủ hướng dẫn chẩn đoán và điều trị.",
+     "Có ban hành quy định và giám sát việc thực hiện bình (hoặc kiểm tra) bệnh án, tối thiểu 1 lần trong 1 tháng.",
+     "Có các hình thức phản hồi kết quả bình (hoặc kiểm tra) bệnh án với bác sĩ, điều dưỡng và các bên liên quan.",
+     "Lập danh sách một số bệnh thường gặp (theo mô hình bệnh tật của Trung tâm), một số bệnh cần ưu tiên giám sát việc tuân thủ các hướng dẫn chẩn đoán và điều trị.",
+     "Tiến hành kiểm tra, giám sát (ngẫu nhiên và định kỳ) việc tuân thủ các hướng dẫn chẩn đoán và điều trị của các bệnh án có bệnh nằm trong danh sách đã lập."
+    ],
+    [
+     "Định kỳ thực hiện phản hồi kết quả giám sát sự tuân thủ hướng dẫn chẩn đoán và điều trị đến nhân viên.",
+     "Ứng dụng công nghệ thông tin trong việc đánh giá sự tuân thủ các hướng dẫn chẩn đoán và điều trị.",
+     "Có bản báo cáo giám sát việc tuân thủ các hướng dẫn chẩn đoán và điều trị.",
+     "Công bố báo cáo về việc tuân thủ các hướng dẫn chẩn đoán và điều trị cho nhân viên bằng các hình thức như bản tin nội bộ, gửi báo cáo, thư điện tử…."
+    ],
+    [
+     "Thực hiện giám sát việc tuân thủ các hướng dẫn chẩn đoán và điều trị của toàn bộ các bệnh án bằng phần mềm tin học.",
+     "Phần mềm tin học có khả năng chiết xuất các kết quả, bảng biểu, đồ thị về kết quả giám sát việc tuân thủ các hướng dẫn chẩn đoán và điều trị.",
+     "Sử dụng kết quả đánh giá, giám sát việc tuân thủ các hướng dẫn chẩn đoán và điều trị cho việc cập nhật, sửa đổi, bổ sung các hướng dẫn và cải tiến chất lượng."
+    ]
+   ]
+  },
+  {
+   "part": "C",
+   "partName": "Hoạt động chuyên môn",
+   "chapter": "C4",
+   "chapterName": "Năng lực thực hiện kỹ năng chuyên môn",
+   "code": "C4.5",
+   "title": "Hoạt động của Tổng đài 115",
+   "legalBasis": "Luật Khám bệnh, chữa bệnh số 15/2023/QH15 ngày 09 tháng 01 năm 2023;\nQuyết định số 01/2008/QĐ-BYT ngày 21 tháng 01 năm 2008 của Bộ Y tế về việc ban hành quy chế cấp cứu, hồi sức tích cực và chống độc.\nQuyết định số 4013/QĐ-UBND ngày 24 tháng 11 năm 2021 của Ủy ban nhân dân Thành phố về việc ban hành Quy chế quản lý, vận hành và sử dụng hệ thống tổng đài khẩn cấp liên thông 113-114-115 và phòng chống thiên tai phục vụ công tác cứu nạn, cứu hộ tại Thành phố Hồ Chí Minh.",
+   "ownerUnit": "CNTT",
+   "levels": [
+    [
+     "Không có sổ ghi nhận hoặc phần mềm lưu trữ các thông tin cấp cứu: thời gian, địa điểm yêu cầu cấp cứu, số lượng người bị tai nạn, tình trạng người bệnh, số điện thoại người gọi cấp cứu.",
+     "Không điều phối kíp cấp cứu đến hiện trường ngay sau khi tiếp nhận.",
+     "Có phản ánh về thái độ giao tiếp, vi phạm y đức gây ảnh hưởng nghiêm trọng đến hình ảnh của Trung tâm và ngành y tế.",
+     "Chưa xây dựng quy trình tư vấn, hướng dẫn người bệnh sơ cấp cứu theo lý do cấp cứu qua điện thoại.",
+     "Chưa xây dựng quy chế hoặc quy định về đảm bảo an toàn thông tin trên hệ thống thông tin điều phối và tiếp nhận cấp cứu",
+     "Chưa xây dựng kế hoạch triển khai quy chế quản lý, vận hành và sử dụng hệ thống Tổng đài khẩn cấp liên thông 113-114-115."
+    ],
+    [
+     "Thực hiện quản lý danh sách cuộc gọi nhỡ vào Tổng đài 115.",
+     "Xây dựng ít nhất 30% quy trình tư vấn, hướng dẫn người bệnh sơ cấp cứu theo lý do cấp cứu qua điện thoại.",
+     "Có tư vấn, hướng dẫn sơ cấp cứu người bệnh qua điện thoại trước khi xe cứu thương đến.",
+     "Điều phối viên tuân thủ quy trình tiếp nhận và xử lý cuộc gọi cấp cứu.",
+     "Phần mềm tiếp nhận điều phối cấp cứu lưu lại thông tin tiếp nhận đảm bảo các chức năng cơ bản bao gồm: quản lý thông tin cuộc gọi, quản lý ca bệnh, điều phối cuộc gọi, giám sát theo dõi công tác tiếp nhận, điều phối cấp cứu.",
+     "Xây dựng phương án dự phòng và thực hiện diễn tập định kỳ (tháng, quý, năm) điều phối bằng các phương tiện thay thế khác khi xảy ra tình huống hệ thống công nghệ thông tin gặp sự cố.",
+     "Đã xây dựng kế hoạch phối hợp giám sát nhân viên tuân thủ các quy định về giao tiếp, tuân thủ quy trình trong tiếp nhận và điều phối cấp cứu.",
+     "Xây dựng kế hoạch triển khai quy chế quản lý, vận hành và xây dựng phương án dự phòng và thực hiện diễn tập định kỳ các tình huống sự cố của Tổng đài khẩn cấp liên thông 113-114-115."
+    ],
+    [
+     "Phần mềm tiếp nhận điều phối cấp cứu đảm bảo đầy đủ các chức năng, tất cả hoạt động tiếp nhận điều phối cấp cứu được thao tác trên phần mềm.",
+     "Xây dựng và thu thập các chỉ số về thời gian trong công tác tiếp nhận, điều phối cấp cứu.",
+     "Điều phối viên được đào tạo về kỹ năng giao tiếp, hướng dẫn sơ cấp cứu qua điện thoại.",
+     "Xây dựng ít nhất 50% quy trình tư vấn, hướng dẫn người bệnh sơ cấp cứu theo lý do cấp cứu qua điện thoại.",
+     "Số cuộc gọi vào Tổng đài 115 được điều phối viên tiếp nhận và xử lý ≥ 95%.",
+     "Có kế hoạch đào tạo, tái đào tạo cho điều phối viên về các quy trình tư vấn, hướng dẫn qua điện thoại, các kỹ năng liên quan đến giao tiếp qua điện thoại (kiểm soát cảm xúc, giảm căng thẳng…)."
+    ],
+    [
+     "Có xây dựng ít nhất 70% quy trình tư vấn, hướng dẫn người bệnh sơ cấp cứu theo lý do cấp cứu qua điện thoại.",
+     "Đảm bảo kết nối giữa Tổng đài 115 với ê-kíp cấp cứu trong quá trình thực hiện nhiệm vụ.",
+     "Thường xuyên cập nhật năng lực chuyên môn của các bệnh viện, trung tâm y tế trên địa bàn Thành phố để điều phối chuyển bệnh phù hợp.",
+     "Phân tích, báo cáo các chỉ số thời gian trong công tác tiếp nhận, điều phối cấp cứu và có biện pháp can thiệp.",
+     "Có phần mềm xuất được số liệu thống kê các chỉ số chuyên môn trong tiếp nhận, điều phối cấp cứu.",
+     "Tất cả các điều phối viên được đào tạo về các quy trình tư vấn, hướng dẫn qua điện thoại, các kỹ năng liên quan đến giao tiếp qua điện thoại (kiểm soát cảm xúc, giảm căng thẳng…)."
+    ],
+    [
+     "Tất cả cuộc gọi có nội dung cấp cứu được điều phối viên tiếp nhận và xử lý.",
+     "Có phần mềm theo dõi được các chỉ số thời gian trong công tác tiếp nhận, điều phối cấp cứu theo thời gian thực.",
+     "Có xây dựng ít nhất 90% quy trình tư vấn, hướng dẫn người bệnh sơ cấp cứu theo lý do cấp cứu qua điện thoại và định kỳ cập nhật.",
+     "Tổng đài 115 giám sát được toàn bộ hoạt động của các xe ô tô cứu thương của Trung tâm.",
+     "Có kết nối với Tổ chuyên gia tư vấn về chuyên môn cấp cứu ngoại viện.",
+     "Triển khai hệ thống điều hành “thông minh” (như Hệ thống điều phối cấp cứu EOC, phần mềm ProQA…) tại Trung tâm."
+    ]
+   ]
+  },
+  {
+   "part": "C",
+   "partName": "Hoạt động chuyên môn",
+   "chapter": "C5",
+   "chapterName": "Quản lý cung ứng, sử dụng thuốc, vật tư y tế và kiểm soát nhiễm khuẩn",
+   "code": "C5.1",
+   "title": "Cung ứng, bảo quản thuốc và vật tư y tế đầy đủ, kịp thời, bảo đảm chất lượng",
+   "legalBasis": "Luật đầu thầu số 22/2023/QH15 ngày 23 tháng 6 năm 2023;\nThông tư số 22/2011/TT-BYT ngày 10 tháng 6 năm 2011 của Bộ Y tế quy định về tổ chức và hoạt động của khoa Dược bệnh viện;\nThông tư số 07/2024/TT-BYT ngày 17 tháng 5 năm 2024 của Bộ Y tế quy định việc đấu thầu thuốc tại các cơ sở y tế công lập.",
+   "ownerUnit": "NVD",
+   "levels": [
+    [
+     "Phát hiện thấy trong Trung tâm có thuốc, vật tư y tế quá hạn hoặc thuốc không đạt chất lượng về mặt cảm quan nhưng không được để ở khu vực riêng chờ xử lý.",
+     "Không cung cấp được số liệu về xuất, nhập thuốc, vật tư y tế ngay khi được yêu cầu.",
+     "Có vụ việc thiếu thuốc trong danh mục dẫn đến hậu quả người bệnh tử vong hoặc tổn thương không hồi phục.",
+     "Phát hiện thấy trong kho thuốc, vật tư y tế có côn trùng, mối mọt.",
+     "Có thành lập Hội đồng thuốc và điều trị."
+    ],
+    [
+     "Có xây dựng danh mục thuốc của Trung tâm, đảm bảo phục vụ công tác cấp cứu.",
+     "Thực hiện việc mua thuốc, vật tư y tế theo đúng quy định, không phát hiện có sai phạm.",
+     "Có quy trình kiểm soát chất lượng thuốc.",
+     "Có quy trình quản lý thuốc gây nghiện, thuốc hướng thần, thuốc tiền chất.",
+     "Kho thuốc được bố trí thoáng, mát, bảo đảm ánh sáng mặt trời không chiếu trực tiếp vào thuốc; có trang thiết bị theo dõi, bảo quản thuốc: giá kệ, nhiệt kế, ẩm kế, quạt thông gió, điều hòa nhiệt độ, tủ lạnh.",
+     "Theo dõi, quản lý xuất, nhập, tồn thuốc, vật tư y tế đầy đủ bằng sổ sách, ghi chép rõ ràng (hoặc bằng máy tính và phần mềm quản lý)."
+    ],
+    [
+     "Có tham gia các hoạt động cập nhật kiến thức về chuyên môn dược.",
+     "Có quy trình kiểm nhập, quy trình cấp phát thuốc, vật tư y tế.",
+     "Có quy trình xử lý các thuốc, vật tư y tế chất lượng không đảm bảo.",
+     "Thực hiện báo cáo thường xuyên, đầy đủ các số liệu về sử dụng thuốc, vật tư y tế theo quy định.",
+     "Rà soát và xử lý kịp thời, đúng quy định đối với thuốc có văn bản đình chỉ lưu hành của cơ quan có thẩm quyền."
+    ],
+    [
+     "Có ứng dụng công nghệ thông tin trong quản lý thuốc, vật tư y tế.",
+     "Có hướng dẫn sử dụng thuốc đối với thuốc mới bổ sung vào danh mục thuốc của Trung tâm.",
+     "Có xây dựng và quản lý danh mục thuốc cấp cứu của các vali cấp cứu ngoại viện."
+    ],
+    [
+     "Có báo cáo đánh giá, trong đó có chỉ ra những nhược điểm, khó khăn cần khắc phục trong cung ứng thuốc, sử dụng thuốc, vật tư y tế và đề xuất giải pháp cải tiến.",
+     "Có phần mềm chuyên biệt tra cứu, quản lý thuốc và vật tư y tế.",
+     "Tiến hành khảo sát, đánh giá (hoặc nghiên cứu) việc cung ứng thuốc và vật tư y tế tại Trung tâm.",
+     "Tiến hành cải tiến chất lượng cung ứng thuốc và vật tư y tế dựa trên kết quả khảo sát, đánh giá (hoặc nghiên cứu)."
+    ]
+   ]
+  },
+  {
+   "part": "C",
+   "partName": "Hoạt động chuyên môn",
+   "chapter": "C5",
+   "chapterName": "Quản lý cung ứng, sử dụng thuốc, vật tư y tế và kiểm soát nhiễm khuẩn",
+   "code": "C5.2",
+   "title": "Sử dụng thuốc an toàn, hợp lý",
+   "legalBasis": "Luật Khám bệnh, chữa bệnh số 15/2023/QH15 ngày 09 tháng 01 năm 2023;\nThông tư số 23/2011/TT-BYT ngày 10 tháng 6 năm 2011 của Bộ Y tế hướng dẫn sử dụng thuốc trong các cơ sở y tế có giường bệnh.",
+   "ownerUnit": "NVD",
+   "levels": [
+    [
+     "Phát hiện có sử dụng thuốc sai đường dùng, sai tên thuốc.",
+     "Phát hiện đơn thuốc kê hai thuốc cùng hoạt chất."
+    ],
+    [
+     "Triển khai, bảo đảm thực hiện 5 đúng khi sử dụng thuốc cho người bệnh.",
+     "Bảo đảm tuân thủ các quy định về kê đơn thuốc.",
+     "Có hướng dẫn về sử dụng thuốc cho nhân viên y tế ít nhất 1 buổi/năm."
+    ],
+    [
+     "Có xây dựng các quy trình chuyên môn liên quan đến sử dụng thuốc: giám sát sự cố trong sử dụng thuốc...",
+     "Bảo đảm thực hiện kê đơn thuốc phù hợp với diễn biến của bệnh.",
+     "Có xây dựng danh mục thuốc nhìn giống nhau, đọc giống nhau (LASA).",
+     "Có giám sát và thực hiện báo cáo ADR tại Trung tâm."
+    ],
+    [
+     "Có xây dựng quy trình thực hiện báo cáo phản ứng có hại của thuốc (ADR) và báo cáo rút kinh nghiệm.",
+     "Có hướng dẫn bằng hình ảnh danh mục LASA và phổ biến tại Trung tâm.",
+     "Chỉ định thuốc theo đúng hướng dẫn chẩn đoán và điều trị của Bộ Y tế, của Trung tâm hoặc khuyến cáo của Tổ chức y tế thế giới.",
+     "Tổ chức tập huấn, thông tin cho nhân viên y tế về hiệu quả và độ an toàn khi sử dụng thuốc (có tài liệu và chương trình đào tạo) ít nhất 01 lần/năm."
+    ],
+    [
+     "Có báo cáo đánh giá việc sử dụng thuốc, trong đó có chỉ ra những nhược điểm, hạn chế cần khắc phục và đề xuất giải pháp cải tiến chất lượng.",
+     "Sử dụng thông tin về hiệu quả và độ an toàn của thuốc để khuyến cáo thay đổi, bổ sung danh mục thuốc dùng trong Trung tâm, chỉ định dùng thuốc của thầy thuốc, hướng dẫn điều trị và các quy trình chuyên môn khác trong Trung tâm.",
+     "Tiến hành cải tiến chất lượng dựa trên kết quả khảo sát, đánh giá (nghiên cứu)."
+    ]
+   ]
+  },
+  {
+   "part": "C",
+   "partName": "Hoạt động chuyên môn",
+   "chapter": "C5",
+   "chapterName": "Quản lý cung ứng, sử dụng thuốc, vật tư y tế và kiểm soát nhiễm khuẩn",
+   "code": "C5.3",
+   "title": "Tuân thủ các quy trình kiểm soát nhiễm khuẩn",
+   "legalBasis": "Luật Khám bệnh, chữa bệnh số 15/2023/QH15 ngày 09 tháng 01 năm 2023;\nThông tư số 16/2018/TT-BYT ngày 20 tháng 7 năm 2018 của Bộ Y tế quy định về kiểm soát nhiễm khuẩn trong các cơ sở khám bệnh, chữa bệnh;\nQuyết định số 3916/QĐ-BYT ngày 28 tháng 8 năm 2018 của Bộ Y tế về việc phê duyệt các hướng dẫn kiểm soát nhiễm khuẩn trong các cơ sở khám bệnh, chữa bệnh;\nQuyết định số 3671/QĐ-BYT ngày 27 tháng 9 năm 2012 của Bộ Y tế ban hành Hướng dẫn kiểm soát nhiễm khuẩn tại các cơ sở khám bệnh, chữa bệnh;\nCông văn số 3666/SYT-NVY ngày 26 tháng 4 năm 2024 của Sở Y tế về việc đôn đốc thực hiện tiêu chí kiểm soát nhiễm khuẩn tối thiểu áp dụng đối với hoạt động của cơ sở khám bệnh, chữa bệnh không có giường bệnh nội trú.",
+   "ownerUnit": "NVY",
+   "levels": [
+    [
+     "Chưa phân công người phụ trách công tác kiểm soát nhiễm khuẩn tại Trung tâm.",
+     "Dụng cụ, vật tư y tế sử dụng cho người bệnh không đảm bảo vô khuẩn.",
+     "Không phân loại, không thu gom chất thải y tế.",
+     "Phát hiện cơ sở có hình thức xử lý rác gây ô nhiễm không đảm bảo vệ sinh."
+    ],
+    [
+     "Người phụ trách kiểm soát nhiễm khuẩn tại Trung tâm có chứng chỉ hoặc giấy chứng nhận đào tạo về kiểm soát nhiễm khuẩn theo quy định.",
+     "Triển khai thực hiện các quy định, quy trình cơ bản về kiểm soát nhiễm khuẩn, tối thiểu phải có: quy trình khử khuẩn, tiệt khuẩn dụng cụ; quy trình vệ sinh tay; quy trình vệ sinh bề mặt thiết bị y tế, xe cứu thương; quy định phòng ngừa chuẩn; quy định vô khuẩn khi thực hiện thủ thuật, kỹ thuật xâm lấn.",
+     "Dụng cụ y tế tái sử dụng, xe cứu thương được xử lý đúng quy định.",
+     "Có hợp đồng thu gom, xử lý chất thải rắn y tế với Trung tâm có chức năng thu gom và xử lý chất thải rắn y tế đúng quy trình an toàn, vệ sinh.",
+     "Hệ thống xử lý chất thải lỏng hoạt động liên tục 24/24."
+    ],
+    [
+     "Nhân viên nắm vững quy trình phòng ngừa và xử lý trường hợp bị phơi nhiễm với nguồn bệnh nguy hiểm, có nguy cơ nhiễm khuẩn cao.",
+     "Nhân viên tuân thủ quy định về vô khuẩn khi cấp cứu người bệnh.",
+     "Thực hiện phân loại chất thải rắn y tế tại nguồn.",
+     "Bố trí khu vực lưu trữ tạm thời chất thải rắn y tế theo quy định."
+    ],
+    [
+     "Thực hiện phân loại chất thải nhựa theo quy định.",
+     "Khu vực lưu trữ chất thải lây nhiễm, chất thải nguy hại riêng biệt và đạt chuẩn.",
+     "Các chỉ tiêu đầu ra của nước thải đạt quy chuẩn về môi trường."
+    ],
+    [
+     "Chất thải tái chế được thu gom riêng để giao cho Trung tâm có chức năng xử lý.",
+     "Giám sát và đánh giá tuân thủ vệ sinh tay, tuân thủ quy trình kiểm soát nhiễm khuẩn, quy trình kỹ thuật của nhân viên.",
+     "Báo cáo công tác quản lý chất thải y tế theo quy định."
+    ]
+   ]
+  },
+  {
+   "part": "C",
+   "partName": "Hoạt động chuyên môn",
+   "chapter": "C6",
+   "chapterName": "Nghiên cứu khoa học",
+   "code": "C6.1",
+   "title": "Tích cực triển khai hoạt động nghiên cứu khoa học",
+   "legalBasis": "Công văn số 8798/SYT-NVY ngày 19 tháng 10 năm 2017 của Sở Y tế về việc hướng dẫn hoạt động nghiên cứu khoa học cho các đơn vị trực thuộc chuyên môn do Sở Y tế quản lý từ năm 2017.",
+   "ownerUnit": "NVY",
+   "levels": [
+    [
+     "Không tham gia hoặc không tiến hành hoạt động nghiên cứu khoa học trong năm.",
+     "Không hợp tác cung cấp các số liệu, tài liệu cơ bản cho hoạt động nghiên cứu khoa học phục vụ việc xây dựng chính sách y tế."
+    ],
+    [
+     "Có đầy đủ và bảo đảm hoạt động tốt các phương tiện, trang thiết bị phục vụ trình chiếu, báo cáo khoa học như hội trường/giảng đường; máy chiếu; máy tính, màn chiếu, loa, tăng âm, micro, kết nối mạng không dây (wifi)…",
+     "Có tiến hành sinh hoạt khoa học định kỳ ít nhất 01 lần trong 02 tháng.",
+     "Chủ trì hoặc phối hợp tham gia thực hiện ít nhất một nghiên cứu khoa học."
+    ],
+    [
+     "Có tiến hành sinh hoạt khoa học định kỳ ít nhất 01 lần trong 01 tháng.",
+     "Có buổi sinh hoạt hướng dẫn phương pháp nghiên cứu cho nhân viên.",
+     "Có danh sách tổng hợp và chia nhóm các hoạt động nghiên cứu đã và đang thực hiện tại Trung tâm trong năm (chia theo cấp đề tài) bao gồm tối thiểu 4 nhóm: (1) nghiên cứu do Trung tâm chủ trì; (2) nghiên cứu phối hợp thực hiện; (3) tham gia cung cấp số liệu; (4) là địa điểm nghiên cứu cho đơn vị khác thực hiện.",
+     "Bác sĩ, điều dưỡng và các nhân viên có tham gia các hoạt động nghiên cứu khoa học như xây dựng câu hỏi, thu thập số liệu, viết báo cáo, viết luận văn, luận án tốt nghiệp, viết bài báo khoa học…",
+     "Trong năm, Trung tâm chủ trì xây dựng và tự tiến hành ít nhất một nghiên cứu khoa học (như các đánh giá, nghiên cứu cải tiến chất lượng dịch vụ và chuyên môn tại Trung tâm), có báo cáo kết quả nghiên cứu và đã được hội đồng cấp Trung tâm hoặc cấp cao hơn nghiệm thu."
+    ],
+    [
+     "Tập thể, cá nhân tại Trung tâm chủ trì/chủ nhiệm thực hiện ít nhất 03 công trình nghiên cứu khoa học được nghiệm thu.",
+     "Có ít nhất 01 bài báo khoa học về các công trình khoa học thực hiện tại Trung tâm, do tập thể nhân viên Trung tâm thực hiện đăng trên các tạp chí khoa học trong nước.",
+     "Có ít nhất 01 công trình được nghiệm thu ở cấp thành phố trở lên."
+    ],
+    [
+     "Có ít nhất 02 bài báo khoa học được đăng trên các tạp chí quốc tế có nhân viên của Trung tâm tham gia đồng tác giả.",
+     "Có ít nhất 01 bài báo khoa học đăng trên các tạp chí khoa học quốc tế, do nhân viên cơ hữu của Trung tâm đứng đầu trong số danh sách tên các tác giả.",
+     "Có công trình nghiên cứu do cá nhân/tập thể Trung tâm làm chủ nhiệm/chủ trì đạt các giải thưởng khoa học trong nước cấp quốc gia hoặc giải thưởng khoa học quốc tế."
+    ]
+   ]
+  },
+  {
+   "part": "C",
+   "partName": "Hoạt động chuyên môn",
+   "chapter": "C6",
+   "chapterName": "Nghiên cứu khoa học",
+   "code": "C6.2",
+   "title": "Áp dụng kết quả nghiên cứu khoa học trong hoạt động của Trung tâm và các giải pháp nâng cao chất lượng cấp cứu",
+   "legalBasis": "Quyết định 35/2023/QĐ-UBND ngày 21 tháng 8 năm 2023 của Ủy ban nhân dân Thành phố về ban hành Quy chế quản lý nhiệm vụ khoa học và công nghệ sử dụng ngân sách nhà nước Thành phố Hồ Chí Minh;\nCông văn số 8798/SYT-NVY ngày 19 tháng 10 năm 2017 của Sở Y tế về việc hướng dẫn hoạt động nghiên cứu khoa học cho các đơn vị trực thuộc chuyên môn do Sở Y tế quản lý từ năm 2017.",
+   "ownerUnit": "NVY",
+   "levels": [
+    [
+     "Không áp dụng kết quả nghiên cứu khoa học (do Trung tâm thực hiện hoặc nghiên cứu trong nước, quốc tế) đã được công bố vào hoạt động của Trung tâm và nâng cao chất lượng công tác cấp cứu."
+    ],
+    [
+     "Có tiến hành thu thập, tìm kiếm và tổng hợp kết quả các nghiên cứu hoặc sáng kiến, thành công của đơn vị khác (trong và ngoài nước) phục vụ cho việc cải tiến chất lượng khám, chữa bệnh và nâng cao hoạt động của Trung tâm.",
+     "Có xây dựng kế hoạch và lộ trình triển khai áp dụng các kết quả nghiên cứu/sáng kiến/giải pháp để cải tiến hoạt động Trung tâm."
+    ],
+    [
+     "Có triển khai và áp dụng ít nhất 02 kết quả nghiên cứu vào thực tiễn hoạt động chuyên môn và quản lý; giúp cải tiến hoạt động Trung tâm và nâng cao chất lượng công tác."
+    ],
+    [
+     "Có triển khai và áp dụng ít nhất 03 kết quả nghiên cứu của chính Trung tâm hoặc của đơn vị khác vào thực tiễn hoạt động chuyên môn và quản lý; giúp cải tiến hoạt động Trung tâm và nâng cao chất lượng công tác.",
+     "Có khảo sát, đánh giá hiệu quả việc áp dụng kết quả nghiên cứu vào thực tiễn, có so sánh trước – sau khi áp dụng."
+    ],
+    [
+     "Có triển khai áp dụng ít nhất 04 kết quả nghiên cứu vào thực tiễn để cải tiến chất lượng khám, chữa bệnh và nâng cao hoạt động Trung tâm.",
+     "Có ít nhất 01 sáng kiến hoặc giải pháp mới về cải tiến chất lượng khám, chữa bệnh dựa trên nghiên cứu; được đăng ký bản quyền sở hữu trí tuệ.",
+     "Có báo cáo đánh giá hiệu quả việc áp dụng các sáng kiến hoặc giải pháp mới và khắc phục các nhược điểm (nếu có), liên tục cải tiến chất lượng dựa trên các bằng chứng khoa học."
+    ]
+   ]
+  },
+  {
+   "part": "D",
+   "partName": "Hoạt động cải tiến chất lượng",
+   "chapter": "D1",
+   "chapterName": "Thiết lập hệ thống và xây dựng, triển khai kế hoạch cải tiến chất lượng",
+   "code": "D1.1",
+   "title": "Thiết lập hệ thống quản lý chất lượng",
+   "legalBasis": "Thông tư số 19/2013/TT-BYT ngày 12 tháng 7 năm 2013 của Bộ Y tế về việc hướng dẫn quản lý chất lượng dịch vụ khám, chữa bệnh tại bệnh viện.",
+   "ownerUnit": "NVY",
+   "levels": [
+    [
+     "Chưa thành lập hội đồng quản lý chất lượng Trung tâm."
+    ],
+    [
+     "Đã thành lập phòng/tổ quản lý chất lượng."
+    ],
+    [
+     "Đã xây dựng quy chế hoạt động của hội đồng quản lý chất lượng.",
+     "Phòng/tổ quản lý chất lượng có ít nhất 3 nhân viên làm việc.",
+     "Phòng/tổ quản lý chất lượng có ít nhất một nhân viên chuyên trách về quản lý chất lượng (làm 100% thời gian, không kiêm nhiệm).",
+     "Hội đồng quản lý chất lượng tổ chức các cuộc họp định kỳ theo đúng kế hoạch.",
+     "Đã xác định cơ cấu, số lượng, vị trí việc làm của nhân viên phòng/tổ quản lý chất lượng dựa trên tình hình hoạt động thực tế tại Trung tâm.",
+     "Đã xây dựng và ban hành các văn bản về quản lý chất lượng trong Trung tâm."
+    ],
+    [
+     "Có ít nhất 01 lãnh đạo phòng (trưởng, phó phòng hoặc tổ trưởng, tổ phó) quản lý chất lượng là nhân viên chuyên trách, không kiêm nhiệm chức danh lãnh đạo Trung tâm hoặc lãnh đạo các khoa, phòng khác.",
+     "Nhân viên của phòng, tổ quản lý chất lượng được tham gia các lớp đào tạo về quản lý chất lượng."
+    ],
+    [
+     "Đã tuyển dụng đủ số lượng nhân viên của phòng/tổ quản lý chất lượng theo đề án và đúng cơ cấu theo vị trí việc làm.",
+     "Trưởng phòng (hoặc tổ trưởng) quản lý chất lượng là nhân viên chuyên trách, không kiêm nhiệm các chức danh lãnh đạo khác.",
+     "Áp dụng hệ thống quản lý chất lượng hoạt động cấp cứu theo tiêu chuẩn quốc tế."
+    ]
+   ]
+  },
+  {
+   "part": "D",
+   "partName": "Hoạt động cải tiến chất lượng",
+   "chapter": "D1",
+   "chapterName": "Thiết lập hệ thống và xây dựng, triển khai kế hoạch cải tiến chất lượng",
+   "code": "D1.2",
+   "title": "Xây dựng và triển khai kế hoạch chất lượng",
+   "legalBasis": "Thông tư số 19/2013/TT-BYT ngày 12 tháng 7 năm 2013 của Bộ Y tế về việc hướng dẫn quản lý chất lượng dịch vụ khám, chữa bệnh tại bệnh viện.",
+   "ownerUnit": "NVY",
+   "levels": [
+    [
+     "Chưa xây dựng kế hoạch cải tiến chất lượng chung của toàn Trung tâm"
+    ],
+    [
+     "Đã xây dựng kế hoạch cải tiến chất lượng chung của toàn Trung tâm cho năm hiện tại (hoặc giai đoạn từ 1 đến 3 năm tiếp theo).",
+     "Kế hoạch có đầy đủ các nội dung chương trình hành động, phân công cụ thể, thời gian thực hiện, chỉ số đánh giá.",
+     "Trong kế hoạch cải tiến chất lượng có đưa ra các mục tiêu chất lượng và kết quả đầu ra cụ thể, có thể lượng giá được."
+    ],
+    [
+     "Hội đồng quản lý chất lượng xây dựng bảng kiểm hướng dẫn cụ thể việc thực hiện kế hoạch cải tiến chất lượng và đánh giá các việc đã hoàn thành.",
+     "Trong bản kế hoạch cải tiến chất lượng chung có ghi rõ tên kế hoạch, nội dung hoạt động, kết quả đầu ra, thời gian, địa điểm, người chịu trách nhiệm chính, kinh phí và các nguồn lực khác để thực hiện.",
+     "Trong bản kế hoạch cải tiến chất lượng chung của Trung tâm có xác định số lượng các đề án cải tiến chất lượng theo từng mục tiêu, nguồn kinh phí dự kiến và địa chỉ khoa, phòng đầu mối thực hiện.",
+     "Hội đồng quản lý chất lượng hướng dẫn các khoa, phòng triển khai cải tiến chất lượng theo như kế hoạch.",
+     "Hội đồng quản lý chất lượng hướng dẫn các khoa, phòng xây dựng các đề án cải tiến chất lượng cho từng khoa, phòng.",
+     "Xây dựng và triển khai được ít nhất 02 đề án cải tiến chất lượng."
+    ],
+    [
+     "Bản kế hoạch cải tiến chất lượng chung của Trung tâm được triển khai đầy đủ các mục theo như bảng kiểm đánh giá.",
+     "Tỷ lệ các khoa, phòng xây dựng đề án cải tiến chất lượng riêng của từng khoa, phòng chiếm từ 50% tổng số khoa, phòng trở lên.",
+     "Mỗi đề án cải tiến chất lượng có đưa ra ít nhất 1 mục tiêu và 1 kết quả đầu ra cụ thể, phù hợp với kế hoạch cải tiến chất lượng chung của Trung tâm.",
+     "Các khoa, phòng triển khai các đề án cải tiến chất lượng của từng khoa, phòng theo lộ trình trong đề án.",
+     "Đã tiến hành lượng giá các mục tiêu của kế hoạch chất lượng chung và lượng giá các kết quả đầu ra cụ thể ít nhất 06 tháng 01 lần."
+    ],
+    [
+     "Tỷ lệ các khoa, phòng xây dựng đề án cải tiến chất lượng riêng của từng khoa, phòng chiếm từ 90% tổng số khoa, phòng trở lên.",
+     "Hoàn thành và đạt được trên 90% các mục tiêu đã nêu trong bản kế hoạch cải tiến chất lượng chung của toàn Trung tâm.",
+     "Tiến hành đánh giá và công bố kết quả thực hiện các đề án cải tiến chất lượng riêng của từng khoa, phòng.",
+     "Đánh giá, phân loại thi đua, khen thưởng các khoa, phòng dựa trên việc hoàn thành các đề án cải tiến chất lượng riêng của từng khoa, phòng.",
+     "Xác định nguyên nhân và giải pháp khắc phục các đề án cải tiến chất lượng chưa hoàn thành và xây dựng phương án, triển khai thực hiện đầy đủ các đề án cải tiến chất lượng đã xây dựng."
+    ]
+   ]
+  },
+  {
+   "part": "D",
+   "partName": "Hoạt động cải tiến chất lượng",
+   "chapter": "D2",
+   "chapterName": "Phòng ngừa các sai sót, sự cố và khắc phục",
+   "code": "D2.1",
+   "title": "Xây dựng hệ thống báo cáo, tổng hợp, phân tích sai sót và khắc phục",
+   "legalBasis": "Luật Khám bệnh, chữa bệnh số 15/2023/QH15 ngày 09 tháng 01 năm 2023;\nThông tư số 19/2013/TT-BYT ngày 12 tháng 7 năm 2013 của Bộ Y tế về việc hướng dẫn quản lý chất lượng dịch vụ khám, chữa bệnh tại bệnh viện;\nThông tư 43/2018/TT-BYT ngày 26 tháng 12 năm 2018 của Bộ Y tế về hướng dẫn phòng ngừa sự cố y khoa trong các cơ sở khám bệnh, chữa bệnh.",
+   "ownerUnit": "NVY",
+   "levels": [
+    [
+     "Không triển khai hệ thống báo cáo sự cố y khoa và sự cố ngoại viện.",
+     "Phát hiện thấy Trung tâm có sự cố y khoa và sự cố ngoại viện đã xảy ra trong năm nhưng không được hệ thống báo cáo sự cố ghi nhận."
+    ],
+    [
+     "Hệ thống báo cáo sự cố có ghi nhận các sự cố xảy ra.",
+     "Toàn bộ các sự cố y khoa và sự cố ngoại viện xảy ra trong năm được hệ thống báo cáo sự cố của Trung tâm ghi nhận đầy đủ."
+    ],
+    [
+     "Có quy định về việc quản lý sự cố y khoa và sự cố ngoại viện.",
+     "Hệ thống báo cáo sự cố có ghi đầy đủ, trung thực các thông tin, thời gian, diễn biến sự cố xảy ra; cung cấp được đủ thông tin cho việc phân tích sự cố để rút kinh nghiệm.",
+     "Triển khai thực hiện phiếu báo cáo sự cố y khoa và sự cố ngoại viện tự nguyện (hoặc hình thức báo cáo tự nguyện khác) cho nhân viên.",
+     "Nhân viên có báo cáo sự cố y khoa và sự cố ngoại viện đầy đủ theo phiếu báo cáo khi xảy ra sự cố y khoa (hoặc theo các hình thức báo cáo tự nguyện khác).",
+     "Có điều tra, phân tích, tìm nguyên nhân gốc rễ và đề xuất giải pháp cải tiến tránh lặp lại các sự cố y khoa và sự cố ngoại viện đã xảy ra."
+    ],
+    [
+     "Có phân tích sự cố y khoa và sự cố ngoại viện theo định kỳ ít nhất 01 lần trong 6 tháng và phản hồi cho cá nhân và tập thể liên quan.",
+     "Có hình thức động viên, khuyến khích cho người tự giác, tự nguyện báo cáo sự cố y khoa và sự cố ngoại viện.",
+     "Có tổng hợp, phân tích số liệu về sự cố y khoa và sự cố ngoại viện xảy ra định kỳ hằng năm và công bố tại Trung tâm.",
+     "Có xây dựng các giải pháp khắc phục sự cố y khoa và sự cố ngoại viện đã được báo cáo.",
+     "Có tiến hành rà soát, đánh giá lại ít nhất 01 lần trong năm việc ghi chép, báo cáo về sự cố y khoa và sự cố ngoại viện, trong đó xác định những việc đã làm, chưa làm được, hoặc chưa đạt yêu cầu và các mặt hạn chế cần khắc phục."
+    ],
+    [
+     "Áp dụng công nghệ thông tin để xây dựng hệ thống ghi nhận và quản lý các sai sót, sự cố bằng phần mềm điện tử.",
+     "Phần mềm công nghệ thông tin tự động phân tích và chiết xuất kết quả dưới dạng hình vẽ, biểu đồ… các sự cố đã xảy ra theo địa điểm, thời gian, tần suất… xảy ra.",
+     "Các sự cố xảy ra được xem xét và tìm ra nguyên nhân gốc dựa vào các phương pháp, mô hình phân tích nguyên nhân gốc rễ.",
+     "Tiến hành cải tiến chất lượng hệ thống báo cáo sự cố, đặc biệt hệ thống báo cáo sự cố tự nguyện và các phiếu báo cáo sự cố.",
+     "Xây dựng “văn hóa tự giác” báo cáo sự cố: không có nhân viên che giấu các sự cố đã xảy ra và sự cố “gần như sắp xảy ra” (near miss)."
+    ]
+   ]
+  },
+  {
+   "part": "D",
+   "partName": "Hoạt động cải tiến chất lượng",
+   "chapter": "D2",
+   "chapterName": "Phòng ngừa các sai sót, sự cố và khắc phục",
+   "code": "D2.2",
+   "title": "Thực hiện các biện pháp phòng ngừa để giảm thiểu các sai sót, sự cố",
+   "legalBasis": "Luật Khám bệnh, chữa bệnh số 15/2023/QH15 ngày 09 tháng 01 năm 2023;\nThông tư số 19/2013/TT-BYT ngày 12 tháng 7 năm 2013 của Bộ Y tế về việc hướng dẫn quản lý chất lượng dịch vụ khám, chữa bệnh tại bệnh viện;\nThông tư số 43/2018/TT-BYT ngày 26 tháng 12 năm 2018 của Bộ Y tế về hướng dẫn phòng ngừa sự cố y khoa trong các cơ sở khám bệnh, chữa bệnh.",
+   "ownerUnit": "NVY",
+   "levels": [
+    [
+     "Chưa triển khai bất cứ biện pháp phòng ngừa sai sót, sự cố."
+    ],
+    [
+     "Có ban hành và áp dụng công cụ, phương pháp nhằm giảm thiểu sai sót, sự cố trong các hoạt động chuyên môn của các khoa (tiếp nhận thông tin cuộc gọi, điều phối, xử trí cấp cứu…).",
+     "Có bản danh sách thống kê các sự cố thường xảy ra và các quy trình kỹ thuật có liên quan thường xảy ra các sự cố."
+    ],
+    [
+     "Có xây dựng bảng kiểm đánh giá việc tuân thủ cho ít nhất 5 quy trình kỹ thuật (ưu tiên các quy trình được thực hiện thường xuyên).",
+     "Có kiểm tra việc thực hiện các quy trình kỹ thuật (do Trung tâm quy định dựa trên hướng dẫn của Bộ Y tế) theo bảng kiểm định kỳ (ít nhất 3 tháng 1 lần) và có biên bản kiểm tra lưu trữ.",
+     "Không để xảy ra các sự cố, sai sót nghiêm trọng ảnh hưởng đến hiệu quả công tác cấp cứu người bệnh.",
+     "Có ghi lại và có báo cáo các hành vi đã xảy ra trên thực tế, có thể gây ra hậu quả nhưng được phát hiện và ngăn chặn kịp thời (là các sự cố “gần như sắp xảy ra”."
+    ],
+    [
+     "Xây dựng bảng kiểm đánh giá việc tuân thủ cho ít nhất 10 quy trình kỹ thuật (ưu tiên các quy trình được thực hiện thường xuyên).",
+     "Các sai sót, sự cố được thu thập, tổng hợp và rút kinh nghiệm trong toàn hệ thống cấp cứu ngoại viện.",
+     "Có tổng hợp số liệu về sai sót, sự cố và có báo cáo hàng năm.",
+     "Có báo cáo đánh giá/nghiên cứu về sai sót, sự cố và phân tích xu hướng, nguyên nhân và đề xuất giải pháp hạn chế sai sót, sự cố."
+    ],
+    [
+     "Báo cáo đánh giá, nghiên cứu về sự cố có tỷ lệ sự cố cụ thể tại một số lĩnh vực, khoa, phòng và đề xuất giải pháp cải tiến chất lượng.",
+     "Áp dụng các kết quả phân tích, đánh giá vào việc triển khai các biện pháp phòng ngừa để giảm thiểu các sự cố.",
+     "Có bản tin an toàn y tế định kỳ, ít nhất 2 lần trong 1 năm; trong bản tin có thông tin sự cố, các hướng dẫn, giải pháp phòng ngừa...",
+     "Khắc phục đầy đủ, không để lặp lại các sự cố do “lỗi hệ thống” đã được phát hiện.",
+     "Triển khai các giải pháp cải tiến chất lượng, hạn chế không lặp lại các sự cố tương tự."
+    ]
+   ]
+  },
+  {
+   "part": "D",
+   "partName": "Hoạt động cải tiến chất lượng",
+   "chapter": "D3",
+   "chapterName": "Đánh giá đo lường hợp tác và cải tiến chất lượng",
+   "code": "D3.1",
+   "title": "Đánh giá chính xác thực trạng và công bố công khai chất lượng",
+   "legalBasis": "Thông tư số 19/2013/TT-BYT ngày 12 tháng 7 năm 2013 của Bộ Y tế về việc hướng dẫn quản lý chất lượng dịch vụ khám, chữa bệnh tại bệnh viện.",
+   "ownerUnit": "NVY",
+   "levels": [
+    [
+     "Không tiến hành đánh giá chất lượng theo các tiêu chí hoặc không có “Báo cáo đánh giá chất lượng” hàng năm."
+    ],
+    [
+     "Tự tiến hành đánh giá chất lượng theo các tiêu chí và gửi “Báo cáo đánh giá chất lượng” cho Sở Y tế."
+    ],
+    [
+     "Có tổ chức đánh giá chất lượng 6 tháng đầu năm vào thời điểm giữa năm; có quyết định, biên bản kiểm tra, trong đó có chỉ ra những vấn đề cần ưu tiên khắc phục, cải tiến.",
+     "Có bảng thống kê các tiểu mục theo từng tiêu chí trong “Bộ tiêu chí chất lượng” chưa đạt yêu cầu và lý do chưa đạt.",
+     "Công bố và phổ biến kết quả “Báo cáo đánh giá chất lượng” cho các khoa, phòng, nhân viên.",
+     "Trong báo cáo có phân tích rõ mặt mạnh, mặt yếu, khó khăn về chất lượng Trung tâm, những tồn tại và biện pháp khắc phục."
+    ],
+    [
+     "Có bảng thống kê các tiểu mục theo từng tiêu chí trong “Bộ tiêu chí chất lượng” chưa đạt yêu cầu, lý do chưa đạt, trách nhiệm của khoa, phòng và nội dung cần cải tiến.",
+     "Có tổ chức đánh giá chất lượng thường xuyên hàng tháng hoặc hàng quý và rà soát những nội dung cần cải tiến chất lượng nhưng chưa thực hiện được hoặc chưa đúng tiến độ.",
+     "Tự tiến hành đánh giá chất lượng Trung tâm và công bố công khai “Báo cáo đánh giá chất lượng” trên trang thông tin điện tử."
+    ],
+    [
+     "Có bản danh sách theo dõi thường xuyên hàng tháng kết quả đánh giá chất lượng với việc cải tiến chất lượng đã thực hiện.",
+     "Báo cáo tự đánh giá chất lượng cuối năm có đầy đủ thông tin các khía cạnh chất lượng và bảo đảm số liệu chính xác và đầy đủ."
+    ]
+   ]
+  },
+  {
+   "part": "D",
+   "partName": "Hoạt động cải tiến chất lượng",
+   "chapter": "D3",
+   "chapterName": "Đánh giá đo lường hợp tác và cải tiến chất lượng",
+   "code": "D3.2",
+   "title": "Đo lường và giám sát cải tiến chất lượng",
+   "legalBasis": "Thông tư số 19/2013/TT-BYT ngày 12 tháng 7 năm 2013 của Bộ Y tế về việc hướng dẫn quản lý chất lượng dịch vụ khám, chữa bệnh tại bệnh viện.",
+   "ownerUnit": "NVY",
+   "levels": [
+    [
+     "Không tiến hành đánh giá chất lượng nội bộ."
+    ],
+    [
+     "Kế hoạch cải tiến chất lượng của Trung tâm có đề cập đến nội dung đo lường và giám sát chất lượng."
+    ],
+    [
+     "Trong kế hoạch cải tiến chất lượng có xây dựng ít nhất 5 chỉ số chất lượng cụ thể nhằm đánh giá và theo dõi chất lượng hoạt động chuyên môn.",
+     "Mỗi khoa, phòng xây dựng ít nhất 1 chỉ số chất lượng cụ thể nhằm đánh giá và theo dõi chất lượng hoạt động của khoa, phòng đó.",
+     "Có bản tổng hợp danh sách các chỉ số chất lượng (chung của Trung tâm và các khoa, phòng) được theo dõi, giám sát.",
+     "Tiến hành đo lường và giám sát kế hoạch chất lượng dựa trên bản kế hoạch."
+    ],
+    [
+     "Tiến hành đo lường và công bố kết quả thực hiện các chỉ số chất lượng đã nêu trong kế hoạch.",
+     "Hoàn thành đạt được ít nhất 60% các chỉ số chất lượng đã nêu trong bản kế hoạch cải tiến chất lượng chung của toàn Trung tâm.",
+     "Công bố, phổ biến kết quả đo lường các chỉ số trong danh sách cho nhân viên bằng các hình thức khác nhau (báo cáo, thông báo, gửi thư điện tử…)."
+    ],
+    [
+     "Theo dõi kết quả đo lường các chỉ số chất lượng bằng vẽ biểu đồ (theo các mốc thời gian).",
+     "Tự đặt các mục tiêu cần đạt được cho các chỉ số chất lượng trong danh sách.",
+     "Bản danh sách các chỉ số chất lượng có các cột số liệu như kết quả thực hiện, chỉ tiêu phấn đấu, có đạt hoặc không đạt chỉ tiêu…",
+     "Tiến hành cải tiến chất lượng, ưu tiên các chỉ số chất lượng chưa đạt và tiếp tục duy trì, cải tiến chất lượng các chỉ số đã đạt chỉ tiêu đề ra.",
+     "Hoàn thành đạt được trên 90% các chỉ số chất lượng đã nêu trong bản kế hoạch cải tiến chất lượng chung toàn Trung tâm."
+    ]
+   ]
+  }
+ ]
+}

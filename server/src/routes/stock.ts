@@ -33,7 +33,7 @@ export function registerStock(app: FastifyInstance, { pool }: Ctx) {
     const q = z.object({ stationId: z.string().optional(), vehicleId: z.string().optional(), place: z.enum(['kho', 'xe', 'all']).default('kho') }).parse(req.query);
     return many(pool, `
       SELECT l.id, l.station_id, s.name AS station_name, l.vehicle_id, l.lot, l.expiry, l.qty, l.supplier, l.received_at,
-             d.id AS drug_id, d.name AS drug_name, d.unit, d.controlled, (l.expiry - current_date) AS days_left
+             d.id AS drug_id, d.name AS drug_name, d.unit, d.controlled, (l.expiry - vn_today()) AS days_left
         FROM stock_lots l JOIN drugs d ON d.id = l.drug_id JOIN stations s ON s.id = l.station_id
        WHERE ($1::text IS NULL OR l.station_id = $1)
          AND ($2::text IS NULL OR l.vehicle_id = $2)

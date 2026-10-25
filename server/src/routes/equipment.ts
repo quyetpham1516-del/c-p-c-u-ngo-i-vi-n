@@ -83,8 +83,8 @@ export function registerEquipment(app: FastifyInstance, { pool, hub }: Ctx) {
     const q = z.object({ stationId: z.string().optional(), vehicleId: z.string().optional(), status: z.string().optional(), all: z.string().optional() }).parse(req.query);
     return many(pool, `
       SELECT e.*, t.name AS type_name,
-             (e.next_inspection < current_date OR e.next_calibration < current_date) AS overdue,
-             (e.next_maintenance < current_date) AS maintenance_overdue
+             (e.next_inspection < vn_today() OR e.next_calibration < vn_today()) AS overdue,
+             (e.next_maintenance < vn_today()) AS maintenance_overdue
         FROM equipment e JOIN equipment_types t ON t.id = e.type_id
        WHERE ($1::text IS NULL OR e.station_id = $1) AND ($2::text IS NULL OR e.vehicle_id = $2)
          AND ($3::text IS NULL OR e.status = $3) AND ($4 OR e.status <> 'thanh_ly')
@@ -112,6 +112,67 @@ export function registerEquipment(app: FastifyInstance, { pool, hub }: Ctx) {
     return vehicles.map((v) => ({ ...v, ok: !(gaps[v.id]?.length), gaps: gaps[v.id] ?? [] }));
   });
 
+  /* ---------- Mã QR: nhãn dán trên thiết bị, bộ dụng cụ; quét bằng điện thoại mở trang /tb/<mã> ---------- */
+
+  app.get('/api/qr/:code', { preHandler: guard() }, async (req) => {
+    const { code } = z.object({ code: z.string().trim().min(3).max(40) }).parse(req.params);
+    const e = await one(pool, 'SELECT id FROM equipment WHERE qr_code = $1 OR upper(asset_code) = upper($1) OR serial = $1', [code]);
+    if (e) return { kind: 'equipment', id: e.id };
+    const s = await one(pool, 'SELECT id FROM instrument_sets WHERE qr_code = $1 OR upper(code) = upper($1)', [code]);
+    if (s) return { kind: 'instrument_set', id: s.id };
+    throw new HttpError(404, 'Mã không khớp thiết bị hay bộ dụng cụ nào');
+  });
+
+  app.get('/api/equipment/:id', { preHandler: guard() }, async (req) => {
+    const id = z.object({ id: z.string().uuid() }).parse(req.params).id;
+    const e = await one(pool, `
+      SELECT e.*, t.name AS type_name, st.name AS station_name,
+             (e.next_inspection < vn_today() OR e.next_calibration < vn_today()) AS overdue, (e.next_maintenance < vn_today()) AS maintenance_overdue,
+             (SELECT max(at) FROM equipment_events ev WHERE ev.equipment_id = e.id AND ev.kind = 'kiem_tra') AS last_check
+        FROM equipment e JOIN equipment_types t ON t.id = e.type_id JOIN stations st ON st.id = e.station_id WHERE e.id = $1`, [id]);
+    if (!e) throw new HttpError(404, 'Không tìm thấy thiết bị');
+    const crewVehicleId = req.user.role === 'crew' ? await crewVehicle(req) : null;
+    return { ...e, onMyVehicle: !!crewVehicleId && crewVehicleId === e.vehicle_id };
+  });
+
+  app.get('/api/instrument-sets/:id', { preHandler: guard() }, async (req) => {
+    const id = z.object({ id: z.string().uuid() }).parse(req.params).id;
+    const s = await one(pool, `
+      SELECT s.*, st.name AS station_name, (s.status = 'san_sang' AND s.sterile_until < vn_today()) AS sterile_expired, i.code AS last_incident_code
+        FROM instrument_sets s JOIN stations st ON st.id = s.station_id LEFT JOIN incidents i ON i.id = s.last_incident_id WHERE s.id = $1`, [id]);
+    if (!s) throw new HttpError(404, 'Không tìm thấy bộ dụng cụ');
+    const crewVehicleId = req.user.role === 'crew' ? await crewVehicle(req) : null;
+    return { ...s, onMyVehicle: !!crewVehicleId && crewVehicleId === s.vehicle_id };
+  });
+
+  /** Sửa thông tin thiết bị: model, ghi chú, hướng dẫn sử dụng hiện khi quét tem */
+  app.patch('/api/equipment/:id', { preHandler: guard(...EQ_MANAGE) }, async (req) => {
+    const id = z.object({ id: z.string().uuid() }).parse(req.params).id;
+    const b = z.object({ model: opt, note: opt, manualUrl: z.string().url().max(1000).nullish(), manualText: z.string().max(4000).nullish() }).parse(req.body);
+    return withTx(pool, async (tx) => {
+      const e = await one(tx, `UPDATE equipment SET model = CASE WHEN $2 THEN $3 ELSE model END, note = CASE WHEN $4 THEN $5 ELSE note END,
+                                      manual_url = CASE WHEN $6 THEN $7 ELSE manual_url END, manual_text = CASE WHEN $8 THEN $9 ELSE manual_text END
+                                WHERE id = $1 RETURNING *`,
+      [id, 'model' in b, b.model ?? null, 'note' in b, b.note ?? null, 'manualUrl' in b, b.manualUrl ?? null, 'manualText' in b, b.manualText ?? null]);
+      if (!e) throw new HttpError(404, 'Không tìm thấy thiết bị');
+      await audit(tx, 'system', actorOf(req), 'equipment.updated', 'equipment', id, b);
+      return e;
+    });
+  });
+
+  /** Cấp mã QR mới khi nhãn bị mất hoặc lộ; nhãn cũ hết tác dụng */
+  app.post('/api/qr/reissue', { preHandler: guard(...EQ_MANAGE, 'ipc') }, async (req) => {
+    const b = z.object({ kind: z.enum(['equipment', 'instrument_set']), id: z.string().uuid() }).parse(req.body);
+    if (b.kind === 'equipment' && req.user.role === 'ipc') throw new HttpError(403, 'Không có quyền');
+    const table = b.kind === 'equipment' ? 'equipment' : 'instrument_sets';
+    return withTx(pool, async (tx) => {
+      const r = await one(tx, `UPDATE ${table} SET qr_code = substr(replace(gen_random_uuid()::text, '-', ''), 1, 16) WHERE id = $1 RETURNING id, qr_code`, [b.id]);
+      if (!r) throw new HttpError(404, 'Không tìm thấy');
+      await audit(tx, 'system', actorOf(req), 'qr.reissued', b.kind, b.id, {});
+      return r;
+    });
+  });
+
   app.get('/api/equipment/:id/events', { preHandler: guard() }, async (req) => {
     const id = z.object({ id: z.string().uuid() }).parse(req.params).id;
     return many(pool, `SELECT ev.*, u.full_name AS user_name FROM equipment_events ev LEFT JOIN users u ON u.id = ev.user_id
@@ -121,14 +182,14 @@ export function registerEquipment(app: FastifyInstance, { pool, hub }: Ctx) {
   app.post('/api/equipment/:id/events', { preHandler: guard('crew', ...EQ_MANAGE, 'ipc') }, async (req) => {
     const id = z.object({ id: z.string().uuid() }).parse(req.params).id;
     const b = z.object({
-      kind: z.enum(['bao_duong', 'kiem_dinh', 'hieu_chuan', 'bao_hong', 'sua_xong', 'dieu_chuyen', 'thanh_ly']),
+      kind: z.enum(['kiem_tra', 've_sinh', 'bao_duong', 'kiem_dinh', 'hieu_chuan', 'bao_hong', 'sua_xong', 'dieu_chuyen', 'thanh_ly']),
       note: opt, certNo: z.string().trim().max(80).nullish(), nextDue: date.nullish(), stationId: z.string().nullish(), vehicleId: z.string().nullish(),
     }).parse(req.body);
     const before = await one(pool, 'SELECT vehicle_id FROM equipment WHERE id = $1', [id]);
     if (!before) throw new HttpError(404, 'Không tìm thấy thiết bị');
-    // Kíp và KSNK chỉ được báo hỏng; kíp chỉ báo cho thiết bị trên xe mình
+    // Kíp và KSNK chỉ được kiểm tra nhanh, báo hỏng; kíp chỉ thao tác với thiết bị trên xe mình
     if (req.user.role === 'crew' || req.user.role === 'ipc') {
-      if (b.kind !== 'bao_hong') throw new HttpError(403, 'Chỉ được báo hỏng; bảo dưỡng, kiểm định do bộ phận kỹ thuật ghi');
+      if (!['bao_hong', 'kiem_tra', 've_sinh'].includes(b.kind)) throw new HttpError(403, 'Chỉ được kiểm tra, vệ sinh, báo hỏng; bảo dưỡng, kiểm định do bộ phận kỹ thuật ghi');
       if (req.user.role === 'crew' && before.vehicle_id !== await crewVehicle(req)) throw new HttpError(403, 'Thiết bị không nằm trên xe bạn đang trực');
     }
     const e = await withTx(pool, (tx) => equipmentEvent(tx, actorOf(req), id, b));
@@ -141,7 +202,7 @@ export function registerEquipment(app: FastifyInstance, { pool, hub }: Ctx) {
   app.get('/api/instrument-sets', { preHandler: guard() }, async (req) => {
     const q = z.object({ stationId: z.string().optional(), vehicleId: z.string().optional(), status: z.string().optional() }).parse(req.query);
     return many(pool, `
-      SELECT s.*, (s.status = 'san_sang' AND s.sterile_until < current_date) AS sterile_expired, i.code AS last_incident_code
+      SELECT s.*, (s.status = 'san_sang' AND s.sterile_until < vn_today()) AS sterile_expired, i.code AS last_incident_code
         FROM instrument_sets s LEFT JOIN incidents i ON i.id = s.last_incident_id
        WHERE ($1::text IS NULL OR s.station_id = $1) AND ($2::text IS NULL OR s.vehicle_id = $2) AND ($3::text IS NULL OR s.status = $3)
        ORDER BY s.station_id, s.vehicle_id NULLS LAST, s.code`, [q.stationId ?? null, q.vehicleId ?? null, q.status ?? null]);

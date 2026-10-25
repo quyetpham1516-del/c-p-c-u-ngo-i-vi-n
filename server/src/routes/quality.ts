@@ -148,8 +148,8 @@ export function registerQuality(app: FastifyInstance, { pool, hub }: Ctx) {
     const q = z.object({ days: z.coerce.number().int().min(1).max(730).default(90) }).parse(req.query);
     const [rows, summary] = await Promise.all([
       many(pool, `SELECT w.*, u.full_name AS created_by_name FROM medical_waste w LEFT JOIN users u ON u.id = w.created_by
-                   WHERE w.on_date > current_date - $1::int ORDER BY w.on_date DESC, w.id DESC LIMIT 300`, [q.days]),
-      many(pool, `SELECT station_id, kind, sum(kg)::float AS kg FROM medical_waste WHERE on_date > current_date - $1::int GROUP BY 1, 2 ORDER BY 1, 2`, [q.days]),
+                   WHERE w.on_date > vn_today() - $1::int ORDER BY w.on_date DESC, w.id DESC LIMIT 300`, [q.days]),
+      many(pool, `SELECT station_id, kind, sum(kg)::float AS kg FROM medical_waste WHERE on_date > vn_today() - $1::int GROUP BY 1, 2 ORDER BY 1, 2`, [q.days]),
     ]);
     return { rows, summary };
   });
@@ -243,7 +243,7 @@ export function registerQuality(app: FastifyInstance, { pool, hub }: Ctx) {
     const q = z.object({ mine: z.string().optional(), status: z.string().optional() }).parse(req.query);
     const mine = q.mine === '1' || !QUALITY_VIEW.includes(req.user.role);
     return many(pool, `
-      SELECT c.*, u.full_name AS owner_name, e.code AS event_code, k.code AS complaint_code, (c.status = 'mo' AND c.due_date < current_date) AS overdue
+      SELECT c.*, u.full_name AS owner_name, e.code AS event_code, k.code AS complaint_code, (c.status = 'mo' AND c.due_date < vn_today()) AS overdue
         FROM capa_actions c JOIN users u ON u.id = c.owner_id LEFT JOIN adverse_events e ON e.id = c.event_id LEFT JOIN complaints k ON k.id = c.complaint_id
        WHERE (NOT $1 OR c.owner_id = $2) AND ($3::text IS NULL OR c.status = $3)
        ORDER BY c.status = 'mo' DESC, c.due_date`, [mine, req.user.id, q.status ?? null]);

@@ -12,6 +12,7 @@
     "idb-keyval": "^6.3.0",
     "leaflet": "1.9",
     "next": "16.4.3",
+    "qrcode-generator": "^1.4.4",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-leaflet": "^5.0.0"

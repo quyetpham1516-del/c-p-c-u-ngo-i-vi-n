@@ -1,0 +1,815 @@
+{
+ "code": "TC-PK-SYT",
+ "version": "1.0",
+ "facilityKind": "phong_kham",
+ "name": "Bộ tiêu chí chất lượng phòng khám (Sở Y tế, bản 1.0, 23 tiêu chí)",
+ "source": "Bộ tiêu chí phòng khám của Sở Y tế (bản 1.0), lấy từ dữ liệu mẫu của phần mềm MedOne phòng khám. Tiêu chí 11, 13, 14, 20 chỉ áp dụng khi phòng khám có hoạt động tương ứng; ghi chú (*) đặt ở cột Căn cứ pháp lý.",
+ "criteria": [
+  {
+   "part": "A",
+   "partName": "Tiêu chí chất lượng phòng khám",
+   "chapter": "A1",
+   "chapterName": "Tiêu chí chung",
+   "code": "TC1",
+   "title": "Tuân thủ các quy định về nhân sự tham gia hành nghề khám bệnh, chữa bệnh",
+   "legalBasis": null,
+   "ownerUnit": null,
+   "levels": [
+    [
+     "Người hành nghề khám bệnh, chữa bệnh tại phòng khám chưa có chứng chỉ hành nghề hoặc đang trong thời gian bị đình chỉ hành nghề hoặc chưa đăng ký hành nghề với Sở Y tế.",
+     "Người hành nghề khám bệnh, chữa bệnh không đúng phạm vi chuyên môn ghi trong chứng chỉ hành nghề.",
+     "Phát hiện người phiên dịch thực hiện các công việc của bác sĩ (tư vấn khám bệnh, chữa bệnh; chỉ định xét nghiệm…).",
+     "Trong năm bị xử lý vi phạm hành chính liên quan đến nhân sự của phòng khám."
+    ],
+    [
+     "Niêm yết công khai tại phòng khám hoặc trên trang tin điện tử của cơ sở (nếu có) danh sách, văn bằng chuyên môn và chứng chỉ hành nghề, phạm vi hoạt động chuyên môn của tất cả người hành nghề của cơ sở.",
+     "Mọi thay đổi về nhân sự hành nghề tại phòng khám phải cập nhật vào phần mềm quản lý hành nghề của Sở Y tế trong vòng 10 ngày.",
+     "Nhân viên y tế là viên chức, công chức làm việc ngoài giờ hành chính tại phòng khám phải có văn bản chấp thuận của thủ trưởng cơ quan nơi đang công tác.",
+     "Người hành nghề có đầy đủ hợp đồng lao động (trừ trường hợp nhân sự là chủ hộ kinh doanh, chủ sở hữu công ty), trong đó quy định rõ thời gian làm việc cụ thể phù hợp với thời gian hoạt động của cơ sở và không trùng thời gian làm việc tại một cơ sở khám bệnh, chữa bệnh khác."
+    ],
+    [
+     "100% bác sĩ đang hành nghề khám bệnh, chữa bệnh tại phòng khám có giấy chứng nhận cập nhật kiến thức y khoa liên tục tối thiểu 120 giờ tín chỉ trong 05 năm liên tục1.",
+     "Tổ chức thực hành cho y sĩ (y sĩ đa khoa, y sĩ y học cổ truyền), kỹ thuật y (xét nghiệm y học, hình ảnh y học, phục hình răng, khúc xạ nhãn khoa, phục hồi chức năng) đúng quy định (đơn đề nghị thực hành, hợp đồng, quyết định phân công người hướng dẫn, người hướng dẫn phải đủ điều kiện).",
+     "Bác sĩ nước ngoài khi hành nghề tại Việt Nam hoặc/và bác sĩ Việt Nam khi khám bệnh, chữa bệnh cho người nước ngoài phải tuân thủ quy định về sử dụng ngôn ngữ trong khám bệnh, chữa bệnh."
+    ],
+    [
+     "100% nhân viên y tế đang hành nghề khám bệnh, chữa bệnh tại phòng khám có giấy chứng nhận cập nhật kiến thức y khoa liên tục tối thiểu 120 giờ tín chỉ trong 05 năm liên tục1.",
+     "Báo cáo nhân sự đủ điều kiện sử dụng thành thạo ngôn ngữ khác hoặc đủ trình độ phiên dịch trong khám bệnh, chữa bệnh cho người nước ngoài về Sở Y tế (nếu có khám bệnh, chữa bệnh cho người nước ngoài).",
+     "Người hành nghề là người nước ngoài phải có giấy phép lao động (còn thời hạn, đúng nội dung hành nghề)."
+    ],
+    [
+     "100% bác sĩ phụ trách chuyên khoa có trình độ chuyên khoa 1 hoặc tương đương trở lên."
+    ]
+   ]
+  },
+  {
+   "part": "A",
+   "partName": "Tiêu chí chất lượng phòng khám",
+   "chapter": "A1",
+   "chapterName": "Tiêu chí chung",
+   "code": "TC2",
+   "title": "Tuân thủ các quy định về cơ sở vật chất và thiết bị y tế",
+   "legalBasis": null,
+   "ownerUnit": null,
+   "levels": [
+    [
+     "Thay đổi quy mô giường bệnh, cơ cấu tổ chức (thành lập thêm hoặc giải thể các khoa, phòng) và vị trí các buồng khám nhưng chưa báo cáo Sở Y tế.",
+     "Sử dụng thiết bị y tế không rõ nguồn gốc hoặc quá thời hạn sử dụng.",
+     "Trong năm có phản ánh và bị xử lý vi phạm hành chính liên quan đến cơ sở vật chất, thiết bị y tế."
+    ],
+    [
+     "Duy trì các điều kiện về cơ sở vật chất, thiết bị y tế đã được thẩm định.",
+     "Bảo trì, bảo dưỡng các thiết bị y tế sử dụng tại phòng khám theo quy định, đảm bảo thiết bị y tế luôn trong tình trạng hoạt động tốt (không rỉ sét, hư hỏng,…)."
+    ],
+    [
+     "Kiểm định, hiệu chuẩn thiết bị y tế (theo danh mục của Bộ Y tế) theo quy định.",
+     "Bố trí, thiết kế lối đi trong khuôn viên phòng khám để xe lăn có thể đi được, an toàn và độ dốc phù hợp."
+    ],
+    [
+     "Có thang máy (nếu phòng khám có nhiều tầng) và luôn sẵn sàng các phương tiện vận chuyển người bệnh (xe đẩy, băng ca phù hợp) giúp vận chuyển người bệnh an toàn khi có tình huống cấp cứu.",
+     "Có phòng vệ sinh dành cho người khuyết tật (được thiết kế đủ rộng, có lối đi để xe lăn tiếp cận được bệ xí ngồi, có tay vịn tại vị trí bệ xí ngồi)."
+    ],
+    [
+     "Phát triển đầy đủ tất cả các chuyên khoa (nội, ngoại, sản, nhi, mắt, tai mũi họng, răng hàm mặt, da liễu, xét nghiệm, chẩn đoán hình ảnh)."
+    ]
+   ]
+  },
+  {
+   "part": "A",
+   "partName": "Tiêu chí chất lượng phòng khám",
+   "chapter": "A1",
+   "chapterName": "Tiêu chí chung",
+   "code": "TC3",
+   "title": "Tuân thủ các quy định về danh mục kỹ thuật",
+   "legalBasis": null,
+   "ownerUnit": null,
+   "levels": [
+    [
+     "Phòng khám chưa được phê duyệt danh mục kỹ thuật.",
+     "Thực hiện kỹ thuật khám bệnh, chữa bệnh ngoài danh mục kỹ thuật đã được phê duyệt.",
+     "Trong năm bị xử lý vi phạm hành chính liên quan đến việc thực hiện danh mục kỹ thuật."
+    ],
+    [
+     "Công khai danh mục kỹ thuật đã được phê duyệt cho người bệnh, nhân viên y tế biết và dễ dàng tra cứu.",
+     "Đảm bảo luôn sẵn sàng về nhân lực, thiết bị y tế để thực hiện đầy đủ danh mục kỹ thuật đã được phê duyệt.",
+     "Khi thay đổi nhân sự thực hiện kỹ thuật có báo cáo về Sở Y tế để xem xét thẩm định, phê duyệt lại các kỹ thuật có liên quan."
+    ],
+    [
+     "Có văn bản phân công cho người hành nghề được thực hiện các danh mục kỹ thuật cụ thể tại cơ sở.",
+     "Ít nhất 50% danh mục kỹ thuật được phê duyệt có triển khai thực hiện trong năm tại phòng khám.",
+     "Chuyển tuyến người bệnh kịp thời, đúng quy định khi vượt quá khả năng và phạm vi chuyên môn."
+    ],
+    [
+     "Ít nhất 70% danh mục kỹ thuật được phê duyệt có triển khai thực hiện trong năm tại phòng khám.",
+     "Triển khai giám sát việc thực hiện các quy định hiện hành liên quan đến danh mục kỹ thuật (danh mục kỹ thuật thực hiện đã được phê duyệt, cơ sở vật chất, trang thiết bị, nhân sự, chỉ định thực hiện kỹ thuật).",
+     "Đối với kỹ thuật mới đã có quyết định cho phép thí điểm, trong vòng 02 năm phải báo kết quả triển khai thí điểm về Sở Y tế."
+    ],
+    [
+     "Hàng năm rà soát, cập nhật danh mục kỹ thuật phù hợp với điều kiện thực tiễn của phòng khám."
+    ]
+   ]
+  },
+  {
+   "part": "A",
+   "partName": "Tiêu chí chất lượng phòng khám",
+   "chapter": "A1",
+   "chapterName": "Tiêu chí chung",
+   "code": "TC4",
+   "title": "Xây dựng và tuân thủ hướng dẫn quy trình kỹ thuật khám bệnh, chữa bệnh",
+   "legalBasis": "(*) Kỹ thuật xâm lấn nguy cơ cao là các kỹ thuật xâm lấn có thể gây sự cố nghiêm trọng cho người bệnh nếu thực hiện không đúng quy trình",
+   "ownerUnit": null,
+   "levels": [
+    [
+     "Chưa trang bị tài liệu hướng dẫn quy trình kỹ thuật khám bệnh, chữa bệnh do Bộ Y tế hoặc bệnh viện tuyến cuối ban hành tại phòng khám."
+    ],
+    [
+     "Căn cứ vào hướng dẫn của Bộ Y tế, tham khảo quy trình của các bệnh viện tuyến cuối của Thành phố, xây dựng và ban hành hướng dẫn quy trình kỹ thuật cho ít nhất 30 % kỹ thuật được phê duyệt.",
+     "Phổ biến tài liệu hướng dẫn quy trình kỹ thuật tới các nhân viên y tế có liên quan.",
+     "Hướng dẫn quy trình kỹ thuật do phòng khám xây dựng có sẵn tại các buồng khám chuyên khoa, buồng thủ thuật."
+    ],
+    [
+     "Nhân viên y tế nắm vững và tuân thủ quy trình kỹ thuật áp dụng tại phòng khám.",
+     "Ít nhất 50% danh mục kỹ thuật được phê duyệt có quy trình kỹ thuật.",
+     "Có triển khai hoạt động giám sát tuân thủ quy trình kỹ thuật bằng bảng kiểm cho ít nhất 03 kỹ thuật thường xuyên thực hiện hoặc kỹ thuật xâm lấn nguy cơ cao (*)."
+    ],
+    [
+     "Ít nhất 70% danh mục kỹ thuật được phê duyệt có quy trình kỹ thuật.",
+     "Có triển khai hoạt động giám sát tuân thủ quy trình kỹ thuật bằng bảng kiểm cho ít nhất 05 kỹ thuật thường xuyên thực hiện hoặc kỹ thuật xâm lấn nguy cơ cao (*).",
+     "Sau giám sát, có phản hồi và có biện pháp xử lý phù hợp đối với nhân viên không tuân thủ quy trình kỹ thuật.",
+     "Triển khai các biện pháp cải tiến dựa trên kết quả giám sát."
+    ],
+    [
+     "Ít nhất 90% danh mục kỹ thuật được phê duyệt có quy trình kỹ thuật.",
+     "Ứng dụng công nghệ thông tin trong giám sát tuân thủ quy trình kỹ thuật."
+    ]
+   ]
+  },
+  {
+   "part": "A",
+   "partName": "Tiêu chí chất lượng phòng khám",
+   "chapter": "A1",
+   "chapterName": "Tiêu chí chung",
+   "code": "TC5",
+   "title": "Đảm bảo các điều kiện cấp cứu người bệnh kịp thời",
+   "legalBasis": null,
+   "ownerUnit": null,
+   "levels": [
+    [
+     "Có trường hợp người bệnh nặng không được sơ cứu, cấp cứu kịp thời gây hậu quả nghiêm trọng.",
+     "Buồng cấp cứu không sẵn sàng hoạt động nếu có người bệnh cần cấp cứu.",
+     "Trong năm, có phản ánh về việc phòng khám từ chối tiếp nhận cấp cứu người bệnh và sau khi xác minh là đúng."
+    ],
+    [
+     "Tại các nơi sử dụng thuốc, sơ đồ chẩn đoán và xử trí phản vệ in trên khổ giấy lớn A1 hoặc A2 được dán hoặc treo ở vị trí dễ nhìn.",
+     "Có phân công bác sĩ và điều dưỡng thường trực tại buồng cấp cứu.",
+     "Có đầy đủ thiết bị y tế, phương tiện, thuốc cấp cứu theo đúng danh mục thiết bị cấp cứu - thuốc cấp cứu tại phòng khám đa khoa."
+    ],
+    [
+     "Bác sĩ, điều dưỡng trong danh sách phân công làm việc tại buồng cấp cứu có giấy chứng nhận hoặc chứng chỉ tham gia khoá học cấp cứu cơ bản và sử dụng thành thạo dụng cụ, thiết bị cấp cứu.",
+     "Nhân viên y tế trình bày được quy trình chẩn đoán, xử trí phản vệ và cấp cứu ngừng tim - ngừng thở theo quy định hiện hành.",
+     "Có xây dựng quy trình “báo động đỏ” trong trường hợp người bệnh nguy kịch phù hợp điều kiện thực tế của đơn vị và phổ biến đến tất cả nhân viên y tế.",
+     "Công khai danh sách các bệnh viện can thiệp cấp cứu đột quỵ, cấp cứu tim mạch và cấp cứu các chuyên khoa khác để chuyển người bệnh kịp thời, dễ dàng tra cứu khi cần."
+    ],
+    [
+     "Có hợp đồng vận chuyển người bệnh cấp cứu với Trung tâm Cấp cứu 115 hoặc cơ sở được cấp giấy phép hoạt động về vận chuyển cấp cứu hoặc bệnh viện tuyến trên (đối với phòng khám không có xe cứu thương).",
+     "Có hệ thống báo gọi tại buồng lưu bệnh khi xảy ra tình huống khẩn cấp."
+    ],
+    [
+     "Trang bị xe cứu thương với đầy đủ thiết bị y tế, thuốc cấp cứu và sẵn sàng vận chuyển người bệnh khi cần.",
+     "Có máy truyền dịch, máy theo dõi liên tục…tại buồng cấp cứu, buồng thủ thuật với cảnh báo tự động nếu gặp tình huống nguy hiểm."
+    ]
+   ]
+  },
+  {
+   "part": "A",
+   "partName": "Tiêu chí chất lượng phòng khám",
+   "chapter": "A1",
+   "chapterName": "Tiêu chí chung",
+   "code": "TC6",
+   "title": "Tuân thủ hướng dẫn chẩn đoán và điều trị",
+   "legalBasis": "(*) Tài liệu hướng dẫn chẩn đoán và điều trị hoặc phác đồ điều trị",
+   "ownerUnit": null,
+   "levels": [
+    [
+     "Trong năm, có phản ánh của người bệnh liên quan chỉ định cận lâm sàng và chỉ định điều trị không hợp lý và được xác nhận là đúng."
+    ],
+    [
+     "Các tài liệu hướng dẫn chẩn đoán và điều trị (*) của Bộ Y tế hoặc của Sở Y tế và của các bệnh viện tuyến cuối của Thành phố có sẵn tại cơ sở.",
+     "Phổ biến các hướng dẫn chẩn đoán và điều trị có liên quan các chuyên khoa đến từng bác sĩ."
+    ],
+    [
+     "Căn cứ vào các tài liệu hướng dẫn chẩn đoán và điều trị của Bộ Y tế hoặc của Sở Y tế hoặc của các bệnh viện tuyến cuối trên địa bàn thành phố, phòng khám xây dựng, ban hành tài liệu hướng dẫn chẩn đoán và điều trị phù hợp mô hình bệnh tật, phạm vi hoạt động, điều kiện thực tế của phòng khám.",
+     "Có quy định áp dụng hướng dẫn chẩn đoán và điều trị vào hoạt động khám bệnh, chữa bệnh tại phòng khám đến từng bác sĩ để biết và tuân thủ thực hiện.",
+     "Mỗi bác sĩ, mỗi buồng khám chuyên khoa được trang bị một quyển hướng dẫn chẩn đoán và điều trị.",
+     "Có phân công bác sĩ phụ trách giám sát sự tuân thủ các hướng dẫn chẩn đoán và điều trị đã ban hành."
+    ],
+    [
+     "Có hoạt động giám sát việc tuân thủ chỉ định cận lâm sàng và kê đơn trên bệnh án bằng bảng kiểm cho ít nhất 5 bệnh thường gặp ở phòng khám.",
+     "Có hoạt động đào tạo cập nhật kiến thức về hướng dẫn chẩn đoán và điều trị cho các bác sĩ của phòng khám (gửi bác sĩ tham dự các khoá đào tạo tại các bệnh viện hoặc mời chuyên gia đào tạo tại chỗ).",
+     "Ứng dụng công nghệ thông tin xây dựng hệ thống nhắc các hướng dẫn chẩn đoán và điều trị trong hoạt động khám bệnh, chữa bệnh của bác sĩ tại phòng khám."
+    ],
+    [
+     "Ứng dụng công nghệ thông tin xây dựng hệ thống giám sát về tuân thủ hướng dẫn chẩn đoán và điều trị tại phòng khám."
+    ]
+   ]
+  },
+  {
+   "part": "A",
+   "partName": "Tiêu chí chất lượng phòng khám",
+   "chapter": "A1",
+   "chapterName": "Tiêu chí chung",
+   "code": "TC7",
+   "title": "Tuân thủ các quy định về hồ sơ bệnh án",
+   "legalBasis": null,
+   "ownerUnit": null,
+   "levels": [
+    [
+     "Không lập hồ sơ bệnh án cho người bệnh theo quy định.",
+     "Bệnh án có thông tin mâu thuẫn, không hợp lý.",
+     "Bệnh án có nội dung không đọc được chữ viết, bị tẩy xoá.",
+     "Phát hiện dùng mộc chữ ký hoặc mộc tên thuốc trong hồ sơ bệnh án, đơn thuốc."
+    ],
+    [
+     "Người bệnh điều trị ngoại trú (bệnh mạn tính, người bệnh nằm lưu theo dõi, người bệnh có can thiệp phẫu thuật, thủ thuật) đều có hồ sơ bệnh án đúng biểu mẫu quy định của Bộ Y tế.",
+     "Bác sĩ người nước ngoài ghi hồ sơ bệnh án bằng ngôn ngữ đã đăng ký; người phiên dịch phải phiên dịch sang tiếng Việt và ký tên theo quy định."
+    ],
+    [
+     "Hồ sơ bệnh án đầy đủ các thông tin: hành chính, chỉ định điều trị, chỉ định xét nghiệm, chăm sóc được ghi vào hồ sơ bệnh án theo trình tự thời gian và lưu trữ đúng quy định.",
+     "Chỉ định điều trị thể hiện trong hồ sơ bệnh án phù hợp với hướng dẫn chẩn đoán và điều trị của Bộ Y tế, Sở Y tế."
+    ],
+    [
+     "Phân công nhân viên chịu trách nhiệm kiểm tra hồ sơ bệnh án thường quy, đánh giá việc ghi chép, chất lượng thông tin trong hồ sơ bệnh án.",
+     "Tổ chức quản lý hồ sơ bệnh án chặt chẽ, đầy đủ, khoa học: có kho, phòng hoặc khu vực lưu trữ hồ sơ bệnh án; hồ sơ bệnh án được sắp xếp theo trình tự, thuận tiện khi cần tra cứu."
+    ],
+    [
+     "Triển khai hoàn chỉnh bệnh án điện tử được cơ quan có thẩm quyền thẩm định và công nhận."
+    ]
+   ]
+  },
+  {
+   "part": "A",
+   "partName": "Tiêu chí chất lượng phòng khám",
+   "chapter": "A1",
+   "chapterName": "Tiêu chí chung",
+   "code": "TC8",
+   "title": "Tuân thủ các quy định về sử dụng thuốc an toàn, hợp lý",
+   "legalBasis": null,
+   "ownerUnit": null,
+   "levels": [
+    [
+     "Phát hiện bác sĩ chỉ định sử dụng thuốc nhưng không có đơn thuốc.",
+     "Phát hiện kê đơn thuốc không nhằm mục đích phòng bệnh, chữa bệnh; kê đơn các thuốc chưa được phép lưu hành hợp pháp tại Việt Nam; thuốc thu hồi, thực phẩm chức năng; mỹ phẩm hoặc kê đơn hai thuốc có cùng hoạt chất trở lên.",
+     "Phát hiện kê đơn thuốc sai đường dùng, sai tên thuốc, sai liều dùng."
+    ],
+    [
+     "Đơn thuốc cấp cho người bệnh có thông tin đầy đủ, rõ ràng, chính xác theo mẫu đơn thuốc của Bộ Y tế.",
+     "Thực hiện kê đơn thuốc gây nghiện, thuốc hướng thần, thuốc tiền chất đúng quy định.",
+     "Nhân viên y tế tuân thủ 5 đúng khi cho người bệnh dùng thuốc.",
+     "Bác sĩ người nước ngoài kê đơn thuốc bằng ngôn ngữ đã đăng ký; người phiên dịch phải phiên dịch sang tiếng Việt và ký tên theo quy định."
+    ],
+    [
+     "Tên thuốc trong đơn được ghi theo tên hoạt chất (trừ thuốc đa thành phần).",
+     "Kê đơn thuốc phù hợp với chẩn đoán bệnh, mức độ bệnh và tuân thủ hướng dẫn chẩn đoán và điều trị được áp dụng tại phòng khám.",
+     "Kê đơn thuốc trên máy vi tính.",
+     "Bảo đảm điều kiện bảo quản thuốc theo quy định."
+    ],
+    [
+     "Lưu trữ đơn thuốc (đặc biệt đơn thuốc gây nghiện, thuốc hướng thần, thuốc tiền chất, thuốc kháng sinh) đã cấp cho người bệnh theo đúng quy định.",
+     "Có dược sĩ đảm trách hướng dẫn sử dụng thuốc cho người bệnh.",
+     "Ứng dụng công nghệ thông tin để quản lý và trích xuất đầy đủ thông tin đơn thuốc.",
+     "Trường hợp phòng khám có sử dụng thuốc gây nghiện, thuốc hướng thần, thuốc tiền chất thì phải mua thuốc theo đơn hàng được Sở Y tế phê duyệt."
+    ],
+    [
+     "Phần mềm kê đơn thuốc có cảnh báo, nhắc sai sót trong kê đơn thuốc (nhắc kê đơn theo hướng dẫn chẩn đoán và điều trị, nhắc trùng thuốc, nhắc tương tác thuốc, nhắc số lượng và liều dùng thuốc).",
+     "Có nhà thuốc đã được cấp giấy chứng nhận đủ điều kiện kinh doanh dược và giấy chứng nhận đạt Thực hành tốt cơ sở bán lẻ thuốc (GPP) trong khuôn viên phòng khám, tạo điều kiện thuận lợi cho người bệnh.",
+     "Có kết nối đơn thuốc điện tử với hệ thống cơ sở dữ liệu dược Quốc gia."
+    ]
+   ]
+  },
+  {
+   "part": "A",
+   "partName": "Tiêu chí chất lượng phòng khám",
+   "chapter": "A1",
+   "chapterName": "Tiêu chí chung",
+   "code": "TC9",
+   "title": "Triển khai hệ thống báo cáo, phân tích sự cố y khoa",
+   "legalBasis": null,
+   "ownerUnit": null,
+   "levels": [
+    [
+     "Phát hiện thấy phòng khám có sự cố y khoa đã xảy ra trong năm nhưng không được hệ thống báo cáo sự cố y khoa của phòng khám ghi nhận."
+    ],
+    [
+     "Triển khai quy định về báo cáo sự cố y khoa, trong đó định nghĩa rõ sự cố nào bắt buộc phải báo cáo và có mẫu phiếu báo cáo sự cố y khoa.",
+     "Nhân viên nắm vững quy định về báo cáo sự cố y khoa.",
+     "Ghi nhận được các sự cố y khoa xảy ra tại phòng khám thông qua phiếu báo cáo sự cố y khoa."
+    ],
+    [
+     "Phiếu báo cáo sự cố y khoa được ghi đầy đủ, trung thực các thông tin, thời gian, diễn biến sự cố; cung cấp đủ thông tin cho việc phân tích sự cố để rút kinh nghiệm.",
+     "Có báo cáo tổng hợp sự cố y khoa theo định kỳ ít nhất 1 lần trong 6 tháng và phản hồi cho cá nhân và tập thể liên quan."
+    ],
+    [
+     "Có điều tra, phân tích, tìm nguyên nhân gốc rễ và đề xuất giải pháp cải tiến tránh lặp lại các sự cố y khoa đã xảy ra.",
+     "Có hình thức động viên, khuyến khích nhân viên tự giác, tự nguyện báo cáo sự cố y khoa."
+    ],
+    [
+     "Xây dựng và áp dụng phiếu báo cáo sự cố y khoa điện tử trên mạng nội bộ của phòng khám.",
+     "Xây dựng phần mềm công nghệ thông tin có khả năng phân tích và chiết xuất kết quả dưới dạng hình vẽ, biểu đồ… các sự cố y khoa đã xảy ra theo địa điểm, thời gian, tần suất… xảy ra.",
+     "Tiến hành cải tiến chất lượng dựa trên các sự cố y khoa được báo cáo."
+    ]
+   ]
+  },
+  {
+   "part": "A",
+   "partName": "Tiêu chí chất lượng phòng khám",
+   "chapter": "A1",
+   "chapterName": "Tiêu chí chung",
+   "code": "TC10",
+   "title": "Bảo đảm xác định đúng người bệnh khi cung cấp dịch vụ",
+   "legalBasis": "(*) Xác định đúng người bệnh bao gồm xác định các thông tin tối thiểu của người bệnh (họ tên, ngày tháng năm sinh, địa chỉ) và những gì liên quan người bệnh như: hồ sơ bệnh án và các loại dịch vụ sẽ cung cấp cho người bệnh. (*) Xác định đúng người bệnh bao gồm xác định chính xác cá nhân người bệnh và những thông tin, dịch vụ y tế cung cấp cho người bệnh như hồ sơ bệnh án, đơn thuốc, phiếu xét nghiệm, máu, chế phẩm máu, bệnh phẩm xét nghiệm…theo nguyên tắc: trước khi cung cấp bất kỳ dịch vụ nào cho người bệnh cần phải xác nhận đúng người bệnh.",
+   "ownerUnit": null,
+   "levels": [
+    [
+     "Phát hiện có trường hợp nhầm lẫn người bệnh khi cung cấp dịch vụ, gây hậu quả nghiêm trọng."
+    ],
+    [
+     "Có xây dựng quy định về xác định đúng người bệnh, đúng loại dịch vụ cung cấp cho người bệnh trước khi tiến hành các dịch vụ chẩn đoán, điều trị, phẫu thuật, thủ thuật...",
+     "Phổ biến cho nhân viên y tế các quy định về xác nhận đúng người bệnh và dịch vụ cung cấp."
+    ],
+    [
+     "Nhân viên y tế nắm vững các bước để khẳng định đúng người bệnh khi cung cấp dịch vụ.",
+     "Áp dụng các hình thức như ghi tên, ghi số, phát số… cho người bệnh và các mẫu bệnh phẩm, thuốc…. có liên quan đến người bệnh để tránh nhầm lẫn khi cung cấp dịch vụ.",
+     "Thông tin ghi trên mẫu bệnh phẩm bảo đảm có ít nhất các thông tin cơ bản như họ và tên, năm sinh, giới của người bệnh."
+    ],
+    [
+     "Tất cả người bệnh được cung cấp mã số/mã vạch duy nhất trong quá trình khám và điều trị.",
+     "Áp dụng máy quét mã số/mã vạch để xác nhận đúng thông tin người bệnh và dịch vụ cung cấp."
+    ],
+    [
+     "Tiến hành rà soát, báo cáo theo định kỳ (ít nhất 01 lần trong năm) việc triển khai thực hiện các biện pháp phòng chống nhầm lẫn người bệnh đang triển khai và đề xuất giải pháp khắc phục.",
+     "Tiến hành cải tiến chất lượng, chống nhầm lẫn người bệnh dựa trên kết quả rà soát, đánh giá."
+    ]
+   ]
+  },
+  {
+   "part": "A",
+   "partName": "Tiêu chí chất lượng phòng khám",
+   "chapter": "A1",
+   "chapterName": "Tiêu chí chung",
+   "code": "TC11",
+   "title": "Thực hiện các biện pháp đảm bảo an toàn trong phẫu thuật, thủ thuật",
+   "legalBasis": "Tiêu chí áp dụng có điều kiện (đánh \"không áp dụng\" nếu phòng khám không có hoạt động này). (*) Tiêu chí này áp dụng nếu phòng khám có buồng thủ thuật",
+   "ownerUnit": null,
+   "levels": [
+    [
+     "Có sự cố xảy ra do người hành nghề không tuân thủ các quy định về an toàn trong phẫu thuật, thủ thuật."
+    ],
+    [
+     "Xây dựng và áp dụng quy định an toàn khi thực hiện phẫu thuật, thủ thuật phù hợp điều kiện thực tiễn phòng khám.",
+     "Có bảng kiểm an toàn phẫu thuật, thủ thuật phù hợp điều kiện thực tiễn của phòng khám.",
+     "Phiếu cam kết phẫu thuật (phải có đầy đủ nội dung theo mẫu của Bộ Y tế) được ký đủ hai chữ ký của bác sĩ trực tiếp điều trị và người bệnh/người nhà người bệnh; lưu vào hồ sơ bệnh án."
+    ],
+    [
+     "Triển khai áp dụng bảng kiểm an toàn phẫu thuật, thủ thuật tại buồng thủ thuật cho ít nhất 50% số ca phẫu thuật, thủ thuật.",
+     "Nhân viên y tế trực tiếp thực hiện phẫu thuật, thủ thuật phải nắm vững tai biến và biết cách xử trí theo quy định."
+    ],
+    [
+     "Có tiến hành giám sát việc áp dụng bảng kiểm an toàn phẫu thuật, thủ thuật theo hình thức kiểm tra ngẫu nhiên, không báo trước.",
+     "Triển khai áp dụng bảng kiểm an toàn phẫu thuật, thủ thuật tại buồng thủ thuật cho tất cả các ca phẫu thuật, thủ thuật."
+    ],
+    [
+     "Các sự cố “gần như sắp xảy ra” (hành vi đã xảy ra trên thực tế, có thể gây ra hậu quả nhưng được phát hiện và ngăn chặn kịp thời) được thu thập, tổng hợp và rút kinh nghiệm.",
+     "Báo cáo, phân tích, đánh giá việc triển khai các biện pháp đảm bảo an toàn trong phẫu thuật, thủ thuật.",
+     "Triển khai các giải pháp cải tiến chất lượng, hạn chế không lặp lại các sự cố y khoa tương tự."
+    ]
+   ]
+  },
+  {
+   "part": "A",
+   "partName": "Tiêu chí chất lượng phòng khám",
+   "chapter": "A1",
+   "chapterName": "Tiêu chí chung",
+   "code": "TC12",
+   "title": "Phòng ngừa nguy cơ người bệnh bị trượt ngã",
+   "legalBasis": null,
+   "ownerUnit": null,
+   "levels": [
+    [
+     "Có trường hợp bị trượt, ngã gây hậu quả nghiêm trọng."
+    ],
+    [
+     "Rà soát và lập danh sách các vị trí có nguy cơ trượt, ngã do thiết kế, cơ sở hạ tầng không đồng bộ, xuống cấp hoặc lý do khác.",
+     "Có cảnh báo nguy hiểm tại tất cả các vị trí có nguy cơ trượt, ngã như sàn trơn, nhà vệ sinh, cầu thang, vị trí không bằng phẳng..."
+    ],
+    [
+     "Giường lưu bệnh, giường cấp cứu, băng ca có thanh chắn phòng chống té ngã.",
+     "Tất cả cầu thang bộ có tay vịn và khe hở không được rộng quá 100mm."
+    ],
+    [
+     "Có dán các vật liệu tăng ma sát tại các vị trí có nguy cơ trượt ngã như cầu thang, lối đi dốc…",
+     "Tại các vị trí chuyển tiếp không bằng phẳng của sàn nhà có dán các vật liệu thay đổi màu sắc để dễ nhận biết, tránh vấp, ngã (hoặc sử dụng vật liệu xây dựng cố định có màu sắc khác nhau) hoặc bổ sung tay vịn.",
+     "Toàn bộ các giường bệnh được thiết kế an toàn, có thành giường hoặc thanh chắn hạn chế nguy cơ bị rơi, ngã."
+    ],
+    [
+     "Toàn bộ nhà vệ sinh có thanh vịn phòng trượt, ngã và chuông báo gọi trợ giúp trong trường hợp cần thiết."
+    ]
+   ]
+  },
+  {
+   "part": "A",
+   "partName": "Tiêu chí chất lượng phòng khám",
+   "chapter": "A1",
+   "chapterName": "Tiêu chí chung",
+   "code": "TC13",
+   "title": "Tuân thủ quy định về khám sức khoẻ",
+   "legalBasis": "Tiêu chí áp dụng có điều kiện (đánh \"không áp dụng\" nếu phòng khám không có hoạt động này). (*) Tiêu chí này áp dụng đối với phòng khám có thực hiện khám sức khỏe",
+   "ownerUnit": null,
+   "levels": [
+    [
+     "Có phản ánh vi phạm quy định về khám sức khoẻ và được xác định là đúng.",
+     "Tổ chức khám sức khỏe khi chưa được Sở Y tế công bố đủ điều kiện khám sức khoẻ."
+    ],
+    [
+     "Ban hành và phổ biến quy trình khám sức khoẻ cho nhân viên y tế biết và thực hiện.",
+     "Đảm bảo đầy đủ các điều kiện để tổ chức khám sức khỏe theo quy định.",
+     "Thực hiện đúng biểu mẫu hồ sơ khám sức khoẻ và đầy đủ nội dung theo quy định."
+    ],
+    [
+     "Người kết luận sức khỏe phải là bác sĩ có chứng chỉ hành nghề khám bệnh, chữa bệnh, có thời gian hành nghề ít nhất là 54 tháng và được người có thẩm quyền phân công thực hiện kết luận sức khỏe, ký giấy khám sức khỏe, sổ khám sức khỏe định kỳ bằng văn bản và đóng dấu hợp pháp.",
+     "Tổ chức giám sát việc tuân thủ quy trình khám sức khoẻ của nhân viên y tế.",
+     "Tổng hợp kết quả thực hiện hoạt động khám sức khỏe vào báo cáo theo quy định."
+    ],
+    [
+     "Thực hiện được tất cả các kỹ thuật khám lâm sàng, cận lâm sàng liên quan đến khám sức khỏe ngay tại phòng khám.",
+     "Thực hiện lưu trữ hồ sơ khám sức khoẻ bằng bản giấy hoặc điện tử."
+    ],
+    [
+     "Triển khai được tất cả các hình thức khám sức khỏe: khám sức khỏe định kỳ, khám sức khỏe theo yêu cầu (di trú, lập di chúc), khám sức khỏe có yếu tố nước ngoài, khám sức khỏe theo chuyên ngành (lái xe, thuyền viên) cho tất cả các đối tượng.",
+     "Ứng dụng công nghệ thông tin trong quản lý hồ sơ khám sức khoẻ."
+    ]
+   ]
+  },
+  {
+   "part": "A",
+   "partName": "Tiêu chí chất lượng phòng khám",
+   "chapter": "A1",
+   "chapterName": "Tiêu chí chung",
+   "code": "TC14",
+   "title": "Tuân thủ các quy định về an toàn tiêm chủng",
+   "legalBasis": "Tiêu chí áp dụng có điều kiện (đánh \"không áp dụng\" nếu phòng khám không có hoạt động này). (*) Tiêu chí áp dụng đối với phòng khám có thực hiện tiêm chủng",
+   "ownerUnit": null,
+   "levels": [
+    [
+     "Có xảy ra tai biến tiêm chủng được xác định do lỗi của phòng khám.",
+     "Tổ chức tiêm chủng khi chưa được Sở Y tế công bố đủ điều kiện tiêm chủng, công bố thực hành tốt bảo quản thuốc, nguyên liệu làm thuốc.",
+     "Không tuân thủ việc chỉ định tiêm chủng, quản lý đối tượng tiêm chủng."
+    ],
+    [
+     "Đảm bảo các điều kiện cơ sở vật chất, nhân sự, trang thiết bị thực hiện tiêm chủng theo quy định.",
+     "Thực hiện đầy đủ các bước trong quy trình tiêm chủng, tuân thủ quy trình kỹ thuật về sử dụng vắc xin và an toàn tiêm chủng.",
+     "Thực hiện đúng quy trình vận chuyển, tiếp nhận, bảo quản và cấp phát vắc xin.",
+     "Ghi đầy đủ thông tin vào phiếu hoặc sổ tiêm chủng của đối tượng tiêm chủng và trên hệ thống thông tin tiêm chủng quốc gia; đồng thời hẹn lần tiêm chủng tiếp theo.",
+     "Nhập đầy đủ thông tin đối với từng loại vắc xin đã tiêm chủng và các phản ứng sau tiêm chủng của người được tiêm trên hệ thống thông tin tiêm chủng quốc gia."
+    ],
+    [
+     "Xây dựng quy trình xử trí sự cố bất lợi sau tiêm chủng theo hướng dẫn của Bộ Y tế.",
+     "Tất cả nhân viên tham gia tiêm chủng được tập huấn về an toàn tiêm chủng.",
+     "Triển khai và tuân thủ tiêu chuẩn thực hành tốt bảo quản (GSP) đối với hoạt động bảo quản vắc xin tại phòng khám."
+    ],
+    [
+     "Có hình thức nhắc người bệnh tiêm chủng lần kế tiếp theo lịch tiêm chủng (điện thoại, tin nhắn, thư điện tử).",
+     "Tổ chức các hình thức truyền thông về lợi ích của các chương trình tiêm chủng (áp-phích, tờ rơi, bảng thông tin, phim ngắn).",
+     "Báo cáo đầy đủ tình hình sử dụng vắc xin, kết quả tiêm, trường hợp phản ứng thông thường và trường hợp tai biến nặng sau tiêm chủng theo quy định."
+    ],
+    [
+     "Hằng năm, có nhân viên y tế được tham gia đào tạo liên tục về an toàn tiêm chủng.",
+     "Tham gia các chiến dịch tiêm chủng do Bộ Y tế, Sở Y tế, Ủy ban nhân dân địa phương tổ chức."
+    ]
+   ]
+  },
+  {
+   "part": "A",
+   "partName": "Tiêu chí chất lượng phòng khám",
+   "chapter": "A1",
+   "chapterName": "Tiêu chí chung",
+   "code": "TC15",
+   "title": "Tuân thủ các quy định về hoạt động xét nghiệm",
+   "legalBasis": null,
+   "ownerUnit": null,
+   "levels": [
+    [
+     "Có phản ánh của người bệnh liên quan đến xét nghiệm của phòng khám và được xác nhận do lỗi của phòng khám.",
+     "Chưa thực hiện thủ tục tự công bố phòng xét nghiệm đạt tiêu chuẩn an toàn sinh học.",
+     "Người ký kết quả xét nghiệm tại phòng khám không đúng quy định."
+    ],
+    [
+     "Thực hiện nội kiểm định kỳ theo quy định cho ít nhất 50% tổng số kỹ thuật xét nghiệm được phê duyệt.",
+     "Đăng ký tham gia và thực hiện chương trình ngoại kiểm với trung tâm kiểm chuẩn xét nghiệm đã được Bộ Y tế công nhận.",
+     "Đảm bảo đầy đủ các điều kiện về thực hành an toàn sinh học theo cấp độ đã công bố (cơ sở vật chất, trang thiết bị, nhân sự…).",
+     "Lưu trữ hồ sơ (hồ sơ giấy, bản mềm/điện tử) đầy đủ thông tin, đúng thời gian theo quy định."
+    ],
+    [
+     "Cấp độ an toàn sinh học đã công bố phù hợp với kỹ thuật xét nghiệm, danh mục vi sinh vật gây bệnh truyền nhiễm theo nhóm nguy cơ.",
+     "Nhân viên phụ trách về chất lượng xét nghiệm có chứng chỉ đào tạo về quản lý chất lượng xét nghiệm.",
+     "Thực hiện nội kiểm định kỳ theo quy định cho ít nhất 70% tổng số kỹ thuật xét nghiệm được phê duyệt.",
+     "Thực hiện hiệu chuẩn thiết bị xét nghiệm định kỳ hoặc đột xuất khi phát hiện có sai lệch trong kết quả xét nghiệm.",
+     "Xây dựng đầy đủ các quy trình thao tác chuẩn (SOP) đối với các hoạt động tại phòng xét nghiệm (quy trình về quản lý chất lượng xét nghiệm, quy trình kỹ thuật, hướng dẫn chuyên môn, quy trình lưu trữ, huỷ bệnh phẩm sau xét nghiệm)."
+    ],
+    [
+     "Thực hiện nội kiểm, ngoại kiểm đầy đủ cho tất cả các xét nghiệm được phê duyệt.",
+     "Thiết lập các chỉ số thống kê và sử dụng biểu đồ Levey-Jenning để đánh giá, giám sát kết quả nội kiểm.",
+     "Tìm nguyên nhân và có các biện pháp khắc phục hiệu quả khi kết quả nội kiểm và ngoại kiểm không đạt.",
+     "Đánh giá nguy cơ và có quy trình xử trí sự cố trong xét nghiệm."
+    ],
+    [
+     "Đạt từ mức 4 trở lên theo Quyết định số 2429/QĐ-BYT ngày 12 tháng 6 năm 2017 của Bộ Y tế ban hành Tiêu chí đánh giá mức chất lượng phòng xét nghiệm y học."
+    ]
+   ]
+  },
+  {
+   "part": "A",
+   "partName": "Tiêu chí chất lượng phòng khám",
+   "chapter": "A1",
+   "chapterName": "Tiêu chí chung",
+   "code": "TC16",
+   "title": "Tuân thủ các quy định về biển hiệu, quảng cáo và truyền thông",
+   "legalBasis": null,
+   "ownerUnit": null,
+   "levels": [
+    [
+     "Quảng cáo sản phẩm hàng hóa, dịch vụ đặc biệt thuộc quản lý của Bộ Y tế nhưng chưa có giấy xác nhận nội dung của cơ quan có thẩm quyền.",
+     "Quảng cáo dùng từ ngữ dễ gây hiểu nhầm như “nhất, số 1” và vi phạm điều cấm của Luật quảng cáo.",
+     "Trong năm có phản ánh và bị xử lý vi phạm hành chính liên quan đến biển hiệu, hoạt động quảng cáo của phòng khám."
+    ],
+    [
+     "Thông tin trên biển hiệu đảm bảo đầy đủ và đúng theo quy định, bao gồm: tên cơ sở khám chữa bệnh, địa chỉ, số điện thoại, thời gian làm việc, số giấy phép hoạt động và không có biểu tượng chữ thập đỏ.",
+     "Kích thước biển hiệu và chữ viết trên biển hiệu phù hợp quy định."
+    ],
+    [
+     "Điều chỉnh nội dung quảng cáo dịch vụ khám bệnh, chữa bệnh kịp thời khi thay đổi phạm vi chuyên môn và được Sở Y tế xác nhận.",
+     "Trang thông tin điện tử của phòng khám đảm bảo tuân thủ các quy định của Bộ Thông tin và Truyền thông.",
+     "Trang thông tin điện tử của phòng khám có đầy đủ nội dung: giấy phép hoạt động; phạm vi hoạt động chuyên môn; thời gian hoạt động; danh sách, văn bằng chuyên môn và phạm vi hoạt động chuyên môn của người chịu trách nhiệm chuyên môn và người hành nghề khám bệnh, chữa bệnh; giá dịch vụ khám bệnh, chữa bệnh; tên và địa chỉ cơ quan quản lý nhà nước trực tiếp."
+    ],
+    [
+     "Trên trang tin điện tử của phòng khám có tư vấn, giáo dục sức khỏe; nội dung phải phù hợp quy định chuyên môn.",
+     "Có phân công nhân sự truy cập, theo dõi Cổng Thông tin điện tử của Ngành Y tế để kịp thời nắm bắt các quy định của ngành."
+    ],
+    [
+     "Có các hình thức tuyên truyền chủ trương, chính sách, pháp luật về y tế.",
+     "Cổng thông tin điện tử của Sở Y tế được tích hợp vào trang thông tin điện tử của phòng khám."
+    ]
+   ]
+  },
+  {
+   "part": "A",
+   "partName": "Tiêu chí chất lượng phòng khám",
+   "chapter": "A1",
+   "chapterName": "Tiêu chí chung",
+   "code": "TC17",
+   "title": "Tuân thủ các quy định về công khai, minh bạch trong áp dụng giá dịch vụ khám bệnh, chữa bệnh",
+   "legalBasis": null,
+   "ownerUnit": null,
+   "levels": [
+    [
+     "Có phản ánh bức xúc của người dân liên quan đến giá thu bất hợp lý và được xác nhận là đúng (thu cao hơn giá đã kê khai và niêm yết, thu tiền khi không thực hiện dịch vụ kỹ thuật, cố ý chẩn đoán thêm bệnh để thu tiền).",
+     "Thu phí không có hoá đơn hoặc phiếu thu."
+    ],
+    [
+     "Niêm yết công khai đầy đủ giá các dịch vụ kỹ thuật của phòng khám tại khu vực tiếp nhận người bệnh và nơi thu phí.",
+     "Người bệnh được thông báo và tư vấn trước khi bác sĩ chỉ định các kỹ thuật cao, thuốc đặc trị, xét nghiệm, chẩn đoán hình ảnh, thăm dò chức năng đắt tiền hoặc có chi phí lớn; thông tin tư vấn phải được lưu vào hồ sơ bệnh án."
+    ],
+    [
+     "Công khai và thông báo trước cho người bệnh những khoản chi phí mà người bệnh phải chi trả ngoài phạm vi được hưởng của người tham gia bảo hiểm y tế (đối với phòng khám có khám bệnh, chữa bệnh bảo hiểm y tế).",
+     "Cung cấp bảng kê chi tiết giá tiền của từng loại dịch vụ kỹ thuật khám bệnh, chữa bệnh, thuốc, vật tư tiêu hao đã sử dụng cho người bệnh khi thanh toán.",
+     "Bảng kê thể hiện rõ phần chi phí mà người bệnh phải đóng và phần được bảo hiểm y tế thanh toán hoặc được miễn giảm.",
+     "Bảng kê được in ra để người bệnh kiểm tra, xác nhận toàn bộ nội dung; người bệnh được giữ 01 bản và phòng khám lưu trữ 01 bản."
+    ],
+    [
+     "Đăng tải đầy đủ thông tin về giá tất cả các dịch vụ kỹ thuật, giá thuốc, vật tư y tế (chưa được tính trong cơ cấu giá) trên trang tin điện tử của phòng khám hoặc quầy tra cứu điện tử.",
+     "Thực hiện hồ sơ kê khai giá dịch vụ khám bệnh, chữa bệnh đầy đủ theo quy định hiện hành."
+    ],
+    [
+     "Phục vụ thanh toán các dịch vụ khám bệnh, chữa bệnh tại phòng khám bằng thẻ ngân hàng.",
+     "Giá các dịch vụ kỹ thuật của phòng khám có thể tra cứu dễ dàng trên điện thoại thông minh."
+    ]
+   ]
+  },
+  {
+   "part": "A",
+   "partName": "Tiêu chí chất lượng phòng khám",
+   "chapter": "A1",
+   "chapterName": "Tiêu chí chung",
+   "code": "TC18",
+   "title": "Tuân thủ quy định về kiểm soát nhiễm khuẩn",
+   "legalBasis": null,
+   "ownerUnit": null,
+   "levels": [
+    [
+     "Dụng cụ, vật tư y tế sử dụng cho người bệnh không đảm bảo vô khuẩn.",
+     "Chưa phân công một nhân viên y tế phụ trách xử lý toàn bộ dụng cụ sử dụng lại tại phòng khám."
+    ],
+    [
+     "Phân công một nhân viên y tế phụ trách toàn bộ công tác kiểm soát nhiễm khuẩn tại phòng khám.",
+     "Triển khai thực hiện các quy định, quy trình cơ bản về kiểm soát nhiễm khuẩn, tối thiểu phải có: quy trình khử khuẩn, tiệt khuẩn dụng cụ; quy trình vệ sinh tay; quy trình xử lý dụng cụ nội soi (nếu có); quy trình vệ sinh buồng tiểu phẫu, buồng thủ thuật; quy định tiêm an toàn; quy định phòng ngừa chuẩn; quy định vô khuẩn khi thực hiện thủ thuật, kỹ thuật xâm lấn.",
+     "Bố trí bồn rửa tay đảm bảo đầy đủ trang thiết bị và phương tiện cho nhân viên y tế vệ sinh tay tại các buồng khám, buồng thực hiện thủ thuật.",
+     "Hệ thống nước rửa tay ngoại khoa phải là nước vô khuẩn; có phương án thay thế nếu sử dụng nước sạch.",
+     "Dụng cụ y tế tái sử dụng được xử lý đúng quy định.",
+     "Hệ thống khử khuẩn, tiệt khuẩn tập trung của buồng khám hoạt động đúng quy định.",
+     "Khu vực xử lý dụng cụ nội soi riêng biệt với khu vực buồng khám hoặc buồng thủ thuật."
+    ],
+    [
+     "Nhân viên y tế nắm vững quy trình phòng ngừa và xử lý trường hợp bị phơi nhiễm với nguồn bệnh nguy hiểm, có nguy cơ nhiễm khuẩn cao.",
+     "Nhân viên y tế tuân thủ quy định về vô khuẩn khi khám, điều trị và chăm sóc người bệnh.",
+     "Nhân viên phụ trách công tác kiểm soát nhiễm khuẩn được đào tạo tối thiểu 05 ngày về kiểm soát nhiễm khuẩn (có giấy chứng nhận)."
+    ],
+    [
+     "Có sẵn dung dịch vệ sinh tay chứa cồn tại bàn khám, buồng tiêm, buồng thực hiện thủ thuật và các vị trí (hành lang, trước cửa buồng khám, buồng thủ thuật…) có nhiều người tiếp xúc chung với vật dụng.",
+     "50% nhân viên y tế của buồng khám được tham gia tập huấn về kiểm soát nhiễm khuẩn."
+    ],
+    [
+     "100% nhân viên y tế của phòng khám được tập huấn kiến thức cơ bản về kiểm soát nhiễm khuẩn.",
+     "Giám sát và đánh giá tuân thủ vệ sinh tay, tuân thủ quy trình kiểm soát nhiễm khuẩn, quy trình kỹ thuật của nhân viên y tế tại phòng khám."
+    ]
+   ]
+  },
+  {
+   "part": "A",
+   "partName": "Tiêu chí chất lượng phòng khám",
+   "chapter": "A1",
+   "chapterName": "Tiêu chí chung",
+   "code": "TC19",
+   "title": "Tuân thủ quy định về quản lý chất thải y tế",
+   "legalBasis": null,
+   "ownerUnit": null,
+   "levels": [
+    [
+     "Không phân loại, không thu gom chất thải y tế.",
+     "Xả thẳng chất thải y tế (rắn hoặc lỏng) ra môi trường.",
+     "Bị cảnh sát môi trường phạt về hành vi vi phạm xử lý chất thải (rắn hoặc lỏng) hoặc vi phạm về bảo vệ môi trường."
+    ],
+    [
+     "Thực hiện phân loại chất thải rắn y tế tại nguồn.",
+     "Trang bị túi, thùng để thu gom chất thải rắn y tế.",
+     "Hợp đồng thu gom, xử lý chất thải rắn y tế với đơn vị chức năng thu gom và xử lý chất thải rắn y tế đúng quy trình an toàn, vệ sinh.",
+     "Hệ thống xử lý chất thải lỏng hoạt động liên tục 24/24."
+    ],
+    [
+     "Quy định phân loại rác dán, treo ở vị trí dễ đọc và ngay tại nơi đặt thùng rác.",
+     "Có kế hoạch giảm thiểu chất thải nhựa theo quy định.",
+     "Bố trí khu vực lưu trữ tạm thời chất thải rắn y tế theo quy định.",
+     "Thực hiện báo cáo kết quả quản lý chất thải y tế theo quy định."
+    ],
+    [
+     "Thực hiện phân loại chất thải nhựa theo quy định.",
+     "Hướng dẫn rõ ràng bằng chữ viết hoặc hình ảnh về phân loại chất thải cho người bệnh, thân nhân người bệnh và nhân viên y tế.",
+     "Khu vực lưu trữ chất thải lây nhiễm, chất thải nguy hại riêng biệt và đạt chuẩn.",
+     "Kết quả xử lý nước thải đạt chuẩn môi trường quy định."
+    ],
+    [
+     "Chất thải tái chế được thu gom riêng để giao cho đơn vị có chức năng xử lý.",
+     "Báo cáo công tác quản lý chất thải y tế theo quy định."
+    ]
+   ]
+  },
+  {
+   "part": "A",
+   "partName": "Tiêu chí chất lượng phòng khám",
+   "chapter": "A1",
+   "chapterName": "Tiêu chí chung",
+   "code": "TC20",
+   "title": "Tuân thủ quy định về quản lý an toàn bức xạ đối với thiết bị bức xạ",
+   "legalBasis": "Tiêu chí áp dụng có điều kiện (đánh \"không áp dụng\" nếu phòng khám không có hoạt động này). (*) Tiêu chí này áp dụng nếu phòng khám có sử dụng thiết bị X-quang chẩn đoán trong y tế.",
+   "ownerUnit": null,
+   "levels": [
+    [
+     "Chưa được cấp giấy phép sử dụng thiết bị X-quang chẩn đoán trong y tế.",
+     "Nhân viên bức xạ y tế chưa được đào tạo về an toàn bức xạ."
+    ],
+    [
+     "Phân công người phụ trách an toàn bức xạ, người phụ trách phải có chứng chỉ nhân viên bức xạ.",
+     "Có kế hoạch và áp dụng nội quy an toàn bức xạ, quy trình làm việc cụ thể với thiết bị X-quang chẩn đoán trong y tế.",
+     "Trang bị liều kế cá nhân cho các nhân viên bức xạ y tế và thực hiện đo liều bức xạ cá nhân cho nhân viên bức xạ y tế ít nhất 3 tháng một lần.",
+     "Cung cấp đủ trang thiết bị bảo hộ cá nhân và thiết bị bảo vệ cho nhân viên bức xạ y tế.",
+     "Khám sức khỏe cho nhân viên bức xạ y tế định kỳ theo quy định.",
+     "Sử dụng các dấu hiệu cảnh báo bức xạ (biển cảnh báo, đèn cảnh báo, tín hiệu cảnh báo) và các biện pháp hạn chế người đi vào các khu vực này."
+    ],
+    [
+     "Hàng năm, tổ chức huấn luyện cho các nhân viên bức xạ y tế về nội quy an toàn bức xạ, các quy định của phòng khám liên quan đến bảo đảm an toàn bức xạ, quy trình ứng phó sự cố bức xạ hoặc phổ biến các quy định mới, các thông tin mới về bảo đảm an toàn bức xạ.",
+     "Xây dựng và bảo đảm thực hiện đúng quy trình sử dụng liều kế cá nhân; có biện pháp xử lý trong trường hợp có bất thường xảy ra đối với liều kế cá nhân.",
+     "Xác lập các thông số và điều kiện sử dụng thiết bị bức xạ tối ưu để dùng làm giá trị tham chiếu cho công tác kiểm định, hiệu chuẩn."
+    ],
+    [
+     "Định kỳ ít nhất 03 năm một lần có tổ chức đào tạo nhắc lại, cập nhật những thông tin mới về an toàn bức xạ cho các nhân viên bức xạ y tế.",
+     "Kiểm tra, giám sát sự tuân thủ của nhân viên y tế đối với quy trình làm việc với thiết bị bức xạ và nội quy an toàn bức xạ mà phòng khám đã ban hành."
+    ],
+    [
+     "Kiểm soát mức bức xạ ở các khu vực xung quanh phòng chụp X-quang chẩn đoán trong y tế (bao gồm phòng làm việc, các lối đi lại, hành lang hoặc khu vệ sinh, khu vực có người qua lại khác) để bảo đảm không có sự thay đổi về mức bức xạ trong quá trình làm việc.",
+     "Xây dựng kế hoạch ứng phó khi xảy ra sự cố bức xạ."
+    ]
+   ]
+  },
+  {
+   "part": "A",
+   "partName": "Tiêu chí chất lượng phòng khám",
+   "chapter": "A1",
+   "chapterName": "Tiêu chí chung",
+   "code": "TC21",
+   "title": "Tuân thủ các quy định về công tác an toàn và vệ sinh lao động",
+   "legalBasis": null,
+   "ownerUnit": null,
+   "levels": [
+    [
+     "Không có kế hoạch đảm bảo an toàn, vệ sinh lao động."
+    ],
+    [
+     "Phân công nhân viên phụ trách công tác an toàn, vệ sinh lao động của phòng khám.",
+     "Đăng kiểm các thiết bị có yêu cầu nghiêm ngặt theo định kỳ.",
+     "Báo cáo công tác y tế lao động định kỳ theo quy định."
+    ],
+    [
+     "Thực hiện quan trắc môi trường lao động hàng năm với đơn vị đủ điều kiện."
+    ],
+    [
+     "Hàng năm có tổ chức khám sức khoẻ cho người lao động đang hành nghề tại phòng khám.",
+     "Căn cứ kết quả quan trắc môi trường lao động, phòng khám xây dựng kế hoạch, biện pháp khắc phục nếu có các chỉ số vượt giới hạn cho phép."
+    ],
+    [
+     "Đánh giá rủi ro về an toàn, vệ sinh lao động và xây dựng các giải pháp phòng tránh.",
+     "Có giải pháp cụ thể, khả thi về phòng chống bệnh nghề nghiệp (giải pháp về kỹ thuật, tổ chức, y tế và bảo hộ lao động).",
+     "Người lao động được chăm sóc sức khỏe nhằm giảm thiểu tác hại của môi trường làm việc."
+    ]
+   ]
+  },
+  {
+   "part": "A",
+   "partName": "Tiêu chí chất lượng phòng khám",
+   "chapter": "A1",
+   "chapterName": "Tiêu chí chung",
+   "code": "TC22",
+   "title": "Ứng dụng công nghệ thông tin",
+   "legalBasis": null,
+   "ownerUnit": null,
+   "levels": [
+    [
+     "Trang tin điện tử của phòng khám (nếu có) vi phạm quy định về hoạt động quản lý, cung cấp, sử dụng thông tin trên trang thông tin điện tử và mạng xã hội.",
+     "Không kịp thời cập nhật, triển khai các văn bản chỉ đạo mang tính bắt buộc thực hiện của Sở Y tế và Phòng Y tế."
+    ],
+    [
+     "Máy tính trong buồng khám kết nối được với mạng internet.",
+     "Báo cáo đầy đủ và kịp thời các số liệu khám bệnh, chữa bệnh về cơ quan quản lý theo quy định."
+    ],
+    [
+     "Trang tin điện tử tuân thủ quy định về hoạt động quản lý, cung cấp, sử dụng thông tin trên trang thông tin điện tử và mạng xã hội.",
+     "Phân công người chịu trách nhiệm truy cập các thông báo, thư mời, văn bản chỉ đạo của Sở Y tế qua Cổng Thông tin điện tử của Ngành Y tế mỗi ngày.",
+     "Thực hiện kết nối dữ liệu giữa nhà thuốc của phòng khám (nếu có) với cơ sở dữ liệu dược quốc gia.",
+     "Thực hiện liên thông đầy đủ, kịp thời dữ liệu khám sức khỏe lái xe thành công theo quy định của Bộ Y tế."
+    ],
+    [
+     "Trang tin điện tử của phòng khám có tích hợp các mục thông báo, thư mời, văn bản chỉ đạo từ Sở Y tế trên Cổng Thông tin điện tử của Ngành Y tế.",
+     "Phần mềm kê đơn có tích hợp hệ thống nhắc đảm bảo an toàn cho người bệnh.",
+     "Tham gia phần mềm ứng dụng tra cứu nơi khám bệnh, chữa bệnh của Sở Y tế."
+    ],
+    [
+     "Có hệ thống hội chẩn từ xa với bệnh viện tuyến cuối của Thành phố.",
+     "Số hóa danh mục kỹ thuật khi có yêu cầu của Sở Y tế."
+    ]
+   ]
+  },
+  {
+   "part": "A",
+   "partName": "Tiêu chí chất lượng phòng khám",
+   "chapter": "A1",
+   "chapterName": "Tiêu chí chung",
+   "code": "TC23",
+   "title": "Triển khai các dịch vụ tiện ích phục vụ người bệnh",
+   "legalBasis": null,
+   "ownerUnit": null,
+   "levels": [
+    [
+     "Có phản ánh bức xúc của người bệnh về giao tiếp, ứng xử của nhân viên phòng khám qua báo chí hoặc đường dây nóng của Sở Y tế, Bộ Y tế và Ủy ban nhân dân Thành phố."
+    ],
+    [
+     "Bảo vệ trực trong suốt giờ làm việc của phòng khám.",
+     "Bố trí điểm trông giữ xe cho người bệnh; có biển báo rõ ràng, niêm yết giá cụ thể (nếu có thu phí).",
+     "Phòng hoặc sảnh chờ đủ ghế ngồi, có trang bị quạt hoạt động thường xuyên.",
+     "Nhà vệ sinh sạch sẽ, không có mùi hôi, có đủ giấy vệ sinh, nước và xà phòng rửa tay.",
+     "Có quy định về giao tiếp ứng xử với người bệnh."
+    ],
+    [
+     "Phòng hoặc sảnh chờ có máy điều hòa hoạt động thường xuyên.",
+     "Có phương tiện ghi hình theo dõi an ninh trật tự toàn bộ buồng khám.",
+     "Phân công người chịu trách nhiệm tiếp nhận và giải quyết thắc mắc của người bệnh.",
+     "Triển khai khảo sát định kỳ hài lòng/không hài lòng của người bệnh với đầy đủ nội dung của quy trình khám bệnh theo quy định bằng phiếu đánh giá."
+    ],
+    [
+     "Triển khai đăng ký khám bệnh theo giờ hẹn trước hoặc có trang bị máy đăng ký khám tự động.",
+     "Triển khai khảo sát định kỳ hài lòng/không hài lòng của người bệnh với đầy đủ nội dung của quy trình khám bệnh theo quy định bằng màn hình cảm ứng."
+    ],
+    [
+     "Người bệnh sử dụng thẻ từ để thanh toán các chi phí điều trị và không phải trả tiền mặt cho bất kỳ khoản viện phí nào khác.",
+     "Triển khai thẻ khám bệnh, chữa bệnh thông minh tích hợp nhiều tiện ích để sử dụng cho các dịch vụ của phòng khám: gửi xe, thanh toán chi phí khám bệnh, chữa bệnh."
+    ]
+   ]
+  }
+ ]
+}

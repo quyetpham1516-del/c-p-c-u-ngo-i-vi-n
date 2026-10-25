@@ -34,6 +34,9 @@ export const config = {
   telephonyKey: secret('MEDONE_TELEPHONY_KEY'),
   // Địa chỉ frontend Next.js được phép gọi API (CORS), cách nhau bằng dấu phẩy
   webOrigins: env('MEDONE_WEB_ORIGIN', 'http://localhost:3000').split(',').map((s) => s.trim()).filter(Boolean),
+  /** Cho trang web mở bằng địa chỉ mạng nội bộ (192.168.x.x, 10.x.x.x, 172.16–31.x.x, *.local) gọi API, để điện thoại cùng Wi-Fi quét tem QR được.
+   *  Mặc định bật khi không chạy production; đặt MEDONE_ALLOW_LAN=0 để tắt, =1 để bật cả ở production. */
+  allowLan: env('MEDONE_ALLOW_LAN', isProd ? '0' : '1') === '1',
   boardTickMs: Number(env('MEDONE_BOARD_TICK_MS', '5000')),
   isProd,
 };

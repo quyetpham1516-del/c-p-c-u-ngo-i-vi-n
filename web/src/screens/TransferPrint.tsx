@@ -3,11 +3,30 @@ import { useParams } from 'next/navigation';
 import { api, fmtDateTime } from '../api';
 import { TRAUMA_TYPES } from '../components/EpcrForm';
 import { StarOfLife } from '../Logo';
+import qrcode from 'qrcode-generator';
+import { SIGNATURE_KIND } from '../components/Signatures';
 
 const PAYERS: [string, string][] = [['BHYT', 'BHYT'], ['THU_PHI', 'Thu phí'], ['MIEN', 'Miễn'], ['GIAM', 'Giảm'], ['THAT_THU', 'Thất thu']];
 const DISPO: Record<string, string> = {
   transported: 'Vận chuyển tới bệnh viện', treated_released: 'Xử trí tại chỗ', refused: 'Từ chối (có cam kết)', dead_on_scene: 'Tử vong tại hiện trường', cancelled: 'Hủy',
 };
+
+/** Địa chỉ trang tra cứu mã phiếu: NEXT_PUBLIC_VERIFY_URL khi có địa chỉ công khai, không thì chính máy chủ đang mở */
+const verifyBase = () => (process.env.NEXT_PUBLIC_VERIFY_URL || (typeof window !== 'undefined' ? window.location.origin : '')).replace(/\/$/, '');
+
+/** Mã xác thực và QR: bệnh viện nhận phiếu quét hoặc nhập mã để kiểm tra phiếu thật, đúng phiên bản */
+function VerifyBox({ code }: { code: string }) {
+  const url = `${verifyBase()}/xac-thuc?ma=${encodeURIComponent(code)}`;
+  const q = qrcode(0, 'M');
+  q.addData(url);
+  q.make();
+  return (
+    <div className="verify">
+      <span dangerouslySetInnerHTML={{ __html: q.createSvgTag({ cellSize: 2, margin: 0, scalable: true }) }} />
+      <span>Mã xác thực<br /><b className="mono">{code}</b></span>
+    </div>
+  );
+}
 
 /** Ô đánh dấu như trên mẫu giấy */
 function Cb({ on, label }: { on: any; label?: string }) {
@@ -85,7 +104,8 @@ export function TransferPrint() {
         <div className="hdr">
           <div className="l"><StarOfLife size={34} /><div><b>MEDONE</b><div>DỊCH VỤ CHUYỂN VIỆN –<br />CẤP CỨU NGOẠI VIỆN</div></div></div>
           <div>Cộng Hòa Xã Hội Chủ Nghĩa Việt Nam<br />Độc Lập – Tự Do – Hạnh Phúc</div>
-          <div className="r">Số BA: <b>{t.ba_number ?? '……'}</b><br />Số chuyển viện: <b>{t.transfer_number}</b><br /><span style={{ fontSize: 9 }}>Mã ca: {t.incident_code ?? '—'}</span></div>
+          <div className="r">Số BA: <b>{t.ba_number ?? '……'}</b><br />Số chuyển viện: <b>{t.transfer_number}</b><br /><span style={{ fontSize: 9 }}>Mã ca: {t.incident_code ?? '—'}</span>
+            {t.verify_code && <VerifyBox code={t.verify_code} />}</div>
         </div>
         <h1>BỆNH ÁN CẤP CỨU NGOẠI VIỆN</h1>
         {t.status !== 'signed' && <div className="draft">BẢN NHÁP – CHƯA KÝ</div>}
@@ -259,6 +279,18 @@ export function TransferPrint() {
             <div><b>Chữ ký</b>: <F v={[dp.receiverName, dp.receiverTitle].filter(Boolean).join(' – ')} w={200} /></div>
           </div>
         </div>
+        {(e.signatures?.length ?? 0) > 0 && (
+          <div className="box sigs">
+            {e.signatures.map((g: any) => (
+              <div key={g.id}>
+                <div><b>{SIGNATURE_KIND[g.kind]?.label ?? g.kind}</b>{g.detail ? `: ${g.detail}` : ''}</div>
+                <div style={{ fontSize: 8 }}>{g.statement}</div>
+                <img src={g.image} alt="" />
+                <div>{g.signerName}{g.relation ? ` (${g.relation})` : ''} · {fmtDateTime(g.signedAt)}{g.witness ? ` · chứng kiến: ${g.witness}` : ''}</div>
+              </div>
+            ))}
+          </div>
+        )}
         {t.amendments?.length > 0 && (
           <div style={{ marginTop: 4, fontSize: 9 }}>
             <b>Bổ sung sau khi ký:</b> {t.amendments.map((am: any) => `${fmtDateTime(am.created_at)} – ${am.author}: ${am.reason}`).join('; ')}

@@ -142,5 +142,5 @@ WebSocket, phần sống còn tách khỏi hành chính); đội phát triển c
 
 Tất cả nằm trong `.env` (tạo bằng `npm run setup`): `DATABASE_URL`, `MEDONE_JWT_SECRET`, `MEDONE_DATA_KEY` (mã hóa số định danh),
 `MEDONE_LOOKUP_KEY` (tìm kiếm), `MEDONE_TELEPHONY_KEY` (webhook tổng đài), `MEDONE_WEB_ORIGIN` (địa chỉ frontend được phép gọi API),
-`NEXT_PUBLIC_API_URL` (địa chỉ backend cho frontend), `MEDONE_AUTO_DISPATCH_KM` (bán kính tự báo xe, mặc định 5). Khóa phải dài ít nhất 32 ký tự; thiếu là backend không chạy.
+`NEXT_PUBLIC_API_URL` (địa chỉ backend cho frontend), `NEXT_PUBLIC_VERIFY_URL` (địa chỉ công khai của trang tra cứu mã phiếu in trên QR; để trống là địa chỉ máy chủ đang mở), `MEDONE_AUTO_DISPATCH_KM` (bán kính tự báo xe, mặc định 5). Khóa phải dài ít nhất 32 ký tự; thiếu là backend không chạy.
 **Mất `MEDONE_DATA_KEY` là mất khả năng đọc số CCCD đã lưu**: cất khóa trong kho khóa (HSM/KMS) và có bản sao.

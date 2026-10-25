@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { api, fmtDuration, INFECTION_RISK, fmtTime, PRIORITY_LABEL, STATUS_LABEL, useLive, useNow } from '../api';
 import { EpcrForm } from '../components/EpcrForm';
+import { CrewSos } from '../components/Sos';
 import { FLAG_LABEL } from '../components/Triage';
 import { startAlarm, unlockAudio } from '../alarm';
 import { allDrafts, loadDraft, saveDraft, startBackgroundSync, type Draft } from '../offline';
@@ -166,6 +167,7 @@ export function Crew() {
       {typeof window !== 'undefined' && !window.isSecureContext && (
         <SecureHint />
       )}
+      <CrewSos />
       {!online && <div className="alert amber">Mất mạng: ePCR vẫn lưu trên máy và tự đồng bộ khi có mạng lại. Nút trạng thái cần mạng; dùng bộ đàm báo EOC.</div>}
       <div className="panel">
         <div className="row" style={{ justifyContent: 'space-between' }}>

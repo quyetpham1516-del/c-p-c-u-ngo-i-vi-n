@@ -301,3 +301,23 @@ td.cell-khong_dat { color: var(--p1); background: color-mix(in srgb, var(--p1) 1
 .utstein-flow .box.strong { border-color: var(--brand); border-width: 2px; }
 .table tr.red td:first-child { box-shadow: inset 3px 0 0 var(--p1); }
 .table tr.amber td:first-child { box-shadow: inset 3px 0 0 var(--p2); }
+
+/* Chữ ký điện tử */
+.sig-pad { width: 100%; height: 180px; background: #fff; border: 1px dashed var(--line); border-radius: 8px; touch-action: none; }
+.sig-item img { width: 160px; height: 60px; object-fit: contain; background: #fff; border: 1px solid var(--line); border-radius: 6px; }
+.ba .verify { display: flex; gap: 6px; align-items: center; margin-top: 4px; font-size: 9px; }
+.ba .verify svg { width: 52px; height: 52px; }
+.ba .sigs { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 6px; text-align: left; font-size: 9px; }
+.ba .sigs img { height: 48px; max-width: 100%; object-fit: contain; display: block; margin: 2px 0; }
+
+/* Báo khẩn */
+.sos-btn { width: 100%; min-height: 56px; font-size: 18px; font-weight: 800; letter-spacing: .5px; user-select: none; -webkit-user-select: none; touch-action: none;
+  background: linear-gradient(90deg, rgba(255,255,255,.35) var(--hold, 0%), transparent var(--hold, 0%)), var(--p1); }
+.sos-active { border-width: 2px; }
+.sos-banner { position: sticky; top: 0; z-index: 1000; background: var(--p1); color: #fff; padding: 6px 12px; display: flex; flex-direction: column; gap: 4px; }
+.sos-banner .sos-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; animation: sos-blink 1s steps(2) infinite; }
+.sos-banner .sos-row.acked { animation: none; opacity: .92; }
+.sos-banner a { color: #fff; text-decoration: underline; }
+.sos-banner input { color: var(--text); }
+@keyframes sos-blink { 50% { opacity: .55; } }
+.sos-banner b { color: #fff; }

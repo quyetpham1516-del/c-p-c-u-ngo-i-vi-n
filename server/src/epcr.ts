@@ -125,6 +125,19 @@ export const EpcrSchema = z.object({
   }).partial().default({}),
   payer: z.enum(['BHYT', 'THU_PHI', 'MIEN', 'GIAM', 'THAT_THU']).optional(),
   notes: str,
+  /** Chữ ký điện tử của người bệnh, người nhà hoặc bên nhận trên máy tính bảng; cố định sau khi ký phiếu */
+  signatures: z.array(z.object({
+    id: z.string().max(60),
+    kind: z.enum(['dong_y_thu_thuat', 'tu_choi_van_chuyen', 'nhan_ban_giao']),
+    signerName: z.string().max(200),
+    relation: str,
+    statement: z.string().max(2000),
+    detail: str,
+    image: z.string().max(400_000).regex(/^data:image\/png;base64,[A-Za-z0-9+/=]+$/),
+    signedAt: z.string().max(40),
+    witness: str,
+    hash: str,
+  })).max(8).optional(),
 });
 
 export type Epcr = z.infer<typeof EpcrSchema>;
@@ -140,7 +153,8 @@ export function missingForSign(e: Epcr): string[] {
     if (!e.disposition.hospital) miss.push('Chuyển bệnh (bệnh viện nhận)');
     if (!e.disposition.receiverName) miss.push('Người nhận bàn giao');
   }
-  if (e.disposition.type === 'refused' && !e.disposition.refusalSigned) miss.push('Cam kết từ chối có chữ ký');
+  if (e.disposition.type === 'refused' && !e.disposition.refusalSigned && !(e.signatures ?? []).some((s) => s.kind === 'tu_choi_van_chuyen'))
+    miss.push('Cam kết từ chối có chữ ký (ký trên máy hoặc ký giấy)');
   if (e.trauma.present && !e.trauma.types?.length) miss.push('Loại chấn thương');
   for (const m of e.medications) {
     if (!m.lot) miss.push(`Số lô thuốc ${m.name}`);

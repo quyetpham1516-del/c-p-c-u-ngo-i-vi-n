@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { ROLE_LABEL, session, type Role } from '../api';
 import { Brand } from '../Logo';
+import { SosBanner } from './Sos';
 
 const LINKS: { to: string; label: string; roles: Role[] }[] = [
   { to: '/eoc', label: 'Điều phối', roles: ['calltaker', 'dispatcher', 'supervisor', 'admin'] },
@@ -50,6 +51,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         </div>
         <button className="ghost" onClick={() => { session.clear(); router.push('/dang-nhap'); }}>Đăng xuất</button>
       </header>
+      <SosBanner />
       <main>{children}</main>
     </div>
   );

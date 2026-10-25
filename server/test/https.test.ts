@@ -102,3 +102,16 @@ describe('HTTPS nội bộ', () => {
     expect(crt.body).not.toContain('PRIVATE KEY');
   });
 });
+
+describe('IP động', () => {
+  it('biết IP nào chưa có trong chứng chỉ; cấp lại giữ nguyên CA', () => {
+    const have = mod.certIps();
+    expect(have).toContain('127.0.0.1');
+    expect(mod.missingIps(have)).toEqual([]);
+    expect(mod.missingIps(have, ['127.0.0.1', '192.168.2.245'])).toEqual(['192.168.2.245']);
+    const ca = readFileSync(join(dir, 'ca.crt'));
+    mod.makeCerts();
+    expect(readFileSync(join(dir, 'ca.crt')).equals(ca)).toBe(true);
+    expect(execFileSync('openssl', ['verify', '-CAfile', join(dir, 'ca.crt'), join(dir, 'server.crt')]).toString()).toContain('OK');
+  });
+});

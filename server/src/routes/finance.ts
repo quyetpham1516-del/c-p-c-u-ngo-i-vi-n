@@ -8,6 +8,8 @@ import {
   L1_APPROVERS, L2_APPROVERS, PAY_METHOD, PAYER, PROPOSAL_KIND, receivables, recordPayment, requestWaiver, toCsv, updateCharge, voidPayment, WAIVER_APPROVERS,
 } from '../finance.js';
 import { actorOf, EOC_ROLES, guard, type Ctx, type Role } from '../http.js';
+import { bhytRows, getBhytSettings, giamDinhXml, sha256 } from '../bhyt.js';
+import { misaWorkbook } from '../misa.js';
 
 const FIN: Role[] = ['accountant', 'director'];
 const FIN_VIEW: Role[] = ['accountant', 'director', 'admin'];
@@ -274,6 +276,87 @@ export function registerFinance(app: FastifyInstance, { pool }: Ctx) {
       ['Ngày hạch toán', 'Số chứng từ', 'Diễn giải', 'TK Nợ', 'TK Có', 'Số tiền', 'Đối tượng', 'Mã xe (thống kê)'],
       ...rows.map((r) => [r.date, r.docNo, r.description, r.debit, r.credit, r.amount, r.object, r.vehicle]),
     ]);
+  });
+
+  /* ---------- Xuất chứng từ sang MISA (Excel) ---------- */
+
+  app.get('/api/finance/misa', { preHandler: guard(...FIN_VIEW) }, async (req, reply) => {
+    const q = z.object({ from: date, to: date }).parse(req.query);
+    if (q.to < q.from) throw new HttpError(422, 'Khoảng ngày không hợp lệ');
+    const { buffer, counts } = await misaWorkbook(pool, q.from, q.to);
+    await audit(pool, 'system', actorOf(req), 'finance.misa_exported', 'finance', null, { ...q, ...counts });
+    reply.header('content-type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+      .header('content-disposition', `attachment; filename="misa-${q.from}-${q.to}.xlsx"`);
+    return reply.send(buffer);
+  });
+
+  /* ---------- Bảng kê BHYT, XML theo QĐ 130/QĐ-BYT ---------- */
+
+  const bhytCard = z.object({
+    cardNo: z.string().trim().toUpperCase().regex(/^[A-Z]{2}\d{13}$/, 'Mã thẻ BHYT gồm 2 chữ cái và 13 chữ số'),
+    dkbd: z.string().trim().regex(/^[0-9A-Z]{5}$/, 'Mã nơi đăng ký ban đầu gồm 5 ký tự'),
+    validFrom: date, validTo: date,
+    mucHuong: z.number().int().min(1).max(100),
+    khuVuc: z.enum(['K1', 'K2', 'K3']).nullish(),
+    doiTuongKcb: z.string().trim().max(4).nullish(),
+    noiDi: z.string().trim().regex(/^[0-9A-Z]{5}$/).nullish().or(z.literal('')),
+  });
+  const bhytSettings = z.object({
+    maCskcb: z.string().trim().max(5), maKhoa: z.string().trim().max(20), maNhomVc: z.string().trim().max(2), maLoaiKcb: z.string().trim().max(2),
+    maXangDau: z.string().trim().max(20), fuelPrice: z.number().min(0).max(1_000_000), litrePerKm: z.number().min(0).max(5),
+    maTtdv: z.string().trim().max(10), maBacSi: z.string().trim().max(255),
+  }).partial();
+  const strip = (r: any) => { const { _raw, ...rest } = r; return rest; };
+
+  app.get('/api/finance/bhyt', { preHandler: guard(...FIN_VIEW) }, async (req) => {
+    const q = z.object({ from: date, to: date }).parse(req.query);
+    const rows = await bhytRows(pool, q.from, q.to);
+    const exports = await many(pool, `SELECT x.id, x.from_date::text AS from_date, x.to_date::text AS to_date, cardinality(x.charge_ids) AS n,
+                                             x.total_bv::float8 AS total_bv, x.total_bhtt::float8 AS total_bhtt, x.sha256, x.created_at, u.full_name AS created_by_name
+                                        FROM bhyt_exports x JOIN users u ON u.id = x.created_by ORDER BY x.created_at DESC LIMIT 20`);
+    return { settings: await getBhytSettings(pool), rows: rows.map(strip), exports };
+  });
+
+  app.put('/api/finance/charges/:id/bhyt', { preHandler: guard(...FIN) }, async (req) => {
+    const id = idParam(req.params);
+    const b = bhytCard.parse(req.body);
+    if (b.validTo < b.validFrom) throw new HttpError(422, 'Hạn thẻ: ngày hết hạn trước ngày bắt đầu');
+    await withTx(pool, async (tx) => {
+      const c = await one(tx, `UPDATE charges SET bhyt = $2, updated_at = now() WHERE id = $1 AND payer_kind = 'BHYT' RETURNING code`, [id, { ...b, noiDi: b.noiDi || null }]);
+      if (!c) throw new HttpError(404, 'Không có khoản thu BHYT này');
+      await audit(tx, 'system', actorOf(req), 'finance.bhyt_card', 'charge', id, { code: c.code, cardLast4: b.cardNo.slice(-4), mucHuong: b.mucHuong });
+    });
+    return { ok: true };
+  });
+
+  app.put('/api/finance/bhyt/settings', { preHandler: guard(...FIN) }, async (req) => {
+    const b = bhytSettings.parse(req.body);
+    await withTx(pool, async (tx) => {
+      const next = { ...(await getBhytSettings(tx)), ...b };
+      await tx.query(`INSERT INTO finance_settings(key, value) VALUES ('bhyt', $1) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value`, [JSON.stringify(next)]);
+      await audit(tx, 'system', actorOf(req), 'finance.bhyt_settings', 'settings', 'bhyt', b);
+    });
+    return getBhytSettings(pool);
+  });
+
+  /** Tệp XML gửi Cổng giám định BHYT: chỉ các lượt đủ thông tin; mặc định chỉ lượt chưa xuất */
+  app.get('/api/finance/bhyt/xml', { preHandler: guard(...FIN) }, async (req, reply) => {
+    const q = z.object({ from: date, to: date, all: z.enum(['0', '1']).default('0') }).parse(req.query);
+    const s = await getBhytSettings(pool);
+    const rows = (await bhytRows(pool, q.from, q.to)).filter((r) => !r.missing.length && (q.all === '1' || !r.exportedAt));
+    if (!rows.length) throw new HttpError(409, 'Không có lượt BHYT nào đủ thông tin để xuất (hoặc đã xuất hết)');
+    const xml = giamDinhXml(rows, s);
+    const hash = sha256(xml);
+    await withTx(pool, async (tx) => {
+      const ids = rows.map((r) => r.id);
+      await tx.query('UPDATE charges SET bhyt_exported_at = now() WHERE id = ANY($1)', [ids]);
+      const x = await one(tx, `INSERT INTO bhyt_exports(from_date, to_date, charge_ids, total_bv, total_bhtt, sha256, created_by) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING id`,
+        [q.from, q.to, ids, rows.reduce((t, r) => t + r.amounts!.thanhTienBv, 0), rows.reduce((t, r) => t + r.amounts!.bhtt, 0), hash, req.user.id]);
+      await audit(tx, 'system', actorOf(req), 'finance.bhyt_exported', 'bhyt_export', x.id, { count: ids.length, sha256: hash });
+    });
+    reply.header('content-type', 'application/xml; charset=utf-8')
+      .header('content-disposition', `attachment; filename="GIAMDINHHS_${s.maCskcb}_${q.from}_${q.to}.xml"`);
+    return xml;
   });
 
   app.get('/api/finance/summary', { preHandler: guard(...FIN_VIEW) }, async (req) => {

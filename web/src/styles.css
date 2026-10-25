@@ -279,3 +279,16 @@ tr.sel td { background: color-mix(in srgb, var(--brand) 14%, var(--panel)); }
   .qr-label { border-color: #888; }
   @page { size: A4; margin: 8mm; }
 }
+
+/* Trạng thái đạt / cảnh báo / không đạt: luôn kèm chữ, màu chỉ để nhận nhanh */
+.badge.green { border-color: var(--ok); color: var(--ok); }
+.badge.amber { border-color: var(--p2); color: var(--p2); }
+.badge.red { border-color: var(--p1); color: var(--p1); }
+.panel.green { border-color: var(--ok); }
+.panel.amber { border-color: var(--p2); }
+.panel.red { border-color: var(--p1); }
+:is(td, b, span, div).red:not(.alert):not(.panel):not(.badge) { color: var(--p1); }
+td.cell-dat, td.cell-canh_bao, td.cell-khong_dat { font-weight: 700; text-align: right; }
+td.cell-dat { color: var(--ok); }
+td.cell-canh_bao { color: var(--p2); }
+td.cell-khong_dat { color: var(--p1); background: color-mix(in srgb, var(--p1) 10%, transparent); }

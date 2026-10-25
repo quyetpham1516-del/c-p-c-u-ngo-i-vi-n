@@ -13,6 +13,8 @@
     "test": "npm test -w server",
     "seed": "npm run seed -w server",
     "backup": "npm run backup -w server",
-    "backup:verify": "npm run backup:verify -w server"
+    "backup:verify": "npm run backup:verify -w server",
+    "https:cert": "npm run https:cert -w server",
+    "start:https": "npm run start:https -w server"
   }
 }

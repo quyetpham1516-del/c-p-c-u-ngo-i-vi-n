@@ -40,7 +40,7 @@ describe('bộ tiêu chí chất lượng', () => {
   let draftId = '';
   it('nạp sẵn bộ 41 tiêu chí TTCC 115 và bộ 10 tiêu chí đơn vị CCNV, đang hiệu lực, không sửa trực tiếp', async () => {
     const sets = (await qa('GET', '/api/qc/sets')).data;
-    expect(sets.map((s: any) => [s.code, s.criteria, s.status]).sort()).toEqual([['TC-CCNV', 41, 'hieu_luc'], ['TC-DV-CCNV', 10, 'hieu_luc']]);
+    expect(sets.map((s: any) => [s.code, s.criteria, s.status]).sort()).toEqual([['TC-CCNV', 41, 'hieu_luc'], ['TC-DV-CCNV', 10, 'hieu_luc'], ['TC-PK-SYT', 23, 'hieu_luc']]);
     setId = sets.find((s: any) => s.code === 'TC-CCNV').id;
     const d = await crew('GET', `/api/qc/sets/${setId}`);
     const a12 = d.criteria.find((c: any) => c.code === 'A1.2');

@@ -17,7 +17,7 @@ export const FACILITY_KIND: Record<string, string> = { ccnv: 'Cấp cứu ngoạ
 export const ASSESSMENT_KIND: Record<string, string> = { tu_danh_gia: 'Tự đánh giá', kiem_tra_cap_tren: 'Kiểm tra của cấp trên (Sở Y tế)', danh_gia_ngoai: 'Đánh giá độc lập' };
 export const METHODS = ['Quan sát', 'Kiểm tra số liệu', 'Kiểm tra văn bản, sổ sách', 'Phỏng vấn', 'Đóng vai', 'Đếm lượt người bệnh'];
 /** Bộ tiêu chí nạp sẵn: bộ 41 tiêu chí TTCC 115 TP.HCM và bộ 10 tiêu chí cho đơn vị cấp cứu ngoại viện trong mạng lưới */
-export const BUNDLED_QC_SETS = [`${DATA_DIR}tieu-chi-don-vi-ccnv.json`, `${DATA_DIR}tieu-chi-ccnv-2024.json`];
+export const BUNDLED_QC_SETS = [`${DATA_DIR}tieu-chi-don-vi-ccnv.json`, `${DATA_DIR}tieu-chi-ccnv-2024.json`, `${DATA_DIR}tieu-chi-phong-kham-syt.json`];
 
 export interface CriterionInput {
   part: string; partName: string; chapter: string; chapterName: string; code: string; title: string;

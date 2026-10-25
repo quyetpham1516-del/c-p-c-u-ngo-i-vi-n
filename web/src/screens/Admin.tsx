@@ -3,6 +3,7 @@ import { api, ROLE_LABEL, type Role } from '../api';
 import { STATION_KIND, useStations, type Station } from '../catalog';
 import { MapView } from '../components/MapView';
 import { TelephonyAdmin } from '../components/Telephony';
+import { PkiAdmin } from '../components/Pki';
 
 interface UserRow { id: string; username: string; full_name: string; title: string | null; role: Role; active: boolean; station_id: string | null; sso_linked_at?: string | null }
 interface VehicleRow { id: string; type: string; status: string; station_id: string; station_name: string }
@@ -124,6 +125,7 @@ export function Admin() {
       </div>
       <Accounts users={users} run={run} />
       <TelephonyAdmin />
+      <PkiAdmin />
     </div>
   );
 }

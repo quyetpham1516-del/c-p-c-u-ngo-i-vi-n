@@ -277,6 +277,7 @@ export function TransferPrint() {
             <div><b>Đơn vị giao bệnh</b>: <F v={dp.fromUnit ?? `Medone${t.vehicle_id ? ` – xe ${t.vehicle_id}` : ''}`} w={180} /></div>
             <div><b>Nhận xét</b>: <F v={dp.fromComment} w={220} /></div>
             <div><b>Chữ ký</b>: {t.signed_by_name ? <span>{t.signed_by_name} – ký điện tử {fmtDateTime(t.signed_at)}</span> : <F v={null} w={200} />}</div>
+            {t.digitalSignature && <div style={{ fontSize: 9 }}>Chữ ký số: {t.digitalSignature.valid ? 'hợp lệ' : `KHÔNG hợp lệ (${t.digitalSignature.problems.join('; ')})`} · chứng thư <span className="mono">{String(t.digitalSignature.certSerial).slice(0, 12)}</span> · CA nội bộ Medone</div>}
             <div style={{ fontSize: 9 }}>{t.crew.map((m: any) => `${m.full_name}${m.license_no ? ` (GPHN ${m.license_no})` : ''}`).join(', ')}</div>
           </div>
           <div>

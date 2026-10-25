@@ -11,6 +11,7 @@ import { registerEoc } from './routes/eoc.js';
 import { registerFleet } from './routes/fleet.js';
 import { registerRecords } from './routes/records.js';
 import { registerAuth } from './routes/auth.js';
+import { registerPki } from './routes/pki.js';
 import { registerAdmin } from './routes/admin.js';
 import { registerCatalog } from './routes/catalog.js';
 import { registerEquipment } from './routes/equipment.js';
@@ -75,6 +76,7 @@ export async function buildApp(pool: pg.Pool, opts: { logger?: boolean } = {}) {
   });
 
   registerAuth(app, ctx);
+  registerPki(app, ctx);
   registerEoc(app, ctx);
   registerFleet(app, ctx);
   registerRecords(app, ctx);

@@ -3,6 +3,7 @@ import { audit, type Actor } from './audit.js';
 import { many, nextCounter, one, type Queryable, type Tx } from './db.js';
 import { HttpError, incidentScope } from './domain.js';
 import { recordGps } from './ops.js';
+import { verifyDocument } from './pki.js';
 
 /**
  * Giai đoạn K: báo khẩn của kíp (bị hành hung, đe dọa, tai nạn trên đường), chữ ký điện tử của người bệnh/người nhà
@@ -118,6 +119,13 @@ export function contentHash(epcr: unknown): string {
 /** Viết tắt tên (Nguyễn Văn An → N.V.A.) để trang xác thực công khai không lộ họ tên */
 export const initials = (name?: string | null) => (name ? name.trim().split(/\s+/).map((w) => `${w[0]?.toUpperCase()}.`).join('') : null);
 
+/** Kết quả kiểm tra chữ ký số cho trang công khai: không lộ họ tên người ký, chỉ viết tắt */
+async function publicSignature(q: Queryable, id: string, hash: string | null, version: number) {
+  const v = await verifyDocument(q, 'transfer', id, hash, version);
+  if (!v) return null;
+  return { valid: v.valid, problems: v.problems, signedAt: v.signedAt, signer: initials(v.signerName), issuer: v.issuer, certSerial: v.certSerial, provider: v.provider };
+}
+
 /** Tra cứu công khai: chỉ trả thông tin đủ để đối chiếu bản in, không có chẩn đoán hay số định danh */
 export async function verifyTransfer(q: Queryable, code: string, ip: string | null) {
   const c = normalizeCode(code);
@@ -135,5 +143,6 @@ export async function verifyTransfer(q: Queryable, code: string, ip: string | nu
     patient: { initials: initials(t.full_name), birthYear: t.birth_year, sex: t.sex },
     hospital: t.hospital, handoverAt: t.handover_at, version: t.version, amendments: t.amendments,
     hashPrefix: t.content_hash ? String(t.content_hash).slice(0, 12) : null,
+    digitalSignature: await publicSignature(q, t.id, t.content_hash, t.version),
   };
 }

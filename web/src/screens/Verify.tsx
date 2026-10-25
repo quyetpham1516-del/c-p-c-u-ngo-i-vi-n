@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { API_BASE } from '../api';
 import { Brand } from '../Logo';
+import { DigitalSignatureLine } from '../components/Pki';
 
 /**
  * Trang công khai cho bệnh viện nhận người bệnh: nhập hoặc quét mã in trên phiếu chuyển viện để biết phiếu do Medone phát hành,
@@ -40,6 +41,7 @@ export function Verify() {
           <div>Số chuyển viện: <b>{r.transferNumber}</b></div>
           <div>Người bệnh: <b>{r.patient.initials ?? '—'}</b>{r.patient.birthYear ? `, sinh năm ${r.patient.birthYear}` : ''}{r.patient.sex === 'M' ? ', nam' : r.patient.sex === 'F' ? ', nữ' : ''}</div>
           <div>Ký lúc {at(r.signedAt)}{r.signedBy ? ` bởi ${r.signedBy}` : ''}{r.vehicleId ? ` · xe ${r.vehicleId}` : ''}</div>
+          <DigitalSignatureLine s={r.digitalSignature} />
           <div>Bệnh viện nhận: {r.hospital ?? '—'}{r.handoverAt ? ` · bàn giao ${at(r.handoverAt)}` : ''}</div>
           <div>{r.amendments ? <b>Phiếu đã bổ sung {r.amendments} lần sau khi ký; đối chiếu với bản in mới nhất.</b> : 'Chưa bổ sung sau khi ký.'}</div>
           {r.hashPrefix && <div className="small muted">Dấu nội dung: <span className="mono">{r.hashPrefix}</span></div>}

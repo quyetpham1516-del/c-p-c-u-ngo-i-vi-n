@@ -4,6 +4,7 @@ import { hashPassword } from './crypto.js';
 import { seedDemoOps } from './demo-ops.js';
 import { createPool } from './db.js';
 import { migrate } from './migrate.js';
+import { autoAssignByRole } from './org.js';
 
 /**
  * Dữ liệu mẫu cho môi trường thử: 1 trụ sở + 2 trạm, 6 xe (mục 5.5), 10 vị trí EOC, kíp mẫu.
@@ -55,6 +56,8 @@ export async function seed(pool: import('pg').Pool, password: string) {
       FROM stations s CROSS JOIN drugs d`);
   // Thiết bị, cơ số xe, bộ dụng cụ và tài khoản các phân hệ quản trị
   await seedDemoOps(pool, password);
+  // Xếp tài khoản mẫu vào sơ đồ tổ chức theo vai trò
+  await autoAssignByRole(pool);
   return true;
 }
 

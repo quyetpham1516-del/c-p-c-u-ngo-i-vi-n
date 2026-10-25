@@ -22,6 +22,7 @@ const LINKS: { to: string; label: string; roles: Role[] }[] = [
   { to: '/nhan-su', label: 'Nhân sự', roles: ['hr', 'admin', 'director'] },
   { to: '/tai-chinh', label: 'Tài chính', roles: ['accountant', 'director', 'admin'] },
   { to: '/bang-luong', label: 'Bảng lương', roles: ['hr', 'accountant', 'director'] },
+  { to: '/bo-phan', label: 'Bộ phận', roles: ['calltaker', 'dispatcher', 'supervisor', 'crew', 'qa', 'admin', 'pharmacist', 'technician', 'ipc', 'hr', 'accountant', 'director'] },
   { to: '/bao-cao', label: 'Báo cáo', roles: ['director', 'admin', 'supervisor', 'qa', 'accountant'] },
   { to: '/bao-cao', label: 'Tài liệu', roles: ['calltaker', 'dispatcher', 'crew', 'pharmacist', 'technician', 'ipc', 'hr'] },
   { to: '/ca-nhan', label: 'Cá nhân', roles: ['calltaker', 'dispatcher', 'supervisor', 'crew', 'qa', 'admin', 'pharmacist', 'technician', 'ipc', 'hr', 'accountant', 'director'] },

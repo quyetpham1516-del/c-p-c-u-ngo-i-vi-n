@@ -93,6 +93,12 @@ bấm **Giả lập cuộc gọi** → **Nhận** → nhập địa chỉ, bấm
 `npm run catalog -w server`. Nạp từ tệp khác: `npm run import:icd -w server -- <tệp .xlsx/.csv>`,
 `npm run import:hospitals -w server -- <tệp .csv>`.
 
+**HTTPS trong mạng nội bộ** (điện thoại kíp chỉ được lấy GPS khi trang mở bằng https):
+`npm run https:cert` tạo một CA nội bộ và chứng chỉ cho tên `.local`, `localhost` và IP mạng nội bộ của máy (khóa nằm ở `certs/`, không đưa lên git);
+`npm run start:https` mở `https://<tên máy>.local:3443`, gom web và API về một địa chỉ (`/api`, `/ws` sang cổng 8080, còn lại sang 3000),
+kèm trang hướng dẫn cài chứng chỉ ở `http://<tên máy>.local:3080`. Mỗi điện thoại cài và tin CA một lần. Đổi tên máy hoặc IP thì chạy lại
+`npm run https:cert` rồi khởi động lại cổng HTTPS; CA giữ nguyên nên không phải cài lại trên điện thoại.
+
 Phát triển: `npm run dev:server` và `npm run dev:web` (Next.js ở cổng 3000, gọi backend theo `NEXT_PUBLIC_API_URL`).
 
 ## Kiểm thử

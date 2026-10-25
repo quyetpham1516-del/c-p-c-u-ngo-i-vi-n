@@ -164,7 +164,7 @@ export function Crew() {
   return (
     <div className="crew col">
       {typeof window !== 'undefined' && !window.isSecureContext && (
-        <div className="alert amber">Trình duyệt không cho lấy GPS khi mở trang bằng http qua mạng: xe sẽ không có lộ trình. Cần mở bằng địa chỉ https của trung tâm.</div>
+        <SecureHint />
       )}
       {!online && <div className="alert amber">Mất mạng: ePCR vẫn lưu trên máy và tự đồng bộ khi có mạng lại. Nút trạng thái cần mạng; dùng bộ đàm báo EOC.</div>}
       <div className="panel">
@@ -441,6 +441,18 @@ function Odometer({ vehicleId }: { vehicleId: string }) {
         }}>Lưu</button>
         <button className="ghost" onClick={() => setF(null)}>Bỏ</button>
       </div>
+    </div>
+  );
+}
+
+/** Trang mở bằng http qua mạng: trình duyệt không cho lấy GPS. Chỉ đường sang địa chỉ https nếu máy chủ đã bật */
+function SecureHint() {
+  const [s, setS] = useState<{ httpsUrl: string | null; certHelpUrl: string | null } | null>(null);
+  useEffect(() => { api<any>('GET', '/api/ops/server-name').then(setS).catch(() => {}); }, []);
+  return (
+    <div className="alert amber">
+      Trình duyệt không cho lấy GPS khi mở trang bằng http qua mạng: xe sẽ không có lộ trình.
+      {s?.httpsUrl ? <> Mở bằng <a href={`${s.httpsUrl}/kip`}>{s.httpsUrl}</a> (đăng nhập lại một lần). Máy chưa cài chứng chỉ thì làm theo <a href={s.certHelpUrl ?? '#'}>hướng dẫn cài chứng chỉ</a> trước.</> : ' Cần mở bằng địa chỉ https của trung tâm.'}
     </div>
   );
 }

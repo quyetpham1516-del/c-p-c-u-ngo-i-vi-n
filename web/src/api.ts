@@ -6,6 +6,7 @@ export interface User { id: string; username: string; name: string; role: Role }
 
 /**
  * Địa chỉ backend Fastify, đặt qua NEXT_PUBLIC_API_URL trong .env (để trống = cùng địa chỉ với frontend).
+ * Trang mở bằng https thì luôn gọi cùng địa chỉ (qua cổng HTTPS).
  * Nếu .env để localhost mà trang được mở bằng địa chỉ khác (điện thoại quét tem QR qua IP mạng nội bộ của máy chủ),
  * thì gọi backend ở chính địa chỉ đó, giữ nguyên cổng, vì "localhost" trên điện thoại là chính điện thoại.
  */
@@ -15,6 +16,9 @@ function resolveApiBase(configured: string): string {
   if (!configured || typeof window === 'undefined') return configured;
   try {
     const u = new URL(configured);
+    // Trang mở qua cổng HTTPS (npm run start:https gom web và API về một địa chỉ): gọi API cùng địa chỉ,
+    // vì trình duyệt chặn trang https gọi sang http
+    if (window.location.protocol === 'https:' && u.protocol === 'http:') return '';
     const local = (h: string) => h === 'localhost' || h === '127.0.0.1' || h === '[::1]';
     if (local(u.hostname) && !local(window.location.hostname)) {
       u.hostname = window.location.hostname;

@@ -1,4 +1,7 @@
+import { existsSync } from 'node:fs';
 import { hostname } from 'node:os';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import { z } from 'zod';
 import { many, one, withTx } from '../db.js';
@@ -47,7 +50,15 @@ export function registerOps(app: FastifyInstance, { pool, hub }: Ctx) {
   /** Tên máy chủ trong mạng nội bộ (mDNS .local): tem QR in theo tên này không phụ thuộc IP */
   app.get('/api/ops/server-name', { preHandler: guard() }, async () => {
     const h = hostname().toLowerCase();
-    return { hostname: h.includes('.') ? h : `${h}.local` };
+    const name = h.includes('.') ? h : `${h}.local`;
+    // Có chứng chỉ (npm run https:cert) thì báo địa chỉ https và trang hướng dẫn cài chứng chỉ cho điện thoại
+    const certDir = process.env.MEDONE_CERT_DIR || fileURLToPath(new URL('../../../certs', import.meta.url));
+    const https = existsSync(join(certDir, 'server.crt'));
+    return {
+      hostname: name,
+      httpsUrl: https ? `https://${name}:${process.env.MEDONE_HTTPS_PORT || 3443}` : null,
+      certHelpUrl: https ? `http://${name}:${process.env.MEDONE_HTTPS_HELP_PORT || 3080}` : null,
+    };
   });
 
   /* ---------- Utstein ---------- */

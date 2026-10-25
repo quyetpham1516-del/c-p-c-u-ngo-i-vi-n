@@ -12,6 +12,8 @@
     "catalog": "tsx src/catalog.ts",
     "backup": "tsx src/tools/backup.ts",
     "backup:verify": "tsx src/tools/backup.ts verify",
+    "https:cert": "tsx src/tools/https.ts cert",
+    "start:https": "tsx src/tools/https.ts",
     "import:icd": "tsx src/tools/import-icd.ts",
     "import:hospitals": "tsx src/tools/import-hospitals.ts",
     "test": "vitest run",

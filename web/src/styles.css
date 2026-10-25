@@ -292,3 +292,12 @@ td.cell-dat, td.cell-canh_bao, td.cell-khong_dat { font-weight: 700; text-align:
 td.cell-dat { color: var(--ok); }
 td.cell-canh_bao { color: var(--p2); }
 td.cell-khong_dat { color: var(--p1); background: color-mix(in srgb, var(--p1) 10%, transparent); }
+
+/* Sơ đồ dòng ca Utstein */
+.utstein-flow { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.utstein-flow .row { justify-content: center; }
+.utstein-flow .box { border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; min-width: 150px; text-align: center; display: flex; flex-direction: column; gap: 2px; background: var(--panel-2); }
+.utstein-flow .box b { font-size: 1.4em; }
+.utstein-flow .box.strong { border-color: var(--brand); border-width: 2px; }
+.table tr.red td:first-child { box-shadow: inset 3px 0 0 var(--p1); }
+.table tr.amber td:first-child { box-shadow: inset 3px 0 0 var(--p2); }

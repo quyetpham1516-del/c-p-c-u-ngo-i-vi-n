@@ -7,7 +7,7 @@ import { IcdInput } from './IcdInput';
 import { PatientPicker } from './PatientPicker';
 
 /** Các thẻ đi theo đúng thứ tự các khối trên mẫu "Bệnh án cấp cứu ngoại viện" */
-const TABS = ['Thông tin, điều phối', 'ABCDE và can thiệp', 'SAMPLE, khám, chẩn đoán', 'Theo dõi', 'Em bé (sanh rớt)', 'Giao nhận bệnh', 'Ký phiếu'] as const;
+const TABS = ['Thông tin, điều phối', 'ABCDE và can thiệp', 'Ngừng tuần hoàn', 'SAMPLE, khám, chẩn đoán', 'Theo dõi', 'Em bé (sanh rớt)', 'Giao nhận bệnh', 'Ký phiếu'] as const;
 
 export const TRAUMA_TYPES = ['Bỏng', 'Bụng kín/hở', 'Đứt lìa', 'Động vật cắn', 'Gẫy xương', 'Giập – nát', 'Liệt – yếu', 'Ngực kín/hở', 'Tê', 'Trật khớp', 'Rách da', 'Sưng', 'Xuất huyết'];
 
@@ -59,6 +59,111 @@ function AbcdeRow({ title, left, right }: { title: string; left: React.ReactNode
       <div className="abcde-title">{title}</div>
       <div className="col">{left}</div>
       <div className="col abcde-care">{right}</div>
+    </div>
+  );
+}
+
+/** Nhãn biến Utstein (khớp máy chủ: server/src/ops.ts UTSTEIN_LABELS) */
+export const UT = {
+  witnessed: [['khong', 'Không ai'], ['nguoi_dan', 'Người dân'], ['nhan_vien_y_te', 'Nhân viên y tế khác'], ['kip', 'Kíp cấp cứu']],
+  location: [['nha', 'Nhà riêng'], ['noi_cong_cong', 'Nơi công cộng'], ['duong', 'Đường, xe cộ'], ['noi_lam_viec', 'Nơi làm việc'], ['co_so_y_te', 'Cơ sở y tế'], ['xe_cuu_thuong', 'Trên xe cứu thương'], ['khac', 'Khác']],
+  cause: [['tim', 'Do tim (giả định)'], ['chan_thuong', 'Chấn thương'], ['ngat', 'Ngạt, tắc thở'], ['duoi_nuoc', 'Đuối nước'], ['ngo_doc', 'Ngộ độc'], ['dien_giat', 'Điện giật'], ['qua_lieu', 'Quá liều'], ['khac_khong_do_tim', 'Khác, không do tim'], ['khong_ro', 'Không rõ']],
+  bystanderCpr: [['khong', 'Không'], ['chi_ep_tim', 'Chỉ ép tim'], ['ep_tim_thoi_ngat', 'Ép tim và thổi ngạt'], ['khong_ro', 'Không rõ']],
+  publicAed: [['khong', 'Không dùng'], ['gan_khong_soc', 'Gắn, không sốc'], ['co_soc', 'Gắn và đã sốc']],
+  notAttemptedReason: [['dau_hieu_tu_vong', 'Dấu hiệu tử vong rõ'], ['y_nguyen', 'Ý nguyện không hồi sức'], ['nguy_hiem', 'Hiện trường nguy hiểm'], ['khac', 'Khác']],
+  firstRhythm: [['vf', 'Rung thất'], ['pvt', 'Nhanh thất vô mạch'], ['pea', 'Điện vô mạch (PEA)'], ['vo_tam_thu', 'Vô tâm thu'], ['aed_soc_duoc', 'AED: sốc được'], ['aed_khong_soc', 'AED: không sốc'], ['khong_ro', 'Không rõ']],
+  airway: [['khong', 'Không'], ['bop_bong', 'Bóp bóng mặt nạ'], ['mat_na_thanh_quan', 'Mặt nạ thanh quản'], ['noi_khi_quan', 'Nội khí quản']],
+} as Record<string, [string, string][]>;
+
+function TimeAt({ label, value, onChange, locked }: { label: string; value?: string; onChange: (v?: string) => void; locked?: boolean }) {
+  return (
+    <label className="field">{label}
+      <div className="row" style={{ gap: 4 }}>
+        <input className="grow" type="datetime-local" value={localInput(value)} onChange={(ev) => onChange(fromLocal(ev.target.value))} />
+        {!locked && <button type="button" onClick={() => onChange(nowIso())}>Bây giờ</button>}
+      </div>
+    </label>
+  );
+}
+
+/** Mẫu Utstein 2014 (cập nhật 2024) cho ngừng tuần hoàn ngoài viện: sự kiện, hồi sức của người dân, can thiệp, kết cục tại hiện trường */
+function UtsteinSection({ r, set, locked }: { r: any; set: Setter; locked: boolean }) {
+  const s = (k: string) => (v: any) => set(`arrest.${k}`, v);
+  return (
+    <div className="col">
+      <Pick label="Có ngừng tuần hoàn" value={r.present === true ? 'y' : r.present === false ? 'n' : undefined} options={[['y', 'Có'], ['n', 'Không']]}
+        onChange={(v) => set('arrest.present', v === 'y' ? true : v === 'n' ? false : undefined)} />
+      {r.present && (
+        <>
+          <div className="panel col">
+            <b>Sự kiện</b>
+            <Pick label="Người chứng kiến" value={r.witnessed} options={UT.witnessed as any} onChange={s('witnessed')} />
+            <Pick label="Nơi xảy ra" value={r.location} options={UT.location as any} onChange={s('location')} />
+            <Pick label="Nguyên nhân" value={r.cause} options={UT.cause as any} onChange={s('cause')} />
+            <div className="grid3"><TimeAt label="Giờ ngã quỵ (người chứng kiến ước tính)" value={r.collapseAt} onChange={s('collapseAt')} locked={locked} /></div>
+          </div>
+          {r.witnessed !== 'kip' && (
+            <div className="panel col">
+              <b>Trước khi kíp tới</b>
+              <Pick label="Người dân ép tim" value={r.bystanderCpr} options={UT.bystanderCpr as any} onChange={s('bystanderCpr')} />
+              <Chk label="Điều phối viên hướng dẫn ép tim qua điện thoại" value={r.dispatcherCpr} onChange={s('dispatcherCpr')} />
+              <Pick label="Máy AED công cộng" value={r.publicAed} options={UT.publicAed as any} onChange={s('publicAed')} />
+            </div>
+          )}
+          <div className="panel col">
+            <b>Hồi sức của kíp</b>
+            <Pick label="Có hồi sức" value={r.attempted === true ? 'y' : r.attempted === false ? 'n' : undefined} options={[['y', 'Có'], ['n', 'Không']]}
+              onChange={(v) => set('arrest.attempted', v === 'y' ? true : v === 'n' ? false : undefined)} />
+            {r.attempted === false && <Pick label="Lý do không hồi sức" value={r.notAttemptedReason} options={UT.notAttemptedReason as any} onChange={s('notAttemptedReason')} />}
+            {r.attempted && (
+              <>
+                <Pick label="Nhịp đầu tiên" value={r.firstRhythm} options={UT.firstRhythm as any} onChange={s('firstRhythm')} />
+                <div className="grid3">
+                  <TimeAt label="Kíp bắt đầu ép tim" value={r.cprStartAt} onChange={s('cprStartAt')} locked={locked} />
+                  <TimeAt label="Sốc điện lần đầu" value={r.firstShockAt} onChange={s('firstShockAt')} locked={locked} />
+                  <Txt label="Số lần sốc" type="number" value={r.shocks} onChange={s('shocks')} />
+                  <TimeAt label="Adrenalin liều đầu" value={r.adrenalineFirstAt} onChange={s('adrenalineFirstAt')} locked={locked} />
+                  <Txt label="Số liều adrenalin" type="number" value={r.adrenalineDoses} onChange={s('adrenalineDoses')} />
+                  <Txt label="EtCO2 cao nhất (mmHg)" type="number" value={r.etco2Max} onChange={s('etco2Max')} />
+                </div>
+                <Pick label="Đường thở" value={r.airway} options={UT.airway as any} onChange={s('airway')} />
+                {r.airway && r.airway !== 'khong' && <div className="grid3"><TimeAt label="Giờ đặt đường thở" value={r.airwayAt} onChange={s('airwayAt')} locked={locked} /></div>}
+                <div className="row">
+                  <Chk label="Thuốc chống loạn nhịp (amiodaron, lidocain)" value={r.antiarrhythmic} onChange={s('antiarrhythmic')} />
+                  <Chk label="Ép tim cơ học" value={r.mechanicalCpr} onChange={s('mechanicalCpr')} />
+                  <Chk label="Bắt đầu hạ thân nhiệt chỉ huy" value={r.ttm} onChange={s('ttm')} />
+                  <Chk label="Chuyển ECMO hồi sức (ECPR)" value={r.ecpr} onChange={s('ecpr')} />
+                </div>
+              </>
+            )}
+          </div>
+          {r.attempted && (
+            <div className="panel col">
+              <b>Kết cục tại hiện trường</b>
+              <Pick label="Có tuần hoàn trở lại (ROSC)" value={r.roscAny === true ? 'y' : r.roscAny === false ? 'n' : undefined} options={[['y', 'Có'], ['n', 'Không']]}
+                onChange={(v) => set('arrest.roscAny', v === 'y' ? true : v === 'n' ? false : undefined)} />
+              {r.roscAny && (
+                <>
+                  <div className="grid3"><TimeAt label="Giờ có ROSC" value={r.roscAt} onChange={s('roscAt')} locked={locked} /></div>
+                  <div className="row">
+                    <Chk label="ROSC kéo dài từ 20 phút" value={r.roscSustained} onChange={s('roscSustained')} />
+                    <Pick label="Còn tuần hoàn khi bàn giao bệnh viện" value={r.roscOnArrival === true ? 'y' : r.roscOnArrival === false ? 'n' : undefined} options={[['y', 'Còn'], ['n', 'Mất lại']]}
+                      onChange={(v) => set('arrest.roscOnArrival', v === 'y' ? true : v === 'n' ? false : undefined)} />
+                  </div>
+                </>
+              )}
+              {r.roscAny === false && (
+                <div className="grid3">
+                  <TimeAt label="Giờ ngừng hồi sức" value={r.terminatedAt} onChange={s('terminatedAt')} locked={locked} />
+                  <Txt label="Lý do ngừng hồi sức" value={r.terminationReason} onChange={s('terminationReason')} />
+                </div>
+              )}
+            </div>
+          )}
+          <Txt label="Ghi chú" area value={r.note} onChange={s('note')} />
+          <div className="small muted">Kết cục tại bệnh viện (nhập viện, sống 30 ngày, CPC) do QLCL theo dõi trong sổ Utstein.</div>
+        </>
+      )}
     </div>
   );
 }
@@ -156,8 +261,14 @@ export function EpcrForm({ draft: initial, onChange }: { draft: Draft; onChange?
         <div className="small">{syncState}</div>
       </div>
       <div className="tabs" style={{ marginTop: 8 }}>
-        {TABS.map((t) => <button key={t} className={tab === t ? 'sel' : ''} onClick={() => setTab(t)}>{t}</button>)}
+        {TABS.map((t) => <button key={t} className={tab === t ? 'sel' : ''} onClick={() => setTab(t)}>{t}{t === 'Ngừng tuần hoàn' && e.arrest?.present ? ' ●' : ''}</button>)}
       </div>
+      {(c.cpr || c.defib) && e.arrest?.present == null && !locked && (
+        <div className="alert amber row" style={{ justifyContent: 'space-between' }}>
+          <span>Đã ép tim hoặc sốc điện: điền mẫu ngừng tuần hoàn (Utstein) trước khi ký.</span>
+          <button className="primary small" onClick={() => { set('arrest.present', true); setTab('Ngừng tuần hoàn'); }}>Mở mẫu Utstein</button>
+        </div>
+      )}
       <fieldset disabled={locked} style={{ border: 'none', padding: 0, margin: 0 }}>
         {tab === 'Thông tin, điều phối' && (
           <div className="col">
@@ -460,6 +571,8 @@ export function EpcrForm({ draft: initial, onChange }: { draft: Draft; onChange?
             </div>
           </div>
         )}
+
+        {tab === 'Ngừng tuần hoàn' && <UtsteinSection r={e.arrest ?? {}} set={set} locked={locked} />}
 
         {tab === 'Em bé (sanh rớt)' && (
           <div className="col">

@@ -75,7 +75,10 @@ export function Crew() {
     const id = navigator.geolocation.watchPosition((p) => {
       if (Date.now() - lastSent.current < every) return;
       lastSent.current = Date.now();
-      api('POST', `/api/vehicles/${cur.vehicle.id}/location`, { lat: p.coords.latitude, lng: p.coords.longitude }).catch(() => {});
+      api('POST', `/api/vehicles/${cur.vehicle.id}/location`, {
+        lat: p.coords.latitude, lng: p.coords.longitude, accuracy: p.coords.accuracy ?? null,
+        speed: p.coords.speed != null && p.coords.speed >= 0 ? Math.round(p.coords.speed * 3.6) : null,
+      }).catch(() => {});
     }, () => {}, { enableHighAccuracy: true, maximumAge: 5000 });
     return () => navigator.geolocation.clearWatch(id);
   }, [cur?.vehicle?.id, cur?.vehicle?.status]);
@@ -160,6 +163,9 @@ export function Crew() {
 
   return (
     <div className="crew col">
+      {typeof window !== 'undefined' && !window.isSecureContext && (
+        <div className="alert amber">Trình duyệt không cho lấy GPS khi mở trang bằng http qua mạng: xe sẽ không có lộ trình. Cần mở bằng địa chỉ https của trung tâm.</div>
+      )}
       {!online && <div className="alert amber">Mất mạng: ePCR vẫn lưu trên máy và tự đồng bộ khi có mạng lại. Nút trạng thái cần mạng; dùng bộ đàm báo EOC.</div>}
       <div className="panel">
         <div className="row" style={{ justifyContent: 'space-between' }}>
@@ -201,6 +207,7 @@ export function Crew() {
             <a className="btn" style={{ marginTop: 8 }} target="_blank" rel="noreferrer" href={`https://www.google.com/maps/dir/?api=1&destination=${inc.lat},${inc.lng}`}>Dẫn đường</a>
           )}
           {inc.notes && <div className="alert blue small" style={{ marginTop: 8 }}>{inc.notes}</div>}
+          <a className="btn ghost" style={{ marginTop: 8 }} href={`/van-hanh?tab=${encodeURIComponent('Đông nạn nhân')}&ca=${inc.id}`}>Ghi nạn nhân (đông nạn nhân)</a>
           <label className="field" style={{ marginTop: 8, maxWidth: 360 }}>Nguy cơ lây nhiễm (quyết định mức khử khuẩn sau ca)
             <select value={inc.infectionRisk ?? ''} onChange={(e) => act(() => api('POST', '/api/crew/infection', { risk: e.target.value || null }))}>
               <option value="">Không nghi lây nhiễm</option>
@@ -232,6 +239,7 @@ export function Crew() {
             <button onClick={() => act(() => api('POST', `/api/vehicles/${v.id}/status`, { status: 'S8' }))} disabled={v.status === 'S8'}>Bổ sung, khử khuẩn</button>
             <button onClick={() => act(() => api('POST', `/api/vehicles/${v.id}/status`, { status: 'S9' }))} disabled={v.status === 'S9'}>Ngoài hoạt động</button>
           </div>
+          <Odometer vehicleId={v.id} />
         </div>
       )}
 
@@ -406,6 +414,32 @@ function OfflineDrafts({ drafts, onOpen }: { drafts: Draft[]; onOpen: (d: Draft)
             <span className="small">{d.dirty ? <span style={{ color: 'var(--warn)' }}>chờ đồng bộ</span> : <span style={{ color: 'var(--ok)' }}>đã đồng bộ</span>}</span>
           </div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+/** Kíp ghi số km đồng hồ và đổ nhiên liệu, dùng để tính hạn bảo dưỡng theo km */
+function Odometer({ vehicleId }: { vehicleId: string }) {
+  const [f, setF] = useState<{ km: string; fuelLiters: string; fuelCost: string; note: string } | null>(null);
+  const [msg, setMsg] = useState('');
+  if (!f) return <div className="row" style={{ marginTop: 10 }}><button className="ghost" onClick={() => { setMsg(''); setF({ km: '', fuelLiters: '', fuelCost: '', note: '' }); }}>Ghi số km, đổ nhiên liệu</button>{msg && <span className="small">{msg}</span>}</div>;
+  const n = (s: string) => (s ? Number(s.replace(/[^\d.]/g, '')) : null);
+  return (
+    <div className="grid2" style={{ marginTop: 10 }}>
+      <label className="field">Số km đồng hồ<input inputMode="numeric" value={f.km} onChange={(e) => setF({ ...f, km: e.target.value.replace(/\D/g, '') })} /></label>
+      <label className="field">Nhiên liệu (lít)<input inputMode="decimal" value={f.fuelLiters} onChange={(e) => setF({ ...f, fuelLiters: e.target.value })} /></label>
+      <label className="field">Tiền nhiên liệu (đồng)<input inputMode="numeric" value={f.fuelCost} onChange={(e) => setF({ ...f, fuelCost: e.target.value.replace(/\D/g, '') })} /></label>
+      <label className="field">Ghi chú<input value={f.note} onChange={(e) => setF({ ...f, note: e.target.value })} placeholder="Bắt buộc nếu tăng quá 3.000 km" /></label>
+      <div className="row">
+        {msg && <span className="small" style={{ color: 'var(--p1)' }}>{msg}</span>}
+        <button className="primary" disabled={!f.km} onClick={async () => {
+          try {
+            await api('POST', `/api/ops/fleet/${vehicleId}/odometer`, { km: Number(f.km), fuelLiters: n(f.fuelLiters), fuelCost: n(f.fuelCost), note: f.note || null });
+            setF(null); setMsg('Đã ghi số km');
+          } catch (e) { setMsg((e as Error).message); }
+        }}>Lưu</button>
+        <button className="ghost" onClick={() => setF(null)}>Bỏ</button>
       </div>
     </div>
   );

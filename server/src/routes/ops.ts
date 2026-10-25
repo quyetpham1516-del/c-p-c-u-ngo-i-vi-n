@@ -1,3 +1,4 @@
+import { hostname } from 'node:os';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import { z } from 'zod';
 import { many, one, withTx } from '../db.js';
@@ -42,6 +43,12 @@ export function registerOps(app: FastifyInstance, { pool, hub }: Ctx) {
     triage: TRIAGE, victimStatus: VICTIM_STATUS, icsRoles: ICS_ROLES, mciLevel: MCI_LEVEL, mciSupportThreshold: MCI_SUPPORT_THRESHOLD,
     vehicleDocKind: VEHICLE_DOC_KIND, blockingDocs: BLOCKING_DOCS, docWarnDays: DOC_WARN_DAYS, maintenanceKind: MAINTENANCE_KIND,
   }));
+
+  /** Tên máy chủ trong mạng nội bộ (mDNS .local): tem QR in theo tên này không phụ thuộc IP */
+  app.get('/api/ops/server-name', { preHandler: guard() }, async () => {
+    const h = hostname().toLowerCase();
+    return { hostname: h.includes('.') ? h : `${h}.local` };
+  });
 
   /* ---------- Utstein ---------- */
 
@@ -108,6 +115,12 @@ export function registerOps(app: FastifyInstance, { pool, hub }: Ctx) {
   /* ---------- GPS ---------- */
 
   app.get('/api/ops/incidents/:id/track', { preHandler: guard(...TRACK_VIEW) }, async (req) => incidentTrack(pool, idParam(req.params)));
+  app.get('/api/ops/tracks/by-code/:code', { preHandler: guard(...TRACK_VIEW) }, async (req) => {
+    const code = z.object({ code: z.string().trim().min(3).max(40) }).parse(req.params).code.toUpperCase();
+    const inc = await one(pool, 'SELECT id FROM incidents WHERE code = $1', [code]);
+    if (!inc) throw new HttpError(404, 'Không tìm thấy ca');
+    return incidentTrack(pool, inc.id);
+  });
 
   /* ---------- Đông nạn nhân ---------- */
 

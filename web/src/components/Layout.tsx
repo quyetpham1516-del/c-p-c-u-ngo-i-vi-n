@@ -14,6 +14,8 @@ const LINKS: { to: string; label: string; roles: Role[] }[] = [
   { to: '/chat-luong', label: 'Chất lượng', roles: ['calltaker', 'dispatcher', 'supervisor', 'crew', 'qa', 'admin', 'pharmacist', 'technician', 'ipc', 'hr', 'accountant', 'director'] },
   { to: '/dao-tao', label: 'Đào tạo', roles: ['calltaker', 'dispatcher', 'supervisor', 'crew', 'qa', 'admin', 'pharmacist', 'technician', 'ipc', 'hr', 'accountant', 'director'] },
   { to: '/he-thong-chat-luong', label: 'Hệ thống CL', roles: ['calltaker', 'dispatcher', 'supervisor', 'crew', 'qa', 'admin', 'pharmacist', 'technician', 'ipc', 'hr', 'accountant', 'director'] },
+  { to: '/van-hanh', label: 'Vận hành', roles: ['calltaker', 'dispatcher', 'supervisor', 'crew', 'qa', 'admin', 'technician', 'accountant', 'director'] },
+  { to: '/tuan-thu', label: 'Tuân thủ', roles: ['supervisor', 'qa', 'admin', 'technician', 'hr', 'director'] },
   { to: '/bao-su-co', label: 'Báo sự cố', roles: ['calltaker', 'dispatcher', 'supervisor', 'crew', 'qa', 'admin', 'pharmacist', 'technician', 'ipc', 'hr', 'accountant', 'director'] },
   { to: '/nhan-su', label: 'Nhân sự', roles: ['hr', 'admin', 'director'] },
   { to: '/tai-chinh', label: 'Tài chính', roles: ['accountant', 'director', 'admin'] },

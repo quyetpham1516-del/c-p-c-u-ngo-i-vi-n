@@ -359,7 +359,7 @@ export const MCI_LEVEL: Record<number, string> = {
 /** Kế hoạch: năng lực thật 4–5 xe, từ 5 người bệnh nặng trở lên là kích hoạt hỗ trợ */
 export const MCI_SUPPORT_THRESHOLD = 5;
 
-export async function declareMci(tx: Tx, actor: Actor, incidentId: string, b: { level: number; note?: string | null; roles?: Record<string, string> }) {
+export async function declareMci(tx: Tx, actor: Actor, incidentId: string, b: { level: number; note?: string | null; roles?: Partial<Record<string, string>> }) {
   const inc = await one(tx, 'SELECT * FROM incidents WHERE id = $1 FOR UPDATE', [incidentId]);
   if (!inc) throw new HttpError(404, 'Không tìm thấy ca');
   if (['closed', 'cancelled', 'transferred_115', 'advice_only'].includes(inc.status)) throw new HttpError(409, 'Ca đã đóng');

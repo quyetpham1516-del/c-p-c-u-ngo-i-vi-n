@@ -29,6 +29,7 @@ import { isSession, type Ctx, type TokenUser } from './http.js';
 import { registerSecurity } from './routes/security.js';
 import { registerAttendance } from './routes/attendance.js';
 import { registerSharing } from './routes/sharing.js';
+import { registerPayroll } from './routes/payroll.js';
 
 export * from './http.js';
 
@@ -86,6 +87,7 @@ export async function buildApp(pool: pg.Pool, opts: { logger?: boolean } = {}) {
   registerSecurity(app, ctx);
   registerAttendance(app, ctx);
   registerSharing(app, ctx);
+  registerPayroll(app, ctx);
   registerAdmin(app, ctx);
 
   app.setNotFoundHandler((_req, reply) => reply.code(404).send({ error: 'Không tìm thấy' }));

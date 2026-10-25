@@ -2,6 +2,7 @@ import { Fragment, useEffect, useState } from 'react';
 import { api, session } from '../api';
 import { useStations } from '../catalog';
 import { QualityCriteria } from './QualityCriteria';
+import { CapaList } from './Qms';
 
 interface Meta { categories: Record<string, string>; severity: Record<string, string>; factors: string[] }
 interface Staff { id: string; full_name: string; role: string; title: string | null }
@@ -169,25 +170,10 @@ function SuggestTab({ meta, run }: Ctx) {
   );
 }
 
-function CapaTab({ run }: Ctx) {
-  const [rows, setRows] = useState<any[]>([]);
-  const load = () => api<any[]>('GET', '/api/quality/capa').then(setRows);
-  useEffect(() => { load().catch(() => {}); }, []); // eslint-disable-line react-hooks/exhaustive-deps
-  return (
-    <div className="panel" style={{ overflowX: 'auto' }}>
-      <table>
-        <thead><tr><th>Việc</th><th>Nguồn</th><th>Phụ trách</th><th>Hạn</th><th>Trạng thái</th><th /></tr></thead>
-        <tbody>{rows.map((c) => (
-          <tr key={c.id}><td>{c.kind === 'phong_ngua' ? 'Phòng ngừa' : 'Khắc phục'}: {c.description}</td><td className="mono small">{c.event_code ?? c.complaint_code}</td><td className="small">{c.owner_name}</td>
-            <td className="mono small" style={c.overdue ? { color: 'var(--p1)', fontWeight: 700 } : undefined}>{c.due_date}</td>
-            <td>{c.status === 'mo' ? (c.overdue ? 'Quá hạn' : 'Đang mở') : c.status === 'xong' ? 'Xong' : 'Hủy'}{c.evidence && <div className="small muted">{c.evidence}</div>}</td>
-            <td className="right">{c.status === 'mo' && <>
-              <button className="ghost small" onClick={() => { const ev = prompt('Bằng chứng đã làm xong:'); if (ev && ev.length >= 3) run(async () => { await api('POST', `/api/quality/capa/${c.id}/finish`, { status: 'xong', evidence: ev }); await load(); }); }}>Xong</button>{' '}
-              <button className="ghost small" onClick={() => { const ev = prompt('Lý do hủy:'); if (ev && ev.length >= 3) run(async () => { await api('POST', `/api/quality/capa/${c.id}/finish`, { status: 'huy', evidence: ev }); await load(); }); }}>Hủy</button></>}</td></tr>))}</tbody>
-      </table>
-      {!rows.length && <div className="small muted">Chưa có.</div>}
-    </div>
-  );
+function CapaTab({ staff, run, canEdit }: Ctx) {
+  const [meta, setMeta] = useState<any>(null);
+  useEffect(() => { api('GET', '/api/qms/meta').then(setMeta).catch(() => {}); }, []);
+  return meta ? <CapaList meta={meta} staff={staff} run={run} canEdit={canEdit} /> : null;
 }
 
 function ComplaintsTab({ staff, run }: Ctx) {

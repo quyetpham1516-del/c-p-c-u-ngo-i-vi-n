@@ -3,6 +3,7 @@ import { audit, type Actor } from './audit.js';
 import { config } from './config.js';
 import { many, nextCounter, one, type Queryable, type Tx } from './db.js';
 import { HttpError } from './domain.js';
+import { CAPA_LINKS, CAPA_SOURCE, CAPA_VERIFY_DAYS } from './qms.js';
 
 /**
  * Chất lượng và an toàn: kiểm soát nhiễm khuẩn (QLCL-05), sự cố y khoa (QLCL-03, TT 43/2018/TT-BYT),
@@ -206,20 +207,34 @@ export async function eventSuggestions(q: Queryable, days = 30) {
 
 /* ================= CAPA ================= */
 
-export async function addCapa(tx: Tx, actor: Actor, b: { eventId?: string | null; complaintId?: string | null; kind: string; description: string; ownerId: string; dueDate: string }) {
-  if (!b.eventId && !b.complaintId) throw new HttpError(400, 'Gắn hành động với sự cố hoặc khiếu nại');
-  const c = await one(tx, `INSERT INTO capa_actions(event_id, complaint_id, kind, description, owner_id, due_date, created_by) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`,
-    [b.eventId ?? null, b.complaintId ?? null, b.kind, b.description, b.ownerId, b.dueDate, actor.id]);
+/** Hành động khắc phục, phòng ngừa dùng chung: gắn với sự cố, khiếu nại, phát hiện đánh giá nội bộ, rủi ro, chỉ số, giám sát hoặc xem xét của lãnh đạo */
+export async function addCapa(tx: Tx, actor: Actor, b: {
+  eventId?: string | null; complaintId?: string | null; findingId?: string | null; riskId?: string | null; reviewId?: string | null;
+  callbackId?: string | null; indicatorId?: string | null; source?: string | null; sourceRef?: string | null; rootCause?: string | null;
+  kind: string; description: string; ownerId: string; dueDate: string;
+}) {
+  const links = CAPA_LINKS.filter(([f]) => (b as Record<string, unknown>)[f]);
+  if (links.length > 1) throw new HttpError(400, 'Mỗi hành động gắn với một nguồn');
+  const source = links[0]?.[2] ?? b.source ?? null;
+  if (!source || (!links.length && !b.sourceRef?.trim())) throw new HttpError(400, 'Ghi rõ nguồn của hành động (sự cố, khiếu nại, đánh giá, tiêu chí...)');
+  if (!CAPA_SOURCE[source]) throw new HttpError(400, 'Nguồn không hợp lệ');
+  const cols = links.map(([, c]) => c);
+  const vals = links.map(([f]) => (b as Record<string, unknown>)[f]);
+  const c = await one(tx, `INSERT INTO capa_actions(${['source', 'source_ref', 'root_cause', 'kind', 'description', 'owner_id', 'due_date', 'created_by', ...cols].join(', ')})
+                           VALUES (${[...Array(8 + cols.length)].map((_, i) => `$${i + 1}`).join(',')}) RETURNING *`,
+  [source, b.sourceRef ?? null, b.rootCause ?? null, b.kind, b.description, b.ownerId, b.dueDate, actor.id, ...vals]);
   await audit(tx, 'system', actor, 'quality.capa_added', 'capa_action', c.id, b);
   return c;
 }
 
+/** Xong thì chờ người khác kiểm tra hiệu quả sau CAPA_VERIFY_DAYS ngày (QLCL-10) */
 export async function finishCapa(tx: Tx, actor: Actor & { role: string }, id: string, b: { status: 'xong' | 'huy'; evidence: string }) {
   const c = await one(tx, 'SELECT * FROM capa_actions WHERE id = $1 FOR UPDATE', [id]);
   if (!c) throw new HttpError(404, 'Không tìm thấy hành động');
   if (c.status !== 'mo') throw new HttpError(409, 'Hành động đã kết thúc');
   if (c.owner_id !== actor.id && !['qa', 'supervisor', 'admin', 'director'].includes(actor.role)) throw new HttpError(403, 'Chỉ người phụ trách hoặc QLCL cập nhật');
-  await tx.query('UPDATE capa_actions SET status = $2, done_at = now(), evidence = $3 WHERE id = $1', [id, b.status, b.evidence]);
+  await tx.query(`UPDATE capa_actions SET status = $2, done_at = now(), evidence = $3,
+                    verify_due = CASE WHEN $2 = 'xong' THEN vn_today() + $4::int ELSE NULL END WHERE id = $1`, [id, b.status, b.evidence, CAPA_VERIFY_DAYS]);
   await audit(tx, 'system', actor, 'quality.capa_finished', 'capa_action', id, b);
 }
 

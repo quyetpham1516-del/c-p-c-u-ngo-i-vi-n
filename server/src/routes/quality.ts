@@ -8,6 +8,7 @@ import {
   addCapa, answerSurvey, closeEvent, createComplaint, DISINFECTION_LEVEL, DISINFECTION_STEPS, EVENT_CATEGORY, eventSuggestions, FACTORS,
   finishCapa, reportEvent, SEVERITY, signDisinfection, updateComplaint, updateEvent,
 } from '../quality.js';
+import { CAPA_SELECT, CAPA_SOURCE, verifyCapa } from '../qms.js';
 
 const QUALITY: Role[] = ['qa', 'supervisor', 'admin', 'director'];
 const QUALITY_VIEW: Role[] = [...QUALITY, 'ipc'];
@@ -240,19 +241,19 @@ export function registerQuality(app: FastifyInstance, { pool, hub }: Ctx) {
   /* ================= Hành động khắc phục ================= */
 
   app.get('/api/quality/capa', { preHandler: guard() }, async (req) => {
-    const q = z.object({ mine: z.string().optional(), status: z.string().optional() }).parse(req.query);
+    const q = z.object({ mine: z.string().optional(), status: z.string().optional(), source: z.string().optional() }).parse(req.query);
     const mine = q.mine === '1' || !QUALITY_VIEW.includes(req.user.role);
-    return many(pool, `
-      SELECT c.*, u.full_name AS owner_name, e.code AS event_code, k.code AS complaint_code, (c.status = 'mo' AND c.due_date < vn_today()) AS overdue
-        FROM capa_actions c JOIN users u ON u.id = c.owner_id LEFT JOIN adverse_events e ON e.id = c.event_id LEFT JOIN complaints k ON k.id = c.complaint_id
-       WHERE (NOT $1 OR c.owner_id = $2) AND ($3::text IS NULL OR c.status = $3)
-       ORDER BY c.status = 'mo' DESC, c.due_date`, [mine, req.user.id, q.status ?? null]);
+    return many(pool, `${CAPA_SELECT}
+       WHERE (NOT $1 OR c.owner_id = $2) AND ($3::text IS NULL OR c.status = $3) AND ($4::text IS NULL OR c.source = $4)
+       ORDER BY c.status = 'mo' DESC, c.status = 'xong' DESC, c.due_date`, [mine, req.user.id, q.status ?? null, q.source ?? null]);
   });
 
   app.post('/api/quality/capa', { preHandler: guard(...QUALITY) }, async (req) => {
+    const uuid = z.string().uuid().nullish();
     const b = z.object({
-      eventId: z.string().uuid().nullish(), complaintId: z.string().uuid().nullish(), kind: z.enum(['khac_phuc', 'phong_ngua']).default('khac_phuc'),
-      description: z.string().trim().min(5).max(2000), ownerId: z.string().uuid(), dueDate: date,
+      eventId: uuid, complaintId: uuid, findingId: uuid, riskId: uuid, reviewId: uuid, callbackId: uuid, indicatorId: uuid,
+      source: z.enum(Object.keys(CAPA_SOURCE) as [string, ...string[]]).nullish(), sourceRef: opt(120), rootCause: opt(2000),
+      kind: z.enum(['khac_phuc', 'phong_ngua']).default('khac_phuc'), description: z.string().trim().min(5).max(2000), ownerId: z.string().uuid(), dueDate: date,
     }).parse(req.body);
     return withTx(pool, (tx) => addCapa(tx, actorOf(req), b));
   });
@@ -261,6 +262,14 @@ export function registerQuality(app: FastifyInstance, { pool, hub }: Ctx) {
     const id = idParam(req.params);
     const b = z.object({ status: z.enum(['xong', 'huy']), evidence: z.string().trim().min(3).max(2000) }).parse(req.body);
     await withTx(pool, (tx) => finishCapa(tx, { ...actorOf(req), role: req.user.role }, id, b));
+    return { ok: true };
+  });
+
+  /** Kiểm tra hiệu quả: QLCL hoặc người khác người phụ trách xác nhận; chưa hiệu quả thì mở lại với hạn mới */
+  app.post('/api/quality/capa/:id/verify', { preHandler: guard(...QUALITY) }, async (req) => {
+    const id = idParam(req.params);
+    const b = z.object({ effective: z.boolean(), note: z.string().trim().min(3).max(2000), newDueDate: date.nullish() }).parse(req.body);
+    await withTx(pool, (tx) => verifyCapa(tx, actorOf(req), id, b));
     return { ok: true };
   });
 

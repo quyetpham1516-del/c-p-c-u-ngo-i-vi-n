@@ -11,7 +11,7 @@ const PSTATUS: Record<string, string> = { cho_duyet_1: 'Chờ kế toán duyệt
 const ISTATUS: Record<string, string> = { nhap: 'Nháp, chờ ghi số', da_phat_hanh: 'Đã phát hành', huy: 'Hủy' };
 const WAIVER: Record<string, string> = { mien: 'Miễn', giam: 'Giảm', that_thu: 'Thất thu' };
 const CU_KIND: Record<string, string> = { benh_vien: 'Bệnh viện', bao_hiem: 'Bảo hiểm', doanh_nghiep: 'Doanh nghiệp', su_kien: 'Sự kiện', ca_nhan: 'Cá nhân', khac: 'Khác' };
-const TABS = ['Tổng quan', 'Khoản thu', 'Chờ duyệt', 'Hóa đơn', 'Đề xuất chi', 'Phiếu chi', 'Công nợ', 'Bảng giá, khách hàng', 'Kế toán'] as const;
+const TABS = ['Tổng quan', 'Khoản thu', 'Chờ duyệt', 'Hóa đơn', 'Đề xuất chi', 'Phiếu chi', 'Công nợ', 'Bảng giá, khách hàng', 'BHYT', 'Kế toán'] as const;
 const vnDate = (d = 0) => new Date(Date.now() + 7 * 3600_000 + d * 86400_000).toISOString().slice(0, 10);
 
 /** Tài chính: khoản thu từ phiếu chuyển viện, thu tiền, miễn giảm có duyệt, hóa đơn, đề xuất chi 2 cấp, phiếu chi, công nợ, bút toán */
@@ -43,6 +43,7 @@ export function Finance() {
       {tab === 'Phiếu chi' && <Expenses {...ctx} />}
       {tab === 'Công nợ' && <Receivables {...ctx} />}
       {tab === 'Bảng giá, khách hàng' && <PricesCustomers {...ctx} />}
+      {tab === 'BHYT' && <Bhyt {...ctx} />}
       {tab === 'Kế toán' && <Accounting {...ctx} />}
     </div>
   );
@@ -452,6 +453,113 @@ const ACCOUNT_LABEL: Record<string, string> = {
   payable: 'Phải trả người bán', waiver: 'Giảm trừ doanh thu (miễn, giảm)', badDebt: 'Chi phí xóa nợ thất thu',
 };
 
+/* ======================= BHYT ======================= */
+
+const BHYT_SETTING_LABEL: [string, string, string?][] = [
+  ['maCskcb', 'Mã cơ sở KBCB của công ty (5 ký tự)'], ['maKhoa', 'Mã khoa (PL5 QĐ 5937)'], ['maNhomVc', 'Mã nhóm chi phí vận chuyển (PL3 QĐ 5937)'],
+  ['maLoaiKcb', 'Mã hình thức KBCB'], ['maXangDau', 'Mã loại xăng dầu'], ['fuelPrice', 'Giá xăng dầu (đ/lít)', 'number'],
+  ['litrePerKm', 'Định mức quỹ trả (lít/km)', 'number'], ['maTtdv', 'Mã định danh y tế người ký (MA_TTDV)'], ['maBacSi', 'Mã định danh y tế người chỉ định mặc định'],
+];
+
+function Bhyt({ isAcc, run }: Ctx) {
+  const [from, setFrom] = useState(vnDate().slice(0, 8) + '01');
+  const [to, setTo] = useState(vnDate());
+  const [d, setD] = useState<any>(null);
+  const [st, setSt] = useState<Record<string, any>>({});
+  const [card, setCard] = useState<any>(null);
+  const load = () => run(async () => { const x = await api<any>('GET', `/api/finance/bhyt?from=${from}&to=${to}`); setD(x); setSt(x.settings); });
+  useEffect(() => { load(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  if (!d) return null;
+  const ready = d.rows.filter((r: any) => !r.missing.length);
+  const fresh = ready.filter((r: any) => !r.exportedAt);
+  const sum = (k: string, rows: any[]) => rows.reduce((t: number, r: any) => t + (r.amounts?.[k] ?? 0), 0);
+  const openCard = (r: any) => setCard({ id: r.id, code: r.code, cardNo: r.card?.cardNo ?? '', dkbd: r.card?.dkbd ?? '', validFrom: r.card?.validFrom ?? '', validTo: r.card?.validTo ?? '',
+    mucHuong: r.card?.mucHuong ?? 80, khuVuc: r.card?.khuVuc ?? '', doiTuongKcb: r.card?.doiTuongKcb ?? '', noiDi: r.card?.noiDi ?? '' });
+  return (
+    <div className="col">
+      <div className="alert amber small">
+        Bảng kê chi phí <b>vận chuyển người bệnh</b> xuất XML theo QĐ 130/QĐ-BYT (sửa đổi QĐ 4750/QĐ-BYT): Bảng 1 tổng hợp và Bảng 3 dịch vụ (mã <span className="mono">VC.&lt;mã nơi đến&gt;</span>).
+        Quỹ trả theo định mức nhiên liệu × số km; phần chênh lệch người bệnh trả. Chưa kê thuốc dùng trên xe (Bảng 2) và chưa ký số: tải tệp lên Cổng giám định bằng công cụ ký số của đơn vị.
+        Mã mặc định và cách tính là bản nháp, kế toán đối chiếu với BHXH và gửi thử trước khi gửi thật.
+      </div>
+      <div className="panel col" style={{ overflowX: 'auto' }}>
+        <div className="row" style={{ flexWrap: 'wrap' }}>
+          <label className="row small">Từ<input type="date" value={from} onChange={(e) => setFrom(e.target.value)} /></label>
+          <label className="row small">Đến<input type="date" value={to} onChange={(e) => setTo(e.target.value)} /></label>
+          <button onClick={load}>Xem</button>
+          {isAcc && <button className="primary" disabled={!fresh.length} onClick={() => run(async () => { await download(`/api/finance/bhyt/xml?from=${from}&to=${to}`, `GIAMDINHHS_${st.maCskcb}_${from}_${to}.xml`); await load(); }, 'Đã xuất XML.')}>
+            Xuất XML {fresh.length} lượt chưa gửi</button>}
+          <span className="small muted grow">{d.rows.length} lượt BHYT · {ready.length} đủ thông tin · đề nghị quỹ trả {money(sum('bhtt', ready))} · người bệnh trả {money(sum('bntt', ready) + sum('bncct', ready))}</span>
+        </div>
+        <table className="table">
+          <thead><tr><th>Ngày</th><th>Khoản thu</th><th>Người bệnh</th><th>Thẻ BHYT</th><th>Nơi đến</th><th className="right">Km</th><th className="right">Chi phí</th><th className="right">Quỹ trả</th><th className="right">Người bệnh trả</th><th>Tình trạng</th><th /></tr></thead>
+          <tbody>{d.rows.map((r: any) => (
+            <tr key={r.id} className={r.missing.length ? 'amber' : undefined}>
+              <td className="small">{r.serviceDate}</td>
+              <td className="mono small">{r.code}<div className="muted">{r.transferNumber}</div></td>
+              <td>{r.patient ?? '—'}</td>
+              <td className="mono small">{r.card ? <>{r.card.cardNo}<div className="muted">{r.card.mucHuong}% · {r.card.dkbd}</div></> : '—'}</td>
+              <td className="small">{r.hospital ?? '—'}{r.hospitalCode && <div className="mono muted">{r.hospitalCode}</div>}</td>
+              <td className="right">{r.km ?? '—'}</td>
+              <td className="right">{money(r.total)}</td>
+              <td className="right">{r.amounts ? money(r.amounts.bhtt) : '—'}</td>
+              <td className="right">{r.amounts ? money(r.amounts.bntt + r.amounts.bncct) : '—'}</td>
+              <td className="small">{r.missing.length ? <span className="red">Thiếu: {r.missing.join(', ')}</span> : r.exportedAt ? `Đã xuất ${new Date(r.exportedAt).toLocaleDateString('vi-VN')}` : 'Sẵn sàng'}</td>
+              <td>{isAcc && <button className="ghost small" onClick={() => openCard(r)}>Thẻ BHYT</button>}</td>
+            </tr>
+          ))}</tbody>
+        </table>
+        {!d.rows.length && <div className="small muted">Không có khoản thu đối tượng BHYT trong kỳ.</div>}
+        {card && (
+          <div className="col panel">
+            <b>Thẻ BHYT cho {card.code}</b>
+            <div className="grid4">
+              <label className="field">Mã thẻ (15 ký tự)<input className="mono" value={card.cardNo} onChange={(e) => setCard({ ...card, cardNo: e.target.value.toUpperCase() })} /></label>
+              <label className="field">Nơi đăng ký ban đầu<input className="mono" value={card.dkbd} onChange={(e) => setCard({ ...card, dkbd: e.target.value.toUpperCase() })} /></label>
+              <label className="field">Giá trị từ<input type="date" value={card.validFrom} onChange={(e) => setCard({ ...card, validFrom: e.target.value })} /></label>
+              <label className="field">Đến<input type="date" value={card.validTo} onChange={(e) => setCard({ ...card, validTo: e.target.value })} /></label>
+              <label className="field">Mức hưởng (%)<input type="number" min={1} max={100} value={card.mucHuong} onChange={(e) => setCard({ ...card, mucHuong: Number(e.target.value) })} /></label>
+              <label className="field">Khu vực<select value={card.khuVuc} onChange={(e) => setCard({ ...card, khuVuc: e.target.value })}><option value="">—</option><option>K1</option><option>K2</option><option>K3</option></select></label>
+              <label className="field">Mã đối tượng KCB (trống: cấp cứu 2, hẹn 1)<input value={card.doiTuongKcb} onChange={(e) => setCard({ ...card, doiTuongKcb: e.target.value })} /></label>
+              <label className="field">Mã nơi chuyển đi (nếu có)<input className="mono" value={card.noiDi} onChange={(e) => setCard({ ...card, noiDi: e.target.value.toUpperCase() })} /></label>
+            </div>
+            <div className="row">
+              <button className="primary" onClick={() => run(async () => {
+                await api('PUT', `/api/finance/charges/${card.id}/bhyt`, { ...card, id: undefined, code: undefined, khuVuc: card.khuVuc || null, doiTuongKcb: card.doiTuongKcb || null, noiDi: card.noiDi || null });
+                setCard(null); await load();
+              }, 'Đã lưu thẻ BHYT.')}>Lưu</button>
+              <button className="ghost" onClick={() => setCard(null)}>Bỏ</button>
+            </div>
+          </div>
+        )}
+      </div>
+      <div className="panel col">
+        <h3 style={{ margin: 0 }}>Cài đặt BHYT</h3>
+        <fieldset disabled={!isAcc} style={{ border: 0, padding: 0, margin: 0 }}>
+          <div className="grid4">{BHYT_SETTING_LABEL.map(([k, label, type]) => (
+            <label key={k} className="field">{label}<input className={type ? undefined : 'mono'} type={type ?? 'text'} step="any" value={st[k] ?? ''}
+              onChange={(e) => setSt({ ...st, [k]: type === 'number' ? Number(e.target.value) : e.target.value })} /></label>
+          ))}</div>
+          <button className="primary" onClick={() => run(async () => { setSt(await api('PUT', '/api/finance/bhyt/settings', st)); await load(); }, 'Đã lưu cài đặt BHYT.')}>Lưu cài đặt BHYT</button>
+        </fieldset>
+        <div className="small muted">Mã KCB bệnh viện nhận lấy từ danh mục bệnh viện (Quản trị). Bệnh viện chưa có mã thì bổ sung ở đó.</div>
+      </div>
+      {d.exports.length > 0 && (
+        <div className="panel">
+          <h3 style={{ marginTop: 0 }}>Các lần xuất</h3>
+          <table className="table">
+            <thead><tr><th>Lúc</th><th>Kỳ</th><th className="right">Số lượt</th><th className="right">Chi phí</th><th className="right">Đề nghị quỹ trả</th><th>Người xuất</th><th>Mã băm</th></tr></thead>
+            <tbody>{d.exports.map((x: any) => (
+              <tr key={x.id}><td className="small">{new Date(x.created_at).toLocaleString('vi-VN')}</td><td className="small">{x.from_date} → {x.to_date}</td><td className="right">{x.n}</td>
+                <td className="right">{money(x.total_bv)}</td><td className="right">{money(x.total_bhtt)}</td><td className="small">{x.created_by_name}</td><td className="mono small">{x.sha256.slice(0, 12)}</td></tr>
+            ))}</tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function Accounting({ meta, isAcc, isDir, run, reloadMeta }: Ctx) {
   const [from, setFrom] = useState(vnDate().slice(0, 8) + '01');
   const [to, setTo] = useState(vnDate());
@@ -468,9 +576,14 @@ function Accounting({ meta, isAcc, isDir, run, reloadMeta }: Ctx) {
           <label className="row small">Từ<input type="date" value={from} onChange={(e) => setFrom(e.target.value)} /></label>
           <label className="row small">Đến<input type="date" value={to} onChange={(e) => setTo(e.target.value)} /></label>
           <button onClick={load}>Xem bút toán</button>
-          <button className="primary" onClick={() => run(() => download(`/api/finance/journal?from=${from}&to=${to}&format=csv`, `but-toan-${from}-${to}.csv`))}>Tải CSV nhập phần mềm kế toán</button>
+          <button className="primary" onClick={() => run(() => download(`/api/finance/misa?from=${from}&to=${to}`, `misa-${from}-${to}.xlsx`), 'Đã tải tệp Excel cho MISA.')}>Tải Excel nhập MISA</button>
+          <button onClick={() => run(() => download(`/api/finance/journal?from=${from}&to=${to}&format=csv`, `but-toan-${from}-${to}.csv`))}>Tải CSV bút toán</button>
         </div>
-        <div className="small muted">Tệp CSV (UTF-8) mở bằng Excel và nhập được vào MISA, Fast, Bravo... theo mẫu "nhập chứng từ nghiệp vụ khác". Cột mã xe dùng làm mã thống kê để tính lãi lỗ theo xe.</div>
+        <div className="small muted">
+          <b>Excel nhập MISA</b>: mỗi loại chứng từ một trang (phiếu thu, thu tiền gửi, phiếu chi, chi tiền gửi, nghiệp vụ khác), cột theo mẫu nhập khẩu của MISA SME;
+          trong MISA chọn Nhập khẩu từ Excel, chọn trang tương ứng rồi ghép cột (hướng dẫn ở trang cuối tệp). <b>CSV bút toán</b> dùng cho Fast, Bravo hoặc phần mềm khác.
+          Cột mã xe dùng làm mã thống kê để tính lãi lỗ theo xe.
+        </div>
         <table>
           <thead><tr><th>Ngày</th><th>Chứng từ</th><th>Diễn giải</th><th>Nợ</th><th>Có</th><th className="right">Số tiền</th><th>Đối tượng</th><th>Xe</th></tr></thead>
           <tbody>{rows.map((r, i) => <tr key={i}><td className="small">{r.date}</td><td className="mono small">{r.docNo}</td><td className="small">{r.description}</td><td className="mono">{r.debit}</td><td className="mono">{r.credit}</td><td className="right">{money(r.amount)}</td><td className="small">{r.object}</td><td className="small">{r.vehicle}</td></tr>)}</tbody>

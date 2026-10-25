@@ -21,6 +21,8 @@ import { registerFinance } from './routes/finance.js';
 import { registerQc } from './routes/qc.js';
 import { registerTraining } from './routes/training.js';
 import { registerQms } from './routes/qms.js';
+import { registerOps } from './routes/ops.js';
+import { registerCompliance } from './routes/compliance.js';
 import { registerReports } from './routes/reports.js';
 import type { Ctx } from './http.js';
 
@@ -73,6 +75,8 @@ export async function buildApp(pool: pg.Pool, opts: { logger?: boolean } = {}) {
   registerQc(app, ctx);
   registerTraining(app, ctx);
   registerQms(app, ctx);
+  registerOps(app, ctx);
+  registerCompliance(app, ctx);
   registerAdmin(app, ctx);
 
   app.setNotFoundHandler((_req, reply) => reply.code(404).send({ error: 'Không tìm thấy' }));

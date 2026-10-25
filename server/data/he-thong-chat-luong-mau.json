@@ -34,6 +34,7 @@
     { "key": "khieu_nai", "label": "Hồ sơ khiếu nại đã đóng", "years": 5, "basis": "Đề xuất nội bộ, cần QLCL xác nhận" },
     { "key": "khao_sat", "label": "Phiếu khảo sát hài lòng", "years": 3, "basis": "Đề xuất nội bộ, cần QLCL xác nhận" },
     { "key": "khu_khuan", "label": "Phiếu khử khuẩn xe", "years": 5, "basis": "Đề xuất nội bộ, cần QLCL xác nhận" },
-    { "key": "bai_thi", "label": "Bài thi sát hạch", "years": 5, "basis": "Đề xuất nội bộ, cần QLCL xác nhận" }
+    { "key": "bai_thi", "label": "Bài thi sát hạch", "years": 5, "basis": "Đề xuất nội bộ, cần QLCL xác nhận" },
+    { "key": "vet_gps", "label": "Vết GPS của xe", "years": 2, "basis": "Đề xuất nội bộ: đủ để đối chiếu khiếu nại và giám sát; dữ liệu vị trí là dữ liệu cá nhân của kíp, không giữ lâu hơn cần thiết. Cần QLCL xác nhận" }
   ]
 }

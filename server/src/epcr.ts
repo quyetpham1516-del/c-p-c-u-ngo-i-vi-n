@@ -79,6 +79,43 @@ export const EpcrSchema = z.object({
     airwayClear: bool, airwayNote: str, suction: bool, oxygen: bool, oxygenNote: str, ett: bool, ettNote: str,
     cpr: str, apgar1: num, apgar5: num, note: str,
   }).partial().default({}),
+  /** Ngừng tuần hoàn ngoài viện theo mẫu Utstein 2014 (cập nhật 2024): bắt buộc khi có ép tim hoặc sốc điện */
+  arrest: z.object({
+    present: bool,
+    /** Ngừng tuần hoàn trước khi kíp tới, hay kíp chứng kiến */
+    witnessed: z.enum(['khong', 'nguoi_dan', 'nhan_vien_y_te', 'kip']).optional(),
+    location: z.enum(['nha', 'noi_cong_cong', 'duong', 'noi_lam_viec', 'co_so_y_te', 'xe_cuu_thuong', 'khac']).optional(),
+    cause: z.enum(['tim', 'chan_thuong', 'ngat', 'duoi_nuoc', 'ngo_doc', 'dien_giat', 'qua_lieu', 'khac_khong_do_tim', 'khong_ro']).optional(),
+    collapseAt: str,
+    /** Hồi sinh tim phổi do người dân trước khi kíp tới */
+    bystanderCpr: z.enum(['khong', 'chi_ep_tim', 'ep_tim_thoi_ngat', 'khong_ro']).optional(),
+    dispatcherCpr: bool,
+    publicAed: z.enum(['khong', 'gan_khong_soc', 'co_soc']).optional(),
+    attempted: bool,
+    notAttemptedReason: z.enum(['dau_hieu_tu_vong', 'y_nguyen', 'nguy_hiem', 'khac']).optional(),
+    cprStartAt: str,
+    firstRhythm: z.enum(['vf', 'pvt', 'pea', 'vo_tam_thu', 'aed_soc_duoc', 'aed_khong_soc', 'khong_ro']).optional(),
+    firstShockAt: str,
+    shocks: num,
+    adrenalineFirstAt: str,
+    adrenalineDoses: num,
+    antiarrhythmic: bool,
+    airway: z.enum(['khong', 'bop_bong', 'mat_na_thanh_quan', 'noi_khi_quan']).optional(),
+    airwayAt: str,
+    mechanicalCpr: bool,
+    etco2Max: num,
+    roscAny: bool,
+    roscAt: str,
+    /** Có tuần hoàn trở lại kéo dài từ 20 phút */
+    roscSustained: bool,
+    /** Còn tuần hoàn khi bàn giao tại bệnh viện */
+    roscOnArrival: bool,
+    terminatedAt: str,
+    terminationReason: str,
+    ttm: bool,
+    ecpr: bool,
+    note: str,
+  }).partial().default({}),
   transportNotes: str,
   disposition: z.object({
     type: z.enum(['transported', 'treated_released', 'refused', 'dead_on_scene', 'cancelled']).optional(),
@@ -109,5 +146,22 @@ export function missingForSign(e: Epcr): string[] {
     if (!m.lot) miss.push(`Số lô thuốc ${m.name}`);
   }
   if (!e.payer) miss.push('Đối tượng thu phí');
+  const a = e.arrest;
+  if ((e.care.cpr || e.care.defib) && a.present == null) miss.push('Có ngừng tuần hoàn không (đã ép tim hoặc sốc điện)');
+  if (a.present) {
+    if (!a.witnessed) miss.push('Utstein: người chứng kiến');
+    if (!a.cause) miss.push('Utstein: nguyên nhân');
+    if (!a.location) miss.push('Utstein: nơi xảy ra');
+    if (!a.bystanderCpr && a.witnessed !== 'kip') miss.push('Utstein: người dân ép tim');
+    if (a.attempted == null) miss.push('Utstein: có hồi sức không');
+    if (a.attempted === false && !a.notAttemptedReason) miss.push('Utstein: lý do không hồi sức');
+    if (a.attempted) {
+      if (!a.firstRhythm) miss.push('Utstein: nhịp đầu tiên');
+      if (!a.cprStartAt) miss.push('Utstein: giờ kíp bắt đầu ép tim');
+      if (a.roscAny == null) miss.push('Utstein: có tuần hoàn trở lại (ROSC)');
+      if (a.roscAny && a.roscOnArrival == null) miss.push('Utstein: còn tuần hoàn khi tới viện');
+      if (!a.roscAny && !a.terminatedAt && e.disposition.type !== 'transported') miss.push('Utstein: giờ ngừng hồi sức');
+    }
+  }
   return miss;
 }

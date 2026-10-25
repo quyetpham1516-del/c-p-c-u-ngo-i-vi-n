@@ -251,7 +251,7 @@ export function registerQuality(app: FastifyInstance, { pool, hub }: Ctx) {
   app.post('/api/quality/capa', { preHandler: guard(...QUALITY) }, async (req) => {
     const uuid = z.string().uuid().nullish();
     const b = z.object({
-      eventId: uuid, complaintId: uuid, findingId: uuid, riskId: uuid, reviewId: uuid, callbackId: uuid, indicatorId: uuid,
+      eventId: uuid, complaintId: uuid, findingId: uuid, riskId: uuid, reviewId: uuid, callbackId: uuid, indicatorId: uuid, caseReviewId: uuid, drillId: uuid,
       source: z.enum(Object.keys(CAPA_SOURCE) as [string, ...string[]]).nullish(), sourceRef: opt(120), rootCause: opt(2000),
       kind: z.enum(['khac_phuc', 'phong_ngua']).default('khac_phuc'), description: z.string().trim().min(5).max(2000), ownerId: z.string().uuid(), dueDate: date,
     }).parse(req.body);

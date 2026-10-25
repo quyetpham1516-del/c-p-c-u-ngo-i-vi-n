@@ -4,6 +4,7 @@ import { many, nextCounter, one, type Queryable, type Tx } from './db.js';
 import { HttpError } from './domain.js';
 import { RESPONSE_TARGET_MIN } from './reports.js';
 import { trainingReport } from './training.js';
+import { incidentTrack } from './ops.js';
 
 /**
  * Hệ thống quản lý chất lượng (giai đoạn H): sổ rủi ro (QLCL-04), đánh giá nội bộ (QLCL-09), khắc phục phòng ngừa
@@ -164,25 +165,28 @@ export async function advanceAudit(tx: Tx, actor: Actor & { role: string }, id: 
 
 export const CAPA_SOURCE: Record<string, string> = {
   su_co: 'Sự cố', khieu_nai: 'Khiếu nại', danh_gia_noi_bo: 'Đánh giá nội bộ', tieu_chi: 'Tiêu chí chất lượng', rui_ro: 'Rủi ro',
-  chi_so: 'Chỉ số không đạt', giam_sat: 'Giám sát gọi lại', xem_xet_lanh_dao: 'Xem xét của lãnh đạo', khac: 'Khác',
+  chi_so: 'Chỉ số không đạt', giam_sat: 'Giám sát gọi lại', xem_xet_lanh_dao: 'Xem xét của lãnh đạo', ra_soat_ca: 'Rà soát ca', dien_tap: 'Diễn tập', khac: 'Khác',
 };
 export const CAPA_STATUS: Record<string, string> = { mo: 'Đang làm', xong: 'Chờ kiểm tra hiệu quả', da_xac_nhan: 'Đã xác nhận hiệu quả', huy: 'Hủy' };
 /** Liên kết nguồn của hành động khắc phục; source suy từ liên kết */
 export const CAPA_LINKS: [field: string, column: string, source: string][] = [
   ['eventId', 'event_id', 'su_co'], ['complaintId', 'complaint_id', 'khieu_nai'], ['findingId', 'finding_id', 'danh_gia_noi_bo'],
   ['riskId', 'risk_id', 'rui_ro'], ['reviewId', 'review_id', 'xem_xet_lanh_dao'], ['callbackId', 'callback_id', 'giam_sat'], ['indicatorId', 'indicator_id', 'chi_so'],
+  ['caseReviewId', 'case_review_id', 'ra_soat_ca'], ['drillId', 'drill_id', 'dien_tap'],
 ];
 export const CAPA_VERIFY_DAYS = 30;
 
 export const CAPA_SELECT = `
   SELECT c.*, u.full_name AS owner_name, v.full_name AS verified_by_name, e.code AS event_code, k.code AS complaint_code, f.code AS finding_code,
          r.code AS risk_code, rv.code AS review_code, ind.code AS indicator_code, inc.code AS callback_incident_code,
+         crv.code AS case_review_code, dr.code AS drill_code,
          (c.status = 'mo' AND c.due_date < vn_today()) AS overdue,
          (c.status = 'xong' AND c.verify_due < vn_today()) AS verify_overdue
     FROM capa_actions c JOIN users u ON u.id = c.owner_id LEFT JOIN users v ON v.id = c.verified_by
     LEFT JOIN adverse_events e ON e.id = c.event_id LEFT JOIN complaints k ON k.id = c.complaint_id LEFT JOIN qm_findings f ON f.id = c.finding_id
     LEFT JOIN qm_risks r ON r.id = c.risk_id LEFT JOIN qm_reviews rv ON rv.id = c.review_id LEFT JOIN qm_indicators ind ON ind.id = c.indicator_id
-    LEFT JOIN qm_callbacks cb ON cb.id = c.callback_id LEFT JOIN incidents inc ON inc.id = cb.incident_id`;
+    LEFT JOIN qm_callbacks cb ON cb.id = c.callback_id LEFT JOIN incidents inc ON inc.id = cb.incident_id
+    LEFT JOIN ops_case_reviews crv ON crv.id = c.case_review_id LEFT JOIN sf_drills dr ON dr.id = c.drill_id`;
 
 /** Người kiểm tra hiệu quả khác người phụ trách. Không hiệu quả: mở lại với hạn mới */
 export async function verifyCapa(tx: Tx, actor: Actor, id: string, b: { effective: boolean; note: string; newDueDate?: string | null }) {
@@ -370,6 +374,8 @@ export async function recordChecks(q: Queryable, incidentId: string) {
   if (scene != null && (scene < 2 || scene > 90)) flags.push(`Thời gian hiện trường bất thường (${scene} phút)`);
   if (target && response != null && response > target) flags.push(`Tới hiện trường sau ${response} phút, quá chỉ tiêu ${target} phút`);
   if (x.amended) flags.push('Phiếu được bổ sung sau khi ký');
+  const track = await incidentTrack(q, incidentId);
+  for (const v of track.vehicles) for (const f of v.flags) flags.push(`${v.vehicleId}: ${f}`);
   return { signed: x.signed, missingTimes: missing, sceneMin: scene, responseMin: response, amended: x.amended, flags };
 }
 
@@ -523,6 +529,7 @@ export const RETENTION_COUNT: Record<string, string> = {
   khao_sat: `SELECT count(*)::int AS n FROM surveys WHERE created_at < $1::date`,
   khu_khuan: `SELECT count(*)::int AS n FROM disinfections WHERE created_at < $1::date`,
   bai_thi: `SELECT count(*)::int AS n FROM tr_attempts WHERE started_at < $1::date`,
+  vet_gps: `SELECT count(*)::int AS n FROM ops_gps_track WHERE at < $1::date`,
 };
 
 export async function retentionList(q: Queryable) {

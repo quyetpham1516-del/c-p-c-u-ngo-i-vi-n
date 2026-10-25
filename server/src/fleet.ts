@@ -93,6 +93,8 @@ export interface VehicleRow {
   supplies_note: string | null;
   /** Thiết bị bắt buộc còn thiếu/hỏng/quá hạn kiểm định (rỗng = đủ) */
   equipment_gaps?: string | null;
+  locked?: string | null;
+  fleet_warnings?: string | null;
 }
 
 export interface Suggestion {
@@ -135,6 +137,10 @@ export function suggestVehicles(
     if (v.duty === 'office' && !office) continue;
     const rule = rules.find((r) => r.type === v.type);
     if (!rule) continue;
+    if (v.locked) {
+      advice.push(`${v.id} rảnh nhưng bị khóa: ${v.locked}.`);
+      continue;
+    }
     if (v.equipment_gaps) {
       advice.push(`${v.id} rảnh nhưng không được gợi ý: thiếu thiết bị bắt buộc (${v.equipment_gaps}).`);
       continue;

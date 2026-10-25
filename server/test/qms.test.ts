@@ -52,7 +52,7 @@ describe('quy tắc', () => {
   it('dữ liệu mẫu: 12 chỉ số, 10 rủi ro, thời hạn lưu chưa xác nhận', async () => {
     const r = await one(`SELECT (SELECT count(*) FROM qm_indicators)::int AS ind, (SELECT count(*) FROM qm_indicators WHERE auto_key IS NOT NULL)::int AS auto,
                                 (SELECT count(*) FROM qm_risks)::int AS risks, (SELECT count(*) FROM qm_retention WHERE NOT confirmed)::int AS ret`);
-    expect(r).toEqual({ ind: 12, auto: 10, risks: 10, ret: 8 });
+    expect(r).toEqual({ ind: 12, auto: 10, risks: 10, ret: 9 });
   });
 });
 

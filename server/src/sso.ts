@@ -13,6 +13,9 @@ export function ssoConfig() {
   if (!issuer || !clientId) return null;
   return {
     issuer, clientId,
+    // Máy chủ Medone gọi Keycloak qua địa chỉ nội bộ (ví dụ http://127.0.0.1:8180/auth/realms/medone) khi Keycloak bật hostname-backchannel-dynamic;
+    // issuer vẫn là địa chỉ trình duyệt thấy
+    discoveryBase: process.env.MEDONE_OIDC_DISCOVERY_URL?.trim().replace(/\/$/, '') || issuer,
     clientSecret: process.env.MEDONE_OIDC_CLIENT_SECRET || null,
     redirectUri: process.env.MEDONE_OIDC_REDIRECT_URI?.trim() || `${config.webOrigins[0]}/dang-nhap`,
     label: process.env.MEDONE_OIDC_LABEL?.trim() || 'Đăng nhập một lần (SSO)',
@@ -48,7 +51,7 @@ async function getJson(url: string, init?: RequestInit) {
 export async function discovery(s: Sso): Promise<Discovery> {
   const c = discoveryCache.get(s.issuer);
   if (c && Date.now() - c.at < 3600_000) return c.d;
-  const r = await getJson(`${s.issuer}/.well-known/openid-configuration`);
+  const r = await getJson(`${s.discoveryBase}/.well-known/openid-configuration`);
   if (!r.ok || !r.json?.authorization_endpoint) throw new HttpError(502, 'Máy chủ đăng nhập một lần trả cấu hình không hợp lệ');
   // Chống giả mạo: issuer trong tài liệu phải đúng địa chỉ đã cấu hình
   if (r.json.issuer.replace(/\/$/, '') !== s.issuer) throw new HttpError(502, 'Issuer của máy chủ đăng nhập một lần không khớp cấu hình');

@@ -206,6 +206,20 @@ Mô hình nhỏ (base, small) nghe tiếng Việt qua điện thoại kém; nên
 
 Đăng nhập bằng mật khẩu Medone vẫn dùng được song song (để quản trị vào được khi máy chủ SSO hỏng).
 
+Cách nhanh: `npm run keycloak:sync` (thư mục `server`, cần `MEDONE_PUBLIC_URL` và `KC_BOOTSTRAP_ADMIN_PASSWORD`) tự tạo realm, client và tài khoản Keycloak
+cho từng người dùng Medone (bắt đổi mật khẩu lần đầu, khóa người đã nghỉ), rồi ghi các biến `MEDONE_OIDC_*` vào `.env`. Chạy lại sau khi thêm người dùng.
+Keycloak chạy với `--http-relative-path=/auth --hostname=<MEDONE_PUBLIC_URL>/auth --hostname-backchannel-dynamic=true` và đặt `MEDONE_KEYCLOAK_PORT`
+thì cổng HTTPS của Medone chuyển `/auth` sang Keycloak: một địa chỉ, một chứng chỉ; máy chủ Medone gọi Keycloak qua `MEDONE_OIDC_DISCOVERY_URL` nội bộ.
+
+## Cài trên máy Mac (không cần Homebrew, Docker)
+
+Các bộ cài trong `deploy/mac` đặt mọi thứ vào `~/medone-tools`, ghi biến cần thiết vào `.env`, chạy nền ngay và tạo sẵn tệp LaunchAgent
+(in ra lệnh để tự chép vào `~/Library/LaunchAgents` cho dịch vụ tự chạy khi mở máy):
+- `MEDONE_PUBLIC_URL=https://<IP>:3443 MEDONE_KEYCLOAK_INITIAL_PASSWORD=<mật khẩu tạm> bash deploy/mac/cai-keycloak.sh`: Java 21 và Keycloak, đăng nhập một lần.
+- `bash deploy/mac/cai-whisper.sh`: whisper.cpp và mô hình large-v3-turbo, chép lời cuộc gọi.
+- `bash deploy/mac/cai-osrm.sh 1.3`: OSRM và bản đồ Việt Nam, tính đường đi (số cuối là hệ số giao thông).
+Xong mỗi bộ, khởi động lại API (và cổng HTTPS với Keycloak). Máy 8 GB RAM chạy được cả ba cùng Medone nhưng sát; máy chủ thật nên có 16 GB.
+
 ## Chữ ký số nội bộ
 
 Ký phiếu chuyển viện (và ký bản bổ sung) tạo thêm một chữ ký số ECDSA P-256 bằng chứng thư của người ký. Medone tự làm CA gốc

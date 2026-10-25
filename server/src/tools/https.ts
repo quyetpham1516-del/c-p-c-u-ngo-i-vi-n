@@ -27,6 +27,8 @@ const HTTPS_PORT = Number(process.env.MEDONE_HTTPS_PORT || 3443);
 const HELP_PORT = Number(process.env.MEDONE_HTTPS_HELP_PORT || 3080);
 const WEB_PORT = Number(process.env.MEDONE_WEB_PORT || 3000);
 const API_PORT = Number(process.env.PORT || 8080);
+/** Keycloak (đăng nhập một lần) chạy với KC_HTTP_RELATIVE_PATH=/auth: đi chung cổng HTTPS để máy trạm, máy tính bảng không phải tin thêm chứng chỉ */
+const KEYCLOAK_PORT = Number(process.env.MEDONE_KEYCLOAK_PORT || 0);
 const CA_NAME = 'Medone CA noi bo';
 /** iOS chỉ chấp nhận chứng chỉ máy chủ tối đa 825 ngày */
 const SERVER_DAYS = 825;
@@ -84,8 +86,9 @@ export function certIps(): string[] {
 /** IP mạng nội bộ hiện có nhưng chứng chỉ chưa có */
 export const missingIps = (have: string[], now = lanIps()) => now.filter((ip) => !have.includes(ip));
 
-/** Chọn đích: API cho /api và /ws, web cho phần còn lại */
-export const targetPort = (url = '/') => (/^\/(api|ws)(\/|\?|$)/.test(url) ? API_PORT : WEB_PORT);
+/** Chọn đích: API cho /api và /ws, Keycloak cho /auth (khi bật), web cho phần còn lại */
+export const targetPort = (url = '/') => (/^\/(api|ws)(\/|\?|$)/.test(url) ? API_PORT
+  : KEYCLOAK_PORT && /^\/auth(\/|\?|$)/.test(url) ? KEYCLOAK_PORT : WEB_PORT);
 
 function forwardedHeaders(req: IncomingMessage) {
   const prior = req.headers['x-forwarded-for'];

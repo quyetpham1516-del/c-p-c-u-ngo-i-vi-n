@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api, money } from '../api';
 import { ProposalForm } from './Finance';
+import { Payslip } from './Payroll';
 
 const DOC: Record<string, string> = {
   gphn: 'Giấy phép/chứng chỉ hành nghề', bang_lai: 'Giấy phép lái xe', bls: 'BLS', acls: 'ACLS', phtls: 'PHTLS', ksnk: 'KSNK', pccc: 'PCCC', khac: 'Khác',
@@ -34,6 +35,7 @@ export function Personal() {
       {error && <div className="error">{error}</div>}
       {msg && <div className="alert green">{msg}</div>}
       <CaseFeedback />
+      <MyPayslips />
       {!me.staff && <div className="alert amber">Tài khoản chưa có hồ sơ nhân sự. Liên hệ phòng Nhân sự.</div>}
       {me.staff && (
         <>
@@ -116,6 +118,26 @@ function CaseFeedback() {
               </div>}
             </div>
           )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** Phiếu lương của tôi (bảng lương đã được Ban Giám đốc duyệt) */
+function MyPayslips() {
+  const [rows, setRows] = useState<any[]>([]);
+  const [open, setOpen] = useState<string | null>(null);
+  useEffect(() => { api<any[]>('GET', '/api/payroll/me').then(setRows).catch(() => {}); }, []);
+  if (!rows.length) return null;
+  return (
+    <div className="panel col">
+      <h3 style={{ margin: 0 }}>Phiếu lương</h3>
+      {rows.map((r) => (
+        <div key={r.month} className="col">
+          <div className="row"><b>Tháng {r.month}</b><span>Thực lĩnh {money(r.net)}</span><span className="small muted">{r.status === 'da_chi' ? 'đã chi' : 'đã duyệt'}</span>
+            <button className="ghost" onClick={() => setOpen(open === r.month ? null : r.month)}>{open === r.month ? 'Ẩn' : 'Xem chi tiết'}</button></div>
+          {open === r.month && <Payslip r={r.result} />}
         </div>
       ))}
     </div>

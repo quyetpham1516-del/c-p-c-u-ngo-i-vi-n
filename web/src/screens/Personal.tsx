@@ -42,7 +42,8 @@ export function Personal() {
           <div className="grid2">
             <div className="panel col">
               <h3 style={{ margin: 0 }}>Chấm công</h3>
-              <div>{me.openCheckIn ? `Đã vào lúc ${new Date(me.openCheckIn).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}` : 'Chưa chấm công vào.'}</div>
+              <div>{me.openCheckIn ? `Đã vào lúc ${new Date(me.openCheckIn).toLocaleTimeString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh', hour: '2-digit', minute: '2-digit' })}${me.openStation ? ` tại ${me.openStation}` : ''}` : 'Chưa chấm công vào.'}</div>
+              <div className="small">Ở trạm: mở camera điện thoại, quét mã QR trên máy chấm công. Bấm tay bên dưới chỉ khi trạm chưa có máy; nhân sự sẽ đối chiếu.</div>
               <div><button className="primary big" onClick={() => run(() => api('POST', '/api/hr/attendance/check'), me.openCheckIn ? 'Đã chấm công ra.' : 'Đã chấm công vào.')}>{me.openCheckIn ? 'Chấm công ra' : 'Chấm công vào'}</button></div>
               <div className="small muted">Kíp đi xe không cần chấm công: giờ làm tính theo lúc bắt đầu và kết thúc ca trên máy tính bảng.</div>
             </div>

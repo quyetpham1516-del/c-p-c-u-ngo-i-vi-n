@@ -191,22 +191,25 @@ export function registerHr(app: FastifyInstance, { pool }: Ctx) {
     const [docs, roster, open, leave] = await Promise.all([
       many(pool, `SELECT kind, number, expires_on, suspended, (expires_on < vn_today()) AS expired FROM staff_docs WHERE staff_id = $1 ORDER BY kind`, [s.id]),
       many(pool, `SELECT work_date, shift, station_id, vehicle_id FROM roster WHERE staff_id = $1 AND work_date BETWEEN vn_today() AND vn_today() + 14 ORDER BY work_date`, [s.id]),
-      one(pool, 'SELECT check_in FROM attendance WHERE staff_id = $1 AND check_out IS NULL', [s.id]),
+      one(pool, `SELECT a.check_in, a.source, st.name AS station_name FROM attendance a LEFT JOIN stations st ON st.id = a.station_id
+                  WHERE a.staff_id = $1 AND a.check_out IS NULL`, [s.id]),
       many(pool, 'SELECT * FROM leave_requests WHERE staff_id = $1 ORDER BY created_at DESC LIMIT 20', [s.id]),
     ]);
-    return { staff: s, docs, roster, openCheckIn: open?.check_in ?? null, leave, ...(await staffCompliance(pool, s.id)) };
+    return { staff: s, docs, roster, openCheckIn: open?.check_in ?? null, openStation: open?.station_name ?? null, leave, ...(await staffCompliance(pool, s.id)) };
   });
 
   app.post('/api/hr/attendance/check', { preHandler: guard() }, async (req) => {
     return withTx(pool, async (tx) => {
       const s = await one(tx, 'SELECT id FROM staff WHERE user_id = $1', [req.user.id]);
       if (!s) throw new HttpError(409, 'Tài khoản chưa có hồ sơ nhân sự');
-      const open = await one(tx, 'UPDATE attendance SET check_out = now() WHERE staff_id = $1 AND check_out IS NULL RETURNING *', [s.id]);
+      // Bấm tay trên web: đánh dấu để nhân sự đối chiếu với chấm công QR tại trạm
+      const open = await one(tx, `UPDATE attendance SET check_out = now(), source_out = 'web', flags = ARRAY(SELECT DISTINCT unnest(flags || '{thu_cong}'::text[]))
+                                   WHERE staff_id = $1 AND check_out IS NULL RETURNING *`, [s.id]);
       if (open) {
         await audit(tx, 'system', actorOf(req), 'hr.check_out', 'staff', s.id);
         return { checkedIn: false, at: open.check_out };
       }
-      const a = await one(tx, 'INSERT INTO attendance(staff_id, check_in) VALUES ($1, now()) RETURNING *', [s.id]);
+      const a = await one(tx, `INSERT INTO attendance(staff_id, check_in, flags) VALUES ($1, now(), '{thu_cong}') RETURNING *`, [s.id]);
       await audit(tx, 'system', actorOf(req), 'hr.check_in', 'staff', s.id);
       return { checkedIn: true, at: a.check_in };
     });

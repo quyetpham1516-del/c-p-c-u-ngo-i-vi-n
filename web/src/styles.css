@@ -327,3 +327,18 @@ td.cell-khong_dat { color: var(--p1); background: color-mix(in srgb, var(--p1) 1
 .mfa-qr svg { width: 100%; height: 100%; }
 .mfa-codes { display: grid; grid-template-columns: repeat(2, max-content); gap: 6px 24px; font-size: 18px; letter-spacing: 1px; }
 .nav-count { display: inline-block; min-width: 18px; padding: 0 5px; margin-left: 4px; border-radius: 999px; background: var(--p1); color: #fff; font-size: 11px; font-weight: 700; text-align: center; }
+
+/* Máy chấm công QR tại trạm */
+.kiosk { min-height: 100vh; box-sizing: border-box; padding: 24px; display: flex; flex-direction: column; gap: 16px; }
+.kiosk-head { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
+.kiosk-station { font-size: 32px; font-weight: 700; }
+.kiosk-clock { font-size: 56px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.kiosk-body { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 24px; align-items: start; }
+.kiosk-qr { display: block; width: min(70vh, 100%); max-width: 560px; aspect-ratio: 1; background: #fff; border-radius: 12px; padding: 8px; box-sizing: border-box; }
+.kiosk-qr svg { width: 100%; height: 100%; }
+.kiosk-off { display: flex; align-items: center; justify-content: center; color: #333; font-size: 28px; }
+.kiosk-bar { width: min(70vh, 100%); max-width: 560px; height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; }
+.kiosk-bar span { display: block; height: 100%; background: var(--brand); transition: width 1s linear; }
+.kiosk-help { font-size: 18px; text-align: center; max-width: 560px; }
+.kiosk-recent { font-size: 17px; }
+@media (max-width: 800px) { .kiosk-body { grid-template-columns: 1fr; } .kiosk-clock { font-size: 40px; } }

@@ -4,7 +4,7 @@ import { STATION_KIND, useStations, type Station } from '../catalog';
 import { MapView } from '../components/MapView';
 import { TelephonyAdmin } from '../components/Telephony';
 
-interface UserRow { id: string; username: string; full_name: string; title: string | null; role: Role; active: boolean; station_id: string | null }
+interface UserRow { id: string; username: string; full_name: string; title: string | null; role: Role; active: boolean; station_id: string | null; sso_linked_at?: string | null }
 interface VehicleRow { id: string; type: string; status: string; station_id: string; station_name: string }
 
 const EMPTY = { id: '', name: '', kind: 'tram', address: '', phone: '', lat: '', lng: '' };
@@ -161,13 +161,14 @@ function Accounts({ users, run }: { users: UserRow[]; run: (fn: () => Promise<un
             <td>{u.full_name} <span className="small muted">{u.username}{u.title ? ` · ${u.title}` : ''}</span></td>
             <td><select value={u.role} onChange={(e) => run(() => api('PATCH', `/api/users/${u.id}`, { role: e.target.value }))}>
               {(Object.keys(ROLE_LABEL) as Role[]).map((r) => <option key={r} value={r}>{ROLE_LABEL[r]}</option>)}</select></td>
-            <td>{u.active ? 'Đang dùng' : 'Đã khóa'}</td>
+            <td>{u.active ? 'Đang dùng' : 'Đã khóa'}{u.sso_linked_at && <span className="badge" title="Đã nối tài khoản đăng nhập một lần"> SSO</span>}</td>
             <td className="right">
               <button className="ghost small" onClick={() => run(() => api('PATCH', `/api/users/${u.id}`, { active: !u.active }))}>{u.active ? 'Khóa' : 'Mở khóa'}</button>{' '}
               <button className="ghost small" onClick={() => {
                 const pw = prompt(`Mật khẩu mới cho ${u.username} (≥ 10 ký tự):`);
                 if (pw && pw.length >= 10) run(() => api('POST', `/api/users/${u.id}/password`, { password: pw }));
               }}>Đặt lại mật khẩu</button>
+              {u.sso_linked_at && <>{' '}<button className="ghost small" onClick={() => confirm(`Gỡ nối đăng nhập một lần của ${u.username}?`) && run(() => api('POST', `/api/users/${u.id}/sso-unlink`))}>Gỡ SSO</button></>}
             </td>
           </tr>))}</tbody>
       </table>

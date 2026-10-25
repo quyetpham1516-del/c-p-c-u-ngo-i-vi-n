@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { api, homeFor, session, type User } from '../api';
 import { StarOfLife } from '../Logo';
@@ -14,12 +14,41 @@ export function Login() {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const router = useRouter();
+  const [sso, setSso] = useState<{ enabled: boolean; label?: string }>({ enabled: false });
+
+  // Đăng nhập một lần: máy chủ SSO chuyển về trang này kèm code và state
+  useEffect(() => {
+    api('GET', '/api/auth/sso').then(setSso).catch(() => {});
+    const q = new URLSearchParams(window.location.search);
+    const back = q.get('code') && q.get('state');
+    const idpError = q.get('error');
+    if (!back && !idpError) return;
+    window.history.replaceState(null, '', window.location.pathname);
+    if (idpError) { setError(`Máy chủ đăng nhập một lần báo lỗi: ${q.get('error_description') ?? idpError}`); return; }
+    setBusy(true);
+    api<LoginResult>('POST', '/api/auth/sso/callback', { code: q.get('code'), state: q.get('state') })
+      .then((r) => { if (r.mfaRequired) setChallenge(r.challenge!); else done(r); })
+      .catch((e) => setError((e as Error).message))
+      .finally(() => setBusy(false));
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const startSso = async () => {
+    setBusy(true); setError('');
+    try {
+      const next = new URLSearchParams(window.location.search).get('next');
+      try { if (next) sessionStorage.setItem('medone.sso.next', next); else sessionStorage.removeItem('medone.sso.next'); } catch { /* bỏ qua */ }
+      window.location.href = (await api<{ url: string }>('POST', '/api/auth/sso/start')).url;
+    } catch (e) {
+      setError((e as Error).message); setBusy(false);
+    }
+  };
 
   const done = (r: LoginResult) => {
     session.set(r.token!, r.user!);
     if (r.mfaSetupRequired) return router.push('/bao-mat');
     if (r.recoveryLeft != null) alert(`Đã dùng một mã dự phòng, còn ${r.recoveryLeft} mã. Vào trang Bảo mật để tạo bộ mã mới nếu sắp hết.`);
-    const next = new URLSearchParams(window.location.search).get('next');
+    let next = new URLSearchParams(window.location.search).get('next');
+    try { next = next ?? sessionStorage.getItem('medone.sso.next'); sessionStorage.removeItem('medone.sso.next'); } catch { /* bỏ qua */ }
     router.push(next && next.startsWith('/') && !next.startsWith('//') ? next : homeFor(r.user!.role));
   };
 
@@ -83,6 +112,12 @@ export function Login() {
         <button className="primary big" disabled={busy || (challenge ? code.length < 6 : !username || !password)}>
           {challenge ? 'Xác nhận' : 'Đăng nhập'}
         </button>
+        {sso.enabled && !challenge && (
+          <>
+            <div className="muted small" style={{ textAlign: 'center' }}>hoặc</div>
+            <button type="button" className="big" disabled={busy} onClick={startSso}>{sso.label}</button>
+          </>
+        )}
       </form>
     </div>
   );

@@ -85,7 +85,7 @@ export function registerAdmin(app: FastifyInstance, { pool, hub }: Ctx) {
   });
 
   app.get('/api/users', admin, async () =>
-    many(pool, `SELECT u.id, u.username, u.full_name, u.title, u.role, u.active, u.license_no, u.station_id, s.name AS station_name
+    many(pool, `SELECT u.id, u.username, u.full_name, u.title, u.role, u.active, u.license_no, u.station_id, s.name AS station_name, u.sso_linked_at
                   FROM users u LEFT JOIN stations s ON s.id = u.station_id ORDER BY u.role, u.username`));
 
   /** Phân điểm làm việc cho nhân viên (để trống = làm được mọi điểm) */
@@ -151,6 +151,17 @@ export function registerAdmin(app: FastifyInstance, { pool, hub }: Ctx) {
       const u = await one(tx, 'UPDATE users SET password_hash = $2 WHERE id = $1 RETURNING id', [id, hashPassword(b.password)]);
       if (!u) throw new HttpError(404, 'Không tìm thấy tài khoản');
       await audit(tx, 'system', actorOf(req), 'user.password_reset', 'user', id);
+    });
+    return { ok: true };
+  });
+
+  /** Gỡ nối tài khoản đăng nhập một lần (đổi người, nối nhầm): lần đăng nhập SSO sau sẽ nối lại theo tên đăng nhập */
+  app.post('/api/users/:id/sso-unlink', admin, async (req) => {
+    const id = z.object({ id: z.string().uuid() }).parse(req.params).id;
+    await withTx(pool, async (tx) => {
+      const u = await one(tx, 'UPDATE users SET sso_issuer = NULL, sso_subject = NULL, sso_linked_at = NULL WHERE id = $1 RETURNING id', [id]);
+      if (!u) throw new HttpError(404, 'Không tìm thấy tài khoản');
+      await audit(tx, 'system', actorOf(req), 'user.sso_unlinked', 'user', id);
     });
     return { ok: true };
   });

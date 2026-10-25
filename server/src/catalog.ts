@@ -2,6 +2,7 @@ import type pg from 'pg';
 import { createPool, withTx } from './db.js';
 import { migrate } from './migrate.js';
 import { seedQcSets } from './qc.js';
+import { seedTraining } from './training.js';
 import { BUNDLED_HOSPITALS, BUNDLED_ICD, HOSPITAL_DEPTS, importHospitals, importIcd } from './tools/importers.js';
 
 /**
@@ -234,6 +235,8 @@ export async function seedCatalog(pool: pg.Pool, opts: { force?: boolean } = {})
   }
   // Bộ tiêu chí chất lượng tham khảo (đơn vị CCNV 10 tiêu chí, TTCC 115 TP.HCM 41 tiêu chí) nếu chưa có; quản lý chất lượng nhân bản để sửa theo Medone
   await withTx(pool, (tx) => seedQcSets(tx));
+  // Câu hỏi và bảng kiểm mẫu (dự thảo, chuyên môn duyệt mới dùng), danh mục quy trình công ty ở trạng thái cần soạn
+  await withTx(pool, (tx) => seedTraining(tx));
   const counts = (await pool.query(`SELECT (SELECT count(*) FROM hospitals)::int AS hospitals, (SELECT count(*) FROM drugs)::int AS drugs,
                                            (SELECT count(*) FROM icd10)::int AS icd`)).rows[0];
   return { ...counts, newHospitals: hosp.hospitals, icdLoaded: icd };

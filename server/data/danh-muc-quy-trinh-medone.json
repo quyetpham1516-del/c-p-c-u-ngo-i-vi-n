@@ -1,0 +1,281 @@
+{
+ "source": "Medone – Kế hoạch chi tiết triển khai và danh mục quy trình (mục 6–8). Chỉ nạp các quy trình dùng cho cấp cứu ngoại viện; phòng khám YHCT, chăm sóc tại nhà và nhà dưỡng lão không nạp.",
+ "documents": [
+  {
+   "code": "CM-07",
+   "title": "Phòng và xử trí sốc phản vệ",
+   "group": "Chuyên môn",
+   "due": "Giấy phép"
+  },
+  {
+   "code": "CM-09",
+   "title": "Cấp cứu ngừng tuần hoàn (BLS, AED)",
+   "group": "Chuyên môn",
+   "due": "Giấy phép"
+  },
+  {
+   "code": "CM-10",
+   "title": "Chuyển tuyến, chuyển viện và bàn giao người bệnh",
+   "group": "Chuyên môn",
+   "due": "Giấy phép"
+  },
+  {
+   "code": "CM-11",
+   "title": "Lập và quản lý hồ sơ bệnh án (giấy và điện tử)",
+   "group": "Chuyên môn",
+   "due": "Giấy phép"
+  },
+  {
+   "code": "CM-12",
+   "title": "Giải thích và lấy đồng ý của người bệnh trước thủ thuật",
+   "group": "Chuyên môn",
+   "due": "Giấy phép"
+  },
+  {
+   "code": "CM-13",
+   "title": "Xử trí cấp cứu ngoài cơ sở và phối hợp 115",
+   "group": "Chuyên môn",
+   "due": "Giấy phép"
+  },
+  {
+   "code": "CM-19",
+   "title": "Đánh giá rủi ro y tế sự kiện và xác định quy mô đội trực",
+   "group": "Chuyên môn",
+   "due": "Tháng 6"
+  },
+  {
+   "code": "CM-20",
+   "title": "Sơ cấp cứu tại hiện trường và phân loại nạn nhân hàng loạt",
+   "group": "Chuyên môn",
+   "due": "Tháng 6"
+  },
+  {
+   "code": "CM-21",
+   "title": "Quản lý túi/tủ thuốc cấp cứu di động (cấp phát, bàn giao, bù cơ số)",
+   "group": "Chuyên môn",
+   "due": "Tháng 6"
+  },
+  {
+   "code": "QLCL-01",
+   "title": "Kiểm soát tài liệu",
+   "group": "Quản lý chất lượng",
+   "due": "Tháng 2"
+  },
+  {
+   "code": "QLCL-02",
+   "title": "Kiểm soát hồ sơ và lưu trữ",
+   "group": "Quản lý chất lượng",
+   "due": "Tháng 3"
+  },
+  {
+   "code": "QLCL-03",
+   "title": "Báo cáo và xử lý sự cố y khoa",
+   "group": "Quản lý chất lượng",
+   "due": "Giấy phép"
+  },
+  {
+   "code": "QLCL-04",
+   "title": "Quản lý rủi ro",
+   "group": "Quản lý chất lượng",
+   "due": "Tháng 4"
+  },
+  {
+   "code": "QLCL-05",
+   "title": "Kiểm soát nhiễm khuẩn",
+   "group": "Quản lý chất lượng",
+   "due": "Giấy phép"
+  },
+  {
+   "code": "QLCL-06",
+   "title": "An toàn người bệnh",
+   "group": "Quản lý chất lượng",
+   "due": "Giấy phép"
+  },
+  {
+   "code": "QLCL-07",
+   "title": "Khảo sát hài lòng người bệnh và nhân viên",
+   "group": "Quản lý chất lượng",
+   "due": "Tháng 6"
+  },
+  {
+   "code": "QLCL-08",
+   "title": "Tiếp nhận và giải quyết khiếu nại",
+   "group": "Quản lý chất lượng",
+   "due": "Tháng 6"
+  },
+  {
+   "code": "QLCL-09",
+   "title": "Đánh giá nội bộ (audit)",
+   "group": "Quản lý chất lượng",
+   "due": "Tháng 11"
+  },
+  {
+   "code": "QLCL-10",
+   "title": "Hành động khắc phục, phòng ngừa (CAPA)",
+   "group": "Quản lý chất lượng",
+   "due": "Tháng 11"
+  },
+  {
+   "code": "QLCL-11",
+   "title": "Bộ chỉ số chất lượng và báo cáo tháng",
+   "group": "Quản lý chất lượng",
+   "due": "Tháng 6"
+  },
+  {
+   "code": "QLCL-12",
+   "title": "Giám sát tuân thủ dịch vụ ngoài cơ sở",
+   "group": "Quản lý chất lượng",
+   "due": "Tháng 6"
+  },
+  {
+   "code": "QLCL-13",
+   "title": "Đào tạo, sát hạch và cấp chứng nhận Medone",
+   "group": "Quản lý chất lượng",
+   "due": "Tháng 4"
+  },
+  {
+   "code": "QLCL-14",
+   "title": "Đánh giá năng lực và phân quyền kỹ thuật",
+   "group": "Quản lý chất lượng",
+   "due": "Tháng 4"
+  },
+  {
+   "code": "QLCL-15",
+   "title": "Quản lý thiết bị y tế",
+   "group": "Quản lý chất lượng",
+   "due": "Giấy phép"
+  },
+  {
+   "code": "QLCL-16",
+   "title": "Quản lý thuốc và vật tư",
+   "group": "Quản lý chất lượng",
+   "due": "Giấy phép"
+  },
+  {
+   "code": "QLCL-17",
+   "title": "Đánh giá nhà cung cấp và đối tác",
+   "group": "Quản lý chất lượng",
+   "due": "Tháng 6"
+  },
+  {
+   "code": "QLCL-18",
+   "title": "Xem xét của lãnh đạo",
+   "group": "Quản lý chất lượng",
+   "due": "Tháng 9"
+  },
+  {
+   "code": "QL-01",
+   "title": "Tuyển dụng và tiếp nhận nhân sự",
+   "group": "Quản lý và vận hành",
+   "due": "Tháng 3"
+  },
+  {
+   "code": "QL-02",
+   "title": "Hội nhập nhân viên mới",
+   "group": "Quản lý và vận hành",
+   "due": "Tháng 4"
+  },
+  {
+   "code": "QL-03",
+   "title": "Quản lý cộng tác viên y tế: hợp đồng, nhận ca, chấm công, thù lao",
+   "group": "Quản lý và vận hành",
+   "due": "Tháng 6"
+  },
+  {
+   "code": "QL-04",
+   "title": "Đánh giá hiệu suất, lương thưởng theo điểm đánh giá và tuân thủ",
+   "group": "Quản lý và vận hành",
+   "due": "Tháng 6"
+  },
+  {
+   "code": "QL-05",
+   "title": "Xử lý vi phạm, kỷ luật và chấm dứt hợp đồng",
+   "group": "Quản lý và vận hành",
+   "due": "Tháng 6"
+  },
+  {
+   "code": "QL-06",
+   "title": "Tiếp nhận yêu cầu và điều phối ca",
+   "group": "Quản lý và vận hành",
+   "due": "Tháng 6"
+  },
+  {
+   "code": "QL-07",
+   "title": "Báo giá, ký hợp đồng dịch vụ và hợp đồng sự kiện",
+   "group": "Quản lý và vận hành",
+   "due": "Tháng 6"
+  },
+  {
+   "code": "QL-08",
+   "title": "Chăm sóc khách hàng sau dịch vụ",
+   "group": "Quản lý và vận hành",
+   "due": "Tháng 6"
+  },
+  {
+   "code": "QL-09",
+   "title": "Quản lý quan hệ đối tác (bệnh viện, xe cứu thương, xét nghiệm, nhà thuốc)",
+   "group": "Quản lý và vận hành",
+   "due": "Tháng 6"
+  },
+  {
+   "code": "QL-10",
+   "title": "Quản lý di chuyển nhân viên và phụ cấp đi lại",
+   "group": "Quản lý và vận hành",
+   "due": "Tháng 6"
+  },
+  {
+   "code": "QL-11",
+   "title": "Thu ngân, thanh toán online, đặt cọc, hoàn tiền, công nợ",
+   "group": "Quản lý và vận hành",
+   "due": "Giấy phép"
+  },
+  {
+   "code": "QL-12",
+   "title": "Quản lý bảng giá, gói dịch vụ và khuyến mãi",
+   "group": "Quản lý và vận hành",
+   "due": "Giấy phép"
+  },
+  {
+   "code": "QL-13",
+   "title": "Mua hàng, nhập – xuất kho thuốc, vật tư",
+   "group": "Quản lý và vận hành",
+   "due": "Giấy phép"
+  },
+  {
+   "code": "QL-14",
+   "title": "Kế toán, thuế, báo cáo tài chính và báo cáo nhà đầu tư hàng quý",
+   "group": "Quản lý và vận hành",
+   "due": "Tháng 1"
+  },
+  {
+   "code": "QL-15",
+   "title": "Marketing và duyệt nội dung y khoa trước khi đăng",
+   "group": "Quản lý và vận hành",
+   "due": "Tháng 5"
+  },
+  {
+   "code": "QL-16",
+   "title": "Quản lý hệ thống CNTT: tài khoản, phân quyền, sao lưu, sự cố phần mềm",
+   "group": "Quản lý và vận hành",
+   "due": "Tháng 6"
+  },
+  {
+   "code": "QL-17",
+   "title": "Bảo vệ dữ liệu cá nhân và bảo mật thông tin người bệnh",
+   "group": "Quản lý và vận hành",
+   "due": "Tháng 6"
+  },
+  {
+   "code": "QL-18",
+   "title": "An toàn lao động, PCCC và ứng phó khẩn cấp tại cơ sở",
+   "group": "Quản lý và vận hành",
+   "due": "Giấy phép"
+  },
+  {
+   "code": "QL-19",
+   "title": "Quản lý tài sản, mặt bằng, vệ sinh cơ sở",
+   "group": "Quản lý và vận hành",
+   "due": "Giấy phép"
+  }
+ ]
+}

@@ -280,6 +280,8 @@ function Documents({ setError }: { setError: (s: string) => void }) {
   const [all, setAll] = useState(false);
   const [rows, setRows] = useState<any[]>([]);
   const [msg, setMsg] = useState('');
+  const [reads, setReads] = useState<any>(null);
+  const canSeeReads = canEdit || ['supervisor', 'hr'].includes(role);
   const [f, setF] = useState({ code: '', title: '', kind: 'quy_trinh', version: '1.0', ownerUnit: '', reviewMonths: '12', url: '', changeNote: '' });
   const load = () => api<any[]>('GET', `/api/documents${all ? '?all=1' : ''}`).then(setRows).catch((e) => setError(e.message));
   useEffect(() => { load(); }, [all]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -307,12 +309,16 @@ function Documents({ setError }: { setError: (s: string) => void }) {
       <label className="row small"><input type="checkbox" checked={all} onChange={(e) => setAll(e.target.checked)} /> Hiện cả bản hết hiệu lực</label>
       <div className="panel" style={{ overflowX: 'auto' }}>
         <table>
-          <thead><tr><th>Mã</th><th>Tên</th><th>Loại</th><th>Phiên bản</th><th>Hiệu lực từ</th><th>Hạn rà soát</th><th>Trạng thái</th><th /></tr></thead>
+          <thead><tr><th>Mã</th><th>Tên</th><th>Loại</th><th>Phiên bản</th><th>Hiệu lực từ</th><th>Hạn rà soát</th><th>Trạng thái</th><th>Bắt buộc đọc</th><th /></tr></thead>
           <tbody>{rows.map((d) => (
             <tr key={d.id}><td className="mono">{d.code}</td><td>{d.url ? <a href={d.url} target="_blank" rel="noreferrer">{d.title}</a> : d.title}<div className="small muted">{d.owner_unit}{d.change_note ? ` · ${d.change_note}` : ''}</div></td>
               <td>{DOC_KIND[d.kind]}</td><td>{d.version}</td><td className="small">{d.effective_on ?? '—'}</td>
               <td className="small">{d.review_due ?? '—'}{d.review_soon && <span className="badge far" style={{ marginLeft: 4 }}>đến hạn</span>}</td>
               <td>{DOC_STATUS[d.status]}{d.approved_by_name && <div className="small muted">{d.approved_by_name}</div>}</td>
+              <td className="small">
+                {canEdit ? <label className="row"><input type="checkbox" checked={!!d.must_read} onChange={(e) => act(() => api('PATCH', `/api/documents/${d.id}/read-policy`, { mustRead: e.target.checked, roles: d.read_roles ?? [] }), e.target.checked ? 'Đã đặt bắt buộc đọc.' : 'Đã bỏ bắt buộc đọc.')} /> {d.must_read ? 'Có' : 'Không'}</label> : (d.must_read ? 'Có' : '—')}
+                {d.must_read && canSeeReads && <div><button className="ghost small" onClick={() => api('GET', `/api/documents/${d.id}/reads`).then(setReads).catch((e) => setError(e.message))}>Ai đã đọc</button></div>}
+              </td>
               <td className="right">
                 {canApprove && d.status === 'du_thao' && <button className="primary small" onClick={() => act(() => api('POST', `/api/documents/${d.id}/approve`, { effectiveOn: vnDate() }), 'Đã ban hành.')}>Ban hành</button>}
                 {canApprove && d.status === 'hieu_luc' && <button className="ghost small" onClick={() => confirm('Bãi bỏ tài liệu này?') && act(() => api('POST', `/api/documents/${d.id}/retire`), 'Đã bãi bỏ.')}>Bãi bỏ</button>}
@@ -321,6 +327,15 @@ function Documents({ setError }: { setError: (s: string) => void }) {
         </table>
         {!rows.length && <div className="small muted">Chưa có tài liệu.</div>}
       </div>
+      {reads && (
+        <div className="panel">
+          <div className="row"><b>{reads.code} · {reads.title}</b><span className="badge">{reads.read}/{reads.total} đã đọc</span><button className="ghost small" onClick={() => setReads(null)}>Đóng</button></div>
+          <table>
+            <thead><tr><th>Nhân viên</th><th>Vai trò</th><th>Xác nhận đọc</th></tr></thead>
+            <tbody>{reads.rows.map((r: any) => <tr key={r.id}><td>{r.full_name}</td><td className="small">{r.role}</td><td>{r.at ? <span className="badge green">{new Date(r.at).toLocaleString('vi-VN')}</span> : <span className="badge red">Chưa đọc</span>}</td></tr>)}</tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }

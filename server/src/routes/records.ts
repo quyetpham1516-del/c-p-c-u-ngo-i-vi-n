@@ -8,6 +8,7 @@ import { HttpError, incidentScope, newBaNumber, newTransferNumber, patientScope,
 import { EpcrSchema, missingForSign } from '../epcr.js';
 import { actorOf, guard, REVIEW_ROLES, type Ctx, type Role } from '../http.js';
 import { consumeForTransfer } from '../stock.js';
+import { privilegeGaps } from '../training.js';
 
 const CLINICAL: Role[] = ['crew', 'calltaker', 'dispatcher', 'supervisor', 'qa', 'admin'];
 const ID_TYPE = z.enum(['CCCD', 'DDCN', 'PASSPORT', 'UNKNOWN']);
@@ -254,7 +255,7 @@ export function registerRecords(app: FastifyInstance, { pool, hub }: Ctx) {
   app.post('/api/transfers/:id/sign', clinical, async (req) => {
     const id = uuidParam(req);
     const actor = actorOf(req);
-    await withTx(pool, async (tx) => {
+    const warnings = await withTx(pool, async (tx) => {
       const t = await one(tx, 'SELECT * FROM transfers WHERE id = $1 FOR UPDATE', [id]);
       if (!t) throw new HttpError(404, 'Không tìm thấy phiếu');
       if (t.status === 'signed') throw new HttpError(409, 'Phiếu đã ký');
@@ -273,10 +274,14 @@ export function registerRecords(app: FastifyInstance, { pool, hub }: Ctx) {
         const h = t.epcr?.disposition?.handoverAt;
         if (h) await recordTime(tx, t.incident_id, 'T13', h, 'ePCR (bàn giao)', actor);
       }
+      // Can thiệp người ký chưa được phân quyền kỹ thuật (QLCL-14): không chặn cấp cứu, ghi vết để quản lý chất lượng rà soát
+      const gaps = await privilegeGaps(tx, actor.id!, epcr.care as Record<string, unknown>);
+      if (gaps.length) await audit(tx, scope, actor, 'training.privilege_gap', 'transfer', id, { procedures: gaps.map((g) => g.code) });
+      return gaps.map((g) => `Bạn chưa được phân quyền kỹ thuật "${g.title}" (${g.code}); quản lý chất lượng sẽ rà soát ca này`);
     });
     const t = await one(pool, 'SELECT incident_id FROM transfers WHERE id = $1', [id]);
     if (t?.incident_id) await hub.publish({ type: 'incident', id: t.incident_id, refetch: true });
-    return { ok: true };
+    return { ok: true, warnings };
   });
 
   app.post('/api/transfers/:id/amend', clinical, async (req) => {

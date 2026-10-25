@@ -33,6 +33,7 @@ export function Personal() {
       <h2 style={{ margin: 0 }}>Cá nhân {me.staff && <span className="small muted">{me.staff.code} · {me.staff.title}</span>}</h2>
       {error && <div className="error">{error}</div>}
       {msg && <div className="alert green">{msg}</div>}
+      <CaseFeedback />
       {!me.staff && <div className="alert amber">Tài khoản chưa có hồ sơ nhân sự. Liên hệ phòng Nhân sự.</div>}
       {me.staff && (
         <>
@@ -78,6 +79,44 @@ export function Personal() {
         <table><tbody>{props.map((p) => <tr key={p.id}><td className="mono">{p.code}</td><td>{p.title}</td><td className="right">{money(p.amount)}</td>
           <td className="small">{PSTATUS[p.status]}{(p.l1_note || p.l2_note) && <div className="muted">{p.l2_note ?? p.l1_note}</div>}</td></tr>)}</tbody></table>
       </div>
+    </div>
+  );
+}
+
+/** Phản hồi bình ca: kết quả rà soát các ca mình tham gia; kíp đọc và xác nhận đã nhận */
+function CaseFeedback() {
+  const [rows, setRows] = useState<any[]>([]);
+  const [meta, setMeta] = useState<any>(null);
+  const [open, setOpen] = useState<string | null>(null);
+  const [comment, setComment] = useState('');
+  const load = () => api<any[]>('GET', '/api/ops/my-feedback').then(setRows).catch(() => {});
+  useEffect(() => { load(); api('GET', '/api/ops/meta').then(setMeta).catch(() => {}); }, []);
+  if (!rows.length || !meta) return null;
+  const pending = rows.filter((r) => !r.acked_at).length;
+  return (
+    <div className={`panel col ${pending ? 'amber' : ''}`}>
+      <h3 style={{ margin: 0 }}>Phản hồi bình ca {pending > 0 && <span className="badge amber">{pending} chưa đọc</span>}</h3>
+      {rows.slice(0, 20).map((r) => (
+        <div key={r.id} className="small">
+          <div className="row">
+            <b className="mono">{r.incident_code}</b><span className="muted">{r.code} · {new Date(r.reviewed_at).toLocaleDateString('vi-VN')}</span>
+            {r.acked_at && <span className="muted">đã xác nhận</span>}
+            <button className="ghost small" onClick={() => { setOpen(open === r.id ? null : r.id); setComment(''); }}>{open === r.id ? 'Thu gọn' : r.acked_at ? 'Xem' : 'Đọc'}</button>
+          </div>
+          {open === r.id && (
+            <div className="col" style={{ gap: 4, marginTop: 4 }}>
+              {meta.reviewCriteria.map(([k, l]: [string, string]) => r.scores?.[k] && <div key={k}>{l}: <b>{meta.reviewScore[r.scores[k]]}</b></div>)}
+              <div>Nhận xét: {r.summary}</div>
+              {r.good_practice && <div>Làm tốt: {r.good_practice}</div>}
+              {r.learning && <div>Cần cải thiện: {r.learning}</div>}
+              {!r.acked_at && <div className="row">
+                <input style={{ flex: 1 }} value={comment} onChange={(e) => setComment(e.target.value)} placeholder="Ý kiến của bạn (không bắt buộc)" />
+                <button className="primary small" onClick={async () => { await api('POST', `/api/ops/my-feedback/${r.id}/ack`, { comment: comment || null }); setOpen(null); await load(); }}>Đã đọc</button>
+              </div>}
+            </div>
+          )}
+        </div>
+      ))}
     </div>
   );
 }

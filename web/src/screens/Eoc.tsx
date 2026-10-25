@@ -288,6 +288,8 @@ function IncidentWorkspace({ id, protocol, board, version, canDispatch, onClose 
           </div>
           <div className="row">
             {t0 && <span className="mono">⏱ {fmtDuration(now - new Date(t0).getTime())}</span>}
+            {inc.mci_declared_at && !inc.mci_ended_at && <span className="badge red">ĐÔNG NẠN NHÂN</span>}
+            <Link href={`/van-hanh?tab=${encodeURIComponent('Đông nạn nhân')}&ca=${id}`} className="small">{inc.mci_declared_at ? 'Bảng đông nạn nhân' : 'Đông nạn nhân'}</Link>
             <Link href={`/ca/${id}/truy-xuat`} className="small">Truy xuất ca</Link>
             <button className="ghost" onClick={onClose}>Đóng cửa sổ</button>
           </div>

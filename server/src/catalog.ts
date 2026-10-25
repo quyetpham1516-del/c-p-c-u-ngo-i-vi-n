@@ -4,6 +4,7 @@ import { migrate } from './migrate.js';
 import { seedQcSets } from './qc.js';
 import { seedTraining } from './training.js';
 import { seedQms } from './qms.js';
+import { seedCompliance } from './compliance.js';
 import { BUNDLED_HOSPITALS, BUNDLED_ICD, HOSPITAL_DEPTS, importHospitals, importIcd } from './tools/importers.js';
 
 /**
@@ -240,10 +241,12 @@ export async function seedCatalog(pool: pg.Pool, opts: { force?: boolean } = {})
   await withTx(pool, (tx) => seedTraining(tx));
   // Bộ chỉ số chất lượng, sổ rủi ro mẫu, thời hạn lưu hồ sơ đề xuất (QLCL xác nhận căn cứ)
   await withTx(pool, (tx) => seedQms(tx));
+  // Sổ hoạt động xử lý dữ liệu cá nhân mẫu (pháp chế rà soát)
+  await withTx(pool, (tx) => seedCompliance(tx));
   const counts = (await pool.query(`SELECT (SELECT count(*) FROM hospitals)::int AS hospitals, (SELECT count(*) FROM drugs)::int AS drugs,
                                            (SELECT count(*) FROM icd10)::int AS icd, (SELECT count(*) FROM tr_questions)::int AS questions,
                                            (SELECT count(*) FROM tr_procedures)::int AS procedures, (SELECT count(*) FROM qm_indicators)::int AS indicators,
-                                           (SELECT count(*) FROM qm_risks)::int AS risks, (SELECT count(*) FROM qm_retention)::int AS retention`)).rows[0];
+                                           (SELECT count(*) FROM qm_risks)::int AS risks, (SELECT count(*) FROM qm_retention)::int AS retention, (SELECT count(*) FROM pd_activities)::int AS pd`)).rows[0];
   return { ...counts, newHospitals: hosp.hospitals, icdLoaded: icd };
 }
 
@@ -253,7 +256,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     .then(() => seedCatalog(pool, { force: true }))
     .then((r) => {
       console.log(`Đã nạp danh mục: ${r.hospitals} bệnh viện/cơ sở KCB, ${r.icd} mã ICD-10, ${r.drugs} thuốc`);
-      console.log(`Đào tạo: ${r.questions} câu hỏi, ${r.procedures} quy trình · Hệ thống chất lượng: ${r.indicators} chỉ số, ${r.risks} rủi ro, ${r.retention} loại hồ sơ lưu trữ`);
+      console.log(`Đào tạo: ${r.questions} câu hỏi, ${r.procedures} quy trình · Hệ thống chất lượng: ${r.indicators} chỉ số, ${r.risks} rủi ro, ${r.retention} loại hồ sơ lưu trữ · Dữ liệu cá nhân: ${r.pd} hoạt động xử lý`);
     })
     .finally(() => pool.end());
 }

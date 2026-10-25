@@ -10,6 +10,8 @@
     "seed": "tsx src/seed.ts",
     "demo:ops": "tsx src/demo-ops.ts",
     "catalog": "tsx src/catalog.ts",
+    "backup": "tsx src/tools/backup.ts",
+    "backup:verify": "tsx src/tools/backup.ts verify",
     "import:icd": "tsx src/tools/import-icd.ts",
     "import:hospitals": "tsx src/tools/import-hospitals.ts",
     "test": "vitest run",

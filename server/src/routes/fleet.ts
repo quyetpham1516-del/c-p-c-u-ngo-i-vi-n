@@ -8,6 +8,7 @@ import {
   estimateFree, haversineKm, STATUS_LABEL, statusMedians, suggestVehicles, travelMinutes, VEHICLE_LABEL, type VehicleRow,
 } from '../fleet.js';
 import { equipmentGaps, gapText } from '../equipment.js';
+import { fleetCompliance, recordGps } from '../ops.js';
 import { actorOf, DISPATCH_ROLES, EOC_ROLES, guard, type Ctx } from '../http.js';
 import { evaluate } from '../triage/engine.js';
 import { findGroup, type Priority, type VehicleType } from '../triage/protocol.js';
@@ -15,13 +16,18 @@ import { findGroup, type Priority, type VehicleType } from '../triage/protocol.j
 const BOARD_ROLES = [...EOC_ROLES, 'qa' as const];
 
 export async function loadVehicles(q: import('../db.js').Queryable): Promise<VehicleRow[]> {
-  const [rows, gaps] = await Promise.all([
+  const [rows, gaps, legal] = await Promise.all([
     many<VehicleRow>(q, `
       SELECT v.*, s.name AS station_name, s.lat AS station_lat, s.lng AS station_lng
         FROM vehicles v JOIN stations s ON s.id = v.station_id ORDER BY v.id`),
     equipmentGaps(q),
+    fleetCompliance(q),
   ]);
-  return rows.map((v) => ({ ...v, equipment_gaps: gaps[v.id]?.length ? gapText(gaps[v.id]) : null }));
+  return rows.map((v) => ({
+    ...v, equipment_gaps: gaps[v.id]?.length ? gapText(gaps[v.id]) : null,
+    locked: legal[v.id]?.blocks.length ? legal[v.id].blocks.join('; ') : null,
+    fleet_warnings: legal[v.id]?.warnings.length ? legal[v.id].warnings.join('; ') : null,
+  }));
 }
 
 export async function boardRows(q: import('../db.js').Queryable) {
@@ -90,16 +96,23 @@ export function registerFleet(app: FastifyInstance, { pool, hub }: Ctx) {
     const b = z.object({ status: z.string().regex(/^S[1-9]$/), lat: z.number().optional(), lng: z.number().optional(), reason: z.string().max(300).optional() }).parse(req.body);
     await assertVehicleAccess(req, id);
     const before = await one(pool, 'SELECT current_incident_id FROM vehicles WHERE id = $1', [id]);
-    await withTx(pool, (tx) => crewStatus(tx, actorOf(req), id, b.status, { lat: b.lat, lng: b.lng }));
+    await withTx(pool, async (tx) => {
+      await crewStatus(tx, actorOf(req), id, b.status, { lat: b.lat, lng: b.lng });
+      if (b.lat != null && b.lng != null) await recordGps(tx, id, { lat: b.lat, lng: b.lng });
+    });
     await Promise.all([pushVehicle(id), pushIncident(before?.current_incident_id)]);
     return { ok: true };
   });
 
   app.post('/api/vehicles/:id/location', { preHandler: guard('crew', ...DISPATCH_ROLES) }, async (req) => {
     const id = vehicleParam(req);
-    const b = z.object({ lat: z.number().min(-90).max(90), lng: z.number().min(-180).max(180) }).parse(req.body);
+    const b = z.object({
+      lat: z.number().min(-90).max(90), lng: z.number().min(-180).max(180),
+      accuracy: z.number().min(0).max(100000).nullish(), speed: z.number().min(0).max(400).nullish(),
+    }).parse(req.body);
     await assertVehicleAccess(req, id);
     await pool.query('UPDATE vehicles SET lat = $2, lng = $3, location_at = now() WHERE id = $1', [id, b.lat, b.lng]);
+    await recordGps(pool, id, b);
     await hub.publish({ type: 'vehicle.location', id, lat: b.lat, lng: b.lng });
     return { ok: true };
   });

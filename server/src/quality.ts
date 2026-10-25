@@ -210,7 +210,7 @@ export async function eventSuggestions(q: Queryable, days = 30) {
 /** Hành động khắc phục, phòng ngừa dùng chung: gắn với sự cố, khiếu nại, phát hiện đánh giá nội bộ, rủi ro, chỉ số, giám sát hoặc xem xét của lãnh đạo */
 export async function addCapa(tx: Tx, actor: Actor, b: {
   eventId?: string | null; complaintId?: string | null; findingId?: string | null; riskId?: string | null; reviewId?: string | null;
-  callbackId?: string | null; indicatorId?: string | null; source?: string | null; sourceRef?: string | null; rootCause?: string | null;
+  callbackId?: string | null; indicatorId?: string | null; caseReviewId?: string | null; drillId?: string | null; source?: string | null; sourceRef?: string | null; rootCause?: string | null;
   kind: string; description: string; ownerId: string; dueDate: string;
 }) {
   const links = CAPA_LINKS.filter(([f]) => (b as Record<string, unknown>)[f]);

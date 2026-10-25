@@ -31,6 +31,14 @@ export function QrLabels() {
     return c.createSvgTag({ cellSize: 2, margin: 0, scalable: true });
   };
   const origin = typeof window !== 'undefined' ? window.location.origin : '';
+  // Mở bằng localhost hoặc IP thì tem phụ thuộc máy hoặc IP hiện tại; gợi ý tên máy .local (không đổi khi IP đổi)
+  const byAddress = /^https?:\/\/(localhost|127\.0\.0\.1|\d{1,3}(\.\d{1,3}){3})(:|$)/.test(origin);
+  const [serverName, setServerName] = useState('');
+  useEffect(() => {
+    if (byAddress) api<{ hostname: string }>('GET', '/api/ops/server-name').then((r) => setServerName(r.hostname)).catch(() => {});
+  }, [byAddress]);
+  const stableUrl = serverName && typeof window !== 'undefined'
+    ? `${window.location.protocol}//${serverName}${window.location.port ? `:${window.location.port}` : ''}${window.location.pathname}${window.location.search}` : '';
   return (
     <div className="col">
       <div className="row no-print">
@@ -41,8 +49,10 @@ export function QrLabels() {
         Tem chứa đường dẫn {origin}/tb/… — điện thoại phải truy cập được địa chỉ này (cùng mạng nội bộ hoặc tên miền của Medone) thì quét mới mở được.
         In khổ A4, tỷ lệ 100%, rồi cắt theo viền đứt và dán lên thiết bị.
       </div>
-      {/^https?:\/\/(localhost|127\.0\.0\.1)(:|$)/.test(origin) && <div className="alert amber no-print">
-        Trang đang mở bằng "localhost": tem in ra điện thoại sẽ không mở được. Hãy mở trang này bằng địa chỉ IP mạng nội bộ của máy chủ (ví dụ http://192.168.x.x:3000) hoặc tên miền của Medone rồi mới in.
+      {byAddress && <div className="alert amber no-print col">
+        <span>Trang đang mở bằng {/localhost|127\.0\.0\.1/.test(origin) ? '"localhost": điện thoại sẽ không mở được tem in ra' : 'địa chỉ IP: khi máy chủ đổi IP (đổi Wi-Fi, khởi động lại router) tem in ra sẽ không mở được nữa'}.
+          Hãy mở trang này bằng tên máy chủ trong mạng nội bộ rồi mới in.</span>
+        {stableUrl && <span><a className="primary" href={stableUrl}>Mở bằng {serverName}</a> <span className="small muted">(đăng nhập lại một lần ở địa chỉ mới)</span></span>}
       </div>}
       {error && <div className="alert red">{error}</div>}
       <div className="qr-sheet">

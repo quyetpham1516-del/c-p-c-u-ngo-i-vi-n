@@ -13,7 +13,10 @@ export function registerAuth(app: FastifyInstance, { pool }: Ctx) {
       return reply.code(401).send({ error: 'Sai tên đăng nhập hoặc mật khẩu' });
     }
     const user: TokenUser = { id: u.id, username: u.username, name: u.full_name, role: u.role };
-    await withTx(pool, (tx) => audit(tx, 'system', { id: u.id, name: u.full_name }, 'auth.login', 'user', u.id, { ip: req.ip }));
+    await withTx(pool, async (tx) => {
+      await tx.query('UPDATE users SET last_login_at = now() WHERE id = $1', [u.id]);
+      await audit(tx, 'system', { id: u.id, name: u.full_name }, 'auth.login', 'user', u.id, { ip: req.ip });
+    });
     return { token: app.jwt.sign(user), user };
   });
 

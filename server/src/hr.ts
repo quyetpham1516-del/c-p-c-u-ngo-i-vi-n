@@ -1,6 +1,7 @@
 import { audit, type Actor } from './audit.js';
 import { many, one, type Queryable, type Tx } from './db.js';
 import { HttpError } from './domain.js';
+import { activeCert } from './training.js';
 
 /**
  * Nhân sự: hồ sơ, giấy tờ hành nghề, đào tạo, lịch trực, chấm công, nghỉ phép.
@@ -12,7 +13,7 @@ export const DOC_KIND: Record<string, string> = {
   phtls: 'Chứng nhận PHTLS', ksnk: 'Chứng nhận KSNK', pccc: 'Chứng nhận PCCC', khac: 'Khác',
 };
 export const TRAINING_KIND: Record<string, string> = {
-  cme: 'Cập nhật kiến thức y khoa liên tục', bls: 'BLS', acls: 'ACLS', phtls: 'PHTLS', ksnk: 'Kiểm soát nhiễm khuẩn',
+  cme: 'Cập nhật kiến thức y khoa liên tục', sat_hach: 'Sát hạch Medone', bls: 'BLS', acls: 'ACLS', phtls: 'PHTLS', ksnk: 'Kiểm soát nhiễm khuẩn',
   pccc: 'Phòng cháy chữa cháy', dieu_phoi: 'Điều phối, tiếp nhận cuộc gọi', lai_xe: 'Lái xe cấp cứu an toàn', khac: 'Khác',
 };
 export const SHIFT: Record<string, { label: string; hours: number }> = {
@@ -66,6 +67,11 @@ export async function staffCompliance(q: Queryable, staffId: string): Promise<Co
     const cme = await one(q, `SELECT coalesce(sum(hours), 0)::float AS h FROM trainings WHERE staff_id = $1 AND kind = 'cme' AND completed_on > vn_today() - interval '5 years'`, [staffId]);
     if (cme.h < CME_REQUIRED_HOURS) warnings.push(`Cập nhật kiến thức y khoa 5 năm: ${cme.h}/${CME_REQUIRED_HOURS} tiết`);
   }
+  // Chứng nhận Medone (QLCL-13): khi bật cấu hình, chưa có chứng nhận còn hạn thì không nhận ca, như MedOne
+  const st = await one(q, 'SELECT require_cert FROM tr_settings WHERE id = 1');
+  const cert = await activeCert(q, staffId);
+  if (!cert && st?.require_cert) blocking.push('Chưa có chứng nhận Medone còn hạn (cần đạt sát hạch lý thuyết và thực hành)');
+  else if (cert?.expiring) warnings.push(`Chứng nhận Medone ${cert.number} hết hạn ngày ${cert.expires_on}, cần thi lại`);
   return { blocking, warnings };
 }
 

@@ -1,0 +1,147 @@
+{
+ "source": "Bản nháp mẫu do phần mềm soạn sẵn theo hướng dẫn hồi sinh tim phổi AHA 2020, Thông tư 51/2017/TT-BYT (phản vệ) và thực hành cấp cứu ngoại viện phổ biến. CẦN CHUYÊN MÔN MEDONE RÀ SOÁT, SỬA VÀ DUYỆT trước khi dùng thi.",
+ "questions": [
+  { "topic": "Hồi sinh tim phổi", "difficulty": 1, "kind": "mot_dap_an", "stem": "Ở người lớn ngừng tuần hoàn, tần số ép tim khuyến cáo là bao nhiêu?", "options": ["60–80 lần/phút", "80–100 lần/phút", "100–120 lần/phút", "130–150 lần/phút"], "answer": ["C"], "explanation": "AHA 2020: ép tim 100–120 lần/phút.", "reference": "QTKT-CC-01" },
+  { "topic": "Hồi sinh tim phổi", "difficulty": 1, "kind": "mot_dap_an", "stem": "Độ sâu ép tim khuyến cáo ở người lớn là:", "options": ["Khoảng 2–3 cm", "Ít nhất 5 cm nhưng không quá 6 cm", "Khoảng 7–8 cm", "Tùy cân nặng, không có khuyến cáo"], "answer": ["B"], "explanation": "Ép sâu ít nhất 5 cm, không quá 6 cm, để lồng ngực nảy lên hoàn toàn sau mỗi lần ép.", "reference": "QTKT-CC-01" },
+  { "topic": "Hồi sinh tim phổi", "difficulty": 1, "kind": "mot_dap_an", "stem": "Tỷ lệ ép tim : thổi ngạt khi chưa có đường thở nâng cao ở người lớn (một hoặc hai người cứu) là:", "options": ["15 : 2", "30 : 2", "5 : 1", "30 : 1"], "answer": ["B"], "reference": "QTKT-CC-01" },
+  { "topic": "Hồi sinh tim phổi", "difficulty": 2, "kind": "dung_sai", "stem": "Khi đã có máy AED, nên tiếp tục ép tim đủ 5 chu kỳ rồi mới gắn máy.", "options": [], "answer": ["B"], "explanation": "Gắn AED và phân tích nhịp càng sớm càng tốt; vẫn ép tim trong lúc chuẩn bị dán điện cực.", "reference": "QTKT-CC-01" },
+  { "topic": "Hồi sinh tim phổi", "difficulty": 2, "kind": "nhieu_dap_an", "stem": "Những yếu tố nào là tiêu chí ép tim chất lượng cao?", "options": ["Ép đủ nhanh và đủ sâu", "Để lồng ngực nảy lên hoàn toàn", "Hạn chế gián đoạn ép tim dưới 10 giây", "Thổi ngạt thật mạnh để lồng ngực phồng căng tối đa"], "answer": ["A", "B", "C"], "explanation": "Thổi vừa đủ thấy lồng ngực nhô lên, tránh thông khí quá mức.", "reference": "QTKT-CC-01" },
+  { "topic": "Hồi sinh tim phổi", "difficulty": 3, "kind": "mot_dap_an", "stem": "Sau khi đặt nội khí quản trong hồi sinh tim phổi người lớn, tần số bóp bóng khuyến cáo là:", "options": ["Mỗi 2–3 giây một nhịp (20–30 lần/phút)", "Mỗi 6 giây một nhịp (10 lần/phút), ép tim liên tục", "Mỗi 10 giây một nhịp, ngừng ép tim khi bóp", "Bóp liên tục không đếm"], "answer": ["B"], "reference": "QTKT-CC-04" },
+  { "topic": "Đường thở và hô hấp", "difficulty": 1, "kind": "mot_dap_an", "stem": "Nghiệm pháp mở đường thở cho nạn nhân nghi chấn thương cột sống cổ là:", "options": ["Ngửa đầu – nâng cằm", "Ấn hàm (đẩy hàm dưới ra trước), giữ thẳng trục đầu cổ", "Cho nạn nhân nằm nghiêng an toàn", "Kê gối dưới đầu"], "answer": ["B"], "reference": "QTKT-CC-03" },
+  { "topic": "Đường thở và hô hấp", "difficulty": 2, "kind": "mot_dap_an", "stem": "Khi bóp bóng qua mặt nạ, cách nhận biết thông khí đủ là:", "options": ["Bóng xẹp hết sau mỗi lần bóp", "Lồng ngực nhô lên vừa phải theo mỗi nhịp bóp", "Bụng phình to", "Nghe tiếng khí xì quanh mặt nạ"], "answer": ["B"], "explanation": "Bụng phình là dấu hiệu khí vào dạ dày do bóp quá mạnh hoặc sai tư thế.", "reference": "QTKT-CC-02" },
+  { "topic": "Đường thở và hô hấp", "difficulty": 2, "kind": "dung_sai", "stem": "Đo EtCO2 dạng sóng là cách tin cậy để xác nhận ống nội khí quản nằm đúng trong khí quản.", "options": [], "answer": ["A"], "reference": "QTKT-CC-04" },
+  { "topic": "Đường thở và hô hấp", "difficulty": 3, "kind": "nhieu_dap_an", "stem": "Sau khi đặt nội khí quản, cần làm gì để xác nhận và giữ ống đúng vị trí?", "options": ["Nghe phổi hai bên và vùng thượng vị", "Gắn EtCO2 dạng sóng", "Cố định ống, ghi độ sâu tại cung răng", "Rút bớt ống ra 5 cm cho chắc chắn"], "answer": ["A", "B", "C"], "reference": "QTKT-CC-04" },
+  { "topic": "Chấn thương", "difficulty": 1, "kind": "mot_dap_an", "stem": "Thứ tự ưu tiên đánh giá ban đầu ở nạn nhân chấn thương chảy máu ồ ạt ở chi (theo PHTLS) là:", "options": ["A – B – C – D – E", "Cầm máu ồ ạt trước (X), rồi A – B – C – D – E", "Đo huyết áp trước tiên", "Bất động chi gãy trước"], "answer": ["B"], "reference": "QTKT-CC-03" },
+  { "topic": "Chấn thương", "difficulty": 2, "kind": "mot_dap_an", "stem": "Garô cầm máu chi đúng cách cần lưu ý:", "options": ["Buộc ngay trên vết thương 5–7 cm, siết đến khi hết chảy máu, ghi giờ garô", "Buộc lỏng để máu còn lưu thông", "Nới garô 5 phút một lần trên đường vận chuyển", "Chỉ dùng garô cho vết thương ở thân mình"], "answer": ["A"], "reference": "QTKT-CC-03" },
+  { "topic": "Chấn thương", "difficulty": 2, "kind": "dung_sai", "stem": "Mọi nạn nhân chấn thương đều phải đeo nẹp cổ, kể cả khi tỉnh táo, không đau cổ, không có dấu hiệu thần kinh và không có tổn thương gây phân tán.", "options": [], "answer": ["B"], "explanation": "Hạn chế vận động cột sống theo chỉ định (tiêu chí NEXUS hoặc Canadian C-spine), không áp dụng máy móc cho mọi trường hợp. Medone cần ban hành tiêu chí cụ thể.", "reference": "QTKT-CC-03" },
+  { "topic": "Chấn thương", "difficulty": 3, "kind": "nhieu_dap_an", "stem": "Dấu hiệu gợi ý sốc mất máu ở người lớn chấn thương gồm:", "options": ["Mạch nhanh", "Da lạnh, ẩm, thời gian đổ đầy mao mạch kéo dài", "Lơ mơ, vật vã", "Huyết áp tăng cao"], "answer": ["A", "B", "C"], "reference": "QTKT-CC-03" },
+  { "topic": "Phản vệ", "difficulty": 1, "kind": "mot_dap_an", "stem": "Thuốc đầu tay xử trí phản vệ là:", "options": ["Kháng histamin tiêm tĩnh mạch", "Adrenalin tiêm bắp", "Corticoid tiêm tĩnh mạch", "Salbutamol khí dung"], "answer": ["B"], "reference": "QTKT-CC-06" },
+  { "topic": "Phản vệ", "difficulty": 2, "kind": "mot_dap_an", "stem": "Liều adrenalin tiêm bắp xử trí phản vệ ở trẻ em theo cân nặng là:", "options": ["0,01 mg/kg (dung dịch 1 mg/ml), tối đa 0,3 mg", "0,1 mg/kg", "1 mg cho mọi trẻ", "0,001 mg/kg"], "answer": ["A"], "explanation": "Đối chiếu Thông tư 51/2017/TT-BYT và phác đồ Medone trước khi duyệt.", "reference": "QTKT-CC-06" },
+  { "topic": "Phản vệ", "difficulty": 2, "kind": "mot_dap_an", "stem": "Vị trí tiêm bắp adrenalin khuyến cáo trong phản vệ là:", "options": ["Cơ delta cánh tay", "Mặt trước bên 1/3 giữa đùi", "Cơ mông", "Dưới da bụng"], "answer": ["B"], "reference": "QTKT-CC-06" },
+  { "topic": "Phản vệ", "difficulty": 3, "kind": "dung_sai", "stem": "Nếu sau tiêm bắp adrenalin lần đầu, triệu chứng chưa cải thiện thì có thể tiêm nhắc lại sau 3–5 phút.", "options": [], "answer": ["A"], "reference": "QTKT-CC-06" },
+  { "topic": "Đột quỵ và tim mạch", "difficulty": 1, "kind": "mot_dap_an", "stem": "Thang FAST dùng để nhận biết sớm:", "options": ["Nhồi máu cơ tim", "Đột quỵ", "Hạ đường huyết", "Sốc phản vệ"], "answer": ["B"] },
+  { "topic": "Đột quỵ và tim mạch", "difficulty": 2, "kind": "nhieu_dap_an", "stem": "Thông tin nào cần báo trước cho bệnh viện nhận người bệnh nghi đột quỵ?", "options": ["Thời điểm khởi phát hoặc thời điểm cuối cùng còn bình thường", "Đường huyết mao mạch", "Thuốc chống đông đang dùng", "Màu áo người bệnh"], "answer": ["A", "B", "C"] },
+  { "topic": "Đột quỵ và tim mạch", "difficulty": 2, "kind": "dung_sai", "stem": "Người bệnh đau ngực nghi hội chứng vành cấp cần được làm điện tim 12 chuyển đạo càng sớm càng tốt, mục tiêu trong vòng 10 phút kể từ khi tiếp cận.", "options": [], "answer": ["A"] },
+  { "topic": "Đột quỵ và tim mạch", "difficulty": 3, "kind": "mot_dap_an", "stem": "Ở người bệnh nghi đột quỵ, đo đường huyết tại chỗ chủ yếu nhằm:", "options": ["Tính liều insulin", "Loại trừ hạ đường huyết gây triệu chứng giống đột quỵ", "Chẩn đoán đái tháo đường", "Không cần thiết"], "answer": ["B"] },
+  { "topic": "Kiểm soát nhiễm khuẩn", "difficulty": 1, "kind": "mot_dap_an", "stem": "Theo WHO, có mấy thời điểm cần vệ sinh tay khi chăm sóc người bệnh?", "options": ["3", "4", "5", "6"], "answer": ["C"] },
+  { "topic": "Kiểm soát nhiễm khuẩn", "difficulty": 2, "kind": "mot_dap_an", "stem": "Sau khi chở người bệnh nghi lây qua đường không khí, xe cứu thương cần:", "options": ["Chỉ lau tay nắm cửa", "Khử khuẩn theo mức tăng cường hoặc toàn diện, ký phiếu khử khuẩn trước khi nhận ca mới", "Không cần làm gì nếu kíp đeo khẩu trang", "Phun nước sạch lên sàn"], "answer": ["B"] },
+  { "topic": "Kiểm soát nhiễm khuẩn", "difficulty": 2, "kind": "dung_sai", "stem": "Khi bị kim đâm sau tiêm cho người bệnh, nhân viên cần rửa vết thương dưới vòi nước, báo ngay người phụ trách và ghi nhận phơi nhiễm.", "options": [], "answer": ["A"] },
+  { "topic": "Kiểm soát nhiễm khuẩn", "difficulty": 3, "kind": "nhieu_dap_an", "stem": "Chất thải nào phải bỏ vào hộp kháng thủng?", "options": ["Kim tiêm", "Ống thuốc thủy tinh đã bẻ", "Lưỡi dao mổ", "Găng tay dính máu"], "answer": ["A", "B", "C"] },
+  { "topic": "Vận chuyển an toàn", "difficulty": 1, "kind": "dung_sai", "stem": "Trên xe cứu thương đang chạy, người bệnh, người nhà và nhân viên đều phải được cố định hoặc thắt dây an toàn khi điều kiện chuyên môn cho phép.", "options": [], "answer": ["A"] },
+  { "topic": "Vận chuyển an toàn", "difficulty": 2, "kind": "mot_dap_an", "stem": "Khi bàn giao người bệnh tại bệnh viện, cách bàn giao có cấu trúc giúp giảm sót thông tin là:", "options": ["Nói tự do theo trí nhớ", "Bàn giao theo khung (ví dụ MIST hoặc SBAR) kèm phiếu chuyển viện đã ký", "Chỉ đưa phiếu, không cần nói", "Bàn giao qua điện thoại sau khi rời bệnh viện"], "answer": ["B"] },
+  { "topic": "Vận chuyển an toàn", "difficulty": 2, "kind": "nhieu_dap_an", "stem": "Trước khi rời trạm nhận ca, kíp cần kiểm tra:", "options": ["Cơ số thuốc, vật tư trên xe", "Thiết bị (monitor, máy sốc điện, máy hút, oxy) hoạt động và còn hạn kiểm định", "Nhiên liệu và tình trạng xe", "Lịch sử cuộc gọi cá nhân"], "answer": ["A", "B", "C"] },
+  { "topic": "Điều phối và tiếp nhận cuộc gọi", "difficulty": 1, "kind": "mot_dap_an", "stem": "Thông tin đầu tiên điều phối viên cần xác nhận khi nhận cuộc gọi cấp cứu là:", "options": ["Họ tên đầy đủ của người bệnh", "Địa chỉ hiện trường và số điện thoại gọi lại", "Bảo hiểm y tế", "Bệnh sử chi tiết"], "answer": ["B"] },
+  { "topic": "Điều phối và tiếp nhận cuộc gọi", "difficulty": 2, "kind": "dung_sai", "stem": "Khi người gọi báo nạn nhân không tỉnh và không thở bình thường, điều phối viên nên hướng dẫn người gọi ép tim qua điện thoại trong lúc chờ xe.", "options": [], "answer": ["A"] },
+  { "topic": "Điều phối và tiếp nhận cuộc gọi", "difficulty": 3, "kind": "mot_dap_an", "stem": "Phần mềm gợi ý mức ưu tiên từ bộ câu hỏi phân loại. Ai quyết định cuối cùng trước khi giao xe?", "options": ["Phần mềm tự quyết", "Điều phối viên xác nhận (bắt buộc), có thể đổi mức kèm lý do", "Người gọi", "Lái xe"], "answer": ["B"] },
+  { "topic": "Sản khoa cấp cứu", "difficulty": 2, "kind": "mot_dap_an", "stem": "Sau khi đỡ đẻ ngoài bệnh viện, việc đầu tiên với trẻ sơ sinh là:", "options": ["Tắm ngay cho trẻ", "Lau khô, ủ ấm, đánh giá thở và trương lực", "Cắt rốn ngay lập tức trước mọi việc khác", "Cho trẻ bú bình"], "answer": ["B"], "reference": "QTKT-CC-05" },
+  { "topic": "Sản khoa cấp cứu", "difficulty": 3, "kind": "dung_sai", "stem": "Khi đỡ đẻ, nếu thấy dây rốn quấn cổ lỏng, có thể nhẹ nhàng đưa dây rốn qua đầu trẻ.", "options": [], "answer": ["A"], "reference": "QTKT-CC-05" }
+ ],
+ "procedures": [
+  {
+   "code": "QTKT-CC-01", "title": "Ép tim ngoài lồng ngực và sốc điện bằng AED ở người lớn (BLS)", "version": "0.1", "category": "Hồi sinh tim phổi",
+   "roles": ["Bác sĩ", "Y sĩ", "Điều dưỡng", "Lái xe"], "epcrFlags": ["cpr", "defib"], "passPct": 80, "privilegeMonths": 24,
+   "steps": [
+    { "text": "Đảm bảo an toàn hiện trường cho người cứu và nạn nhân", "critical": true },
+    { "text": "Kiểm tra đáp ứng (gọi to, vỗ vai) và quan sát thở trong không quá 10 giây", "critical": true },
+    { "text": "Gọi hỗ trợ, yêu cầu mang máy AED", "critical": false },
+    { "text": "Đặt nạn nhân nằm ngửa trên mặt phẳng cứng, bộc lộ ngực", "critical": false },
+    { "text": "Đặt tay đúng vị trí: nửa dưới xương ức", "critical": true },
+    { "text": "Ép tim tần số 100–120 lần/phút", "critical": true },
+    { "text": "Ép sâu 5–6 cm, để lồng ngực nảy lên hoàn toàn sau mỗi lần ép", "critical": true },
+    { "text": "Tỷ lệ 30 ép : 2 thổi, mỗi lần thổi khoảng 1 giây, thấy lồng ngực nhô lên", "critical": false },
+    { "text": "Bật AED ngay khi có máy, dán điện cực đúng vị trí, vẫn ép tim khi đang dán", "critical": true },
+    { "text": "Hô mọi người tránh xa khi máy phân tích và khi sốc", "critical": true },
+    { "text": "Ép tim lại ngay sau sốc (hoặc khi máy báo không sốc), không bắt mạch", "critical": true },
+    { "text": "Gián đoạn ép tim mỗi lần không quá 10 giây; đổi người ép mỗi 2 phút", "critical": false },
+    { "text": "Ghi nhận thời điểm ngừng tuần hoàn, lần sốc, thuốc vào ePCR", "critical": false }
+   ]
+  },
+  {
+   "code": "QTKT-CC-02", "title": "Bóp bóng qua mặt nạ (thông khí bằng bóng – van – mặt nạ)", "version": "0.1", "category": "Đường thở và hô hấp",
+   "roles": ["Bác sĩ", "Y sĩ", "Điều dưỡng"], "epcrFlags": ["bvm", "bagMask"], "passPct": 80, "privilegeMonths": 24,
+   "steps": [
+    { "text": "Chọn cỡ mặt nạ phù hợp (che kín mũi và miệng, không đè lên mắt)", "critical": false },
+    { "text": "Nối bóng với nguồn oxy, có túi dự trữ, lưu lượng 10–15 lít/phút", "critical": false },
+    { "text": "Mở đường thở đúng (ngửa đầu nâng cằm, hoặc ấn hàm nếu nghi chấn thương cổ)", "critical": true },
+    { "text": "Hút đờm dãi, dị vật nếu có; cân nhắc canuyn miệng hầu", "critical": false },
+    { "text": "Áp mặt nạ kín bằng kỹ thuật C–E (hoặc hai người, hai tay)", "critical": true },
+    { "text": "Bóp mỗi nhịp khoảng 1 giây, vừa đủ thấy lồng ngực nhô lên", "critical": true },
+    { "text": "Tần số đúng: 30:2 khi ép tim chưa có đường thở nâng cao; 1 nhịp mỗi 6 giây khi người bệnh còn mạch", "critical": true },
+    { "text": "Theo dõi SpO2, màu da, tránh thông khí quá mức và bụng chướng", "critical": false }
+   ]
+  },
+  {
+   "code": "QTKT-CC-03", "title": "Hạn chế vận động cột sống: nẹp cổ và cố định trên ván cứng", "version": "0.1", "category": "Chấn thương",
+   "roles": ["Bác sĩ", "Y sĩ", "Điều dưỡng", "Lái xe"], "epcrFlags": ["collar", "spine"], "passPct": 80, "privilegeMonths": 24,
+   "steps": [
+    { "text": "Đảm bảo an toàn hiện trường, đeo phương tiện bảo hộ", "critical": true },
+    { "text": "Một người giữ thẳng trục đầu – cổ bằng tay ngay từ đầu và suốt quá trình", "critical": true },
+    { "text": "Đánh giá X–A–B–C–D–E, cầm máu ồ ạt nếu có", "critical": true },
+    { "text": "Kiểm tra vận động, cảm giác, tuần hoàn bốn chi trước khi cố định", "critical": false },
+    { "text": "Đo và chọn cỡ nẹp cổ đúng, đặt nẹp không làm lệch trục", "critical": true },
+    { "text": "Lăn nghiêng nạn nhân theo khối (log roll) theo hiệu lệnh của người giữ đầu", "critical": true },
+    { "text": "Đặt ván, cố định thân trước rồi đến đầu bằng gối chèn và dây", "critical": false },
+    { "text": "Kiểm tra lại vận động, cảm giác, tuần hoàn bốn chi sau cố định", "critical": false },
+    { "text": "Ghi nhận vào ePCR và bàn giao tình trạng cố định cho bệnh viện", "critical": false }
+   ]
+  },
+  {
+   "code": "QTKT-CC-04", "title": "Đặt nội khí quản đường miệng ngoài bệnh viện", "version": "0.1", "category": "Đường thở và hô hấp",
+   "roles": ["Bác sĩ"], "epcrFlags": ["ett"], "passPct": 85, "privilegeMonths": 12,
+   "steps": [
+    { "text": "Xác định chỉ định, chuẩn bị phương án đường thở dự phòng (mặt nạ thanh quản, bóp bóng)", "critical": true },
+    { "text": "Chuẩn bị đủ dụng cụ: đèn soi, ống đúng cỡ và cỡ nhỏ hơn, que dẫn, bơm tiêm, máy hút, EtCO2", "critical": false },
+    { "text": "Cho thở oxy trước (tiền oxy hóa) bằng mặt nạ hoặc bóp bóng", "critical": true },
+    { "text": "Đặt tư thế đầu phù hợp (giữ thẳng trục nếu nghi chấn thương cổ)", "critical": false },
+    { "text": "Mỗi lần thử đặt không kéo dài quá thời gian quy định; ngừng và thông khí lại nếu SpO2 giảm", "critical": true },
+    { "text": "Đưa ống qua dây thanh dưới quan sát trực tiếp, bơm bóng chèn", "critical": false },
+    { "text": "Xác nhận vị trí bằng EtCO2 dạng sóng và nghe phổi, thượng vị", "critical": true },
+    { "text": "Cố định ống, ghi độ sâu tại cung răng", "critical": false },
+    { "text": "Theo dõi EtCO2 liên tục và kiểm tra lại sau mỗi lần di chuyển người bệnh", "critical": true },
+    { "text": "Ghi nhận vào ePCR: cỡ ống, độ sâu, số lần thử, EtCO2", "critical": false }
+   ]
+  },
+  {
+   "code": "QTKT-CC-05", "title": "Đỡ đẻ thường ngoài bệnh viện và chăm sóc sơ sinh ngay sau sinh", "version": "0.1", "category": "Sản khoa cấp cứu",
+   "roles": ["Bác sĩ", "Y sĩ", "Điều dưỡng"], "epcrFlags": [], "passPct": 80, "privilegeMonths": 24,
+   "steps": [
+    { "text": "Đánh giá cuộc chuyển dạ; quyết định đỡ đẻ tại chỗ hay vận chuyển; báo bệnh viện sản", "critical": true },
+    { "text": "Chuẩn bị bộ đỡ đẻ vô khuẩn, khăn ủ ấm, bóng và mặt nạ sơ sinh", "critical": false },
+    { "text": "Đỡ đầu, kiểm soát tốc độ sổ, kiểm tra dây rốn quấn cổ", "critical": true },
+    { "text": "Đỡ vai và thân theo cơ chế đẻ", "critical": false },
+    { "text": "Lau khô, ủ ấm trẻ, đánh giá thở và trương lực ngay", "critical": true },
+    { "text": "Thông khí bằng bóng – mặt nạ nếu trẻ không thở hoặc thở nấc", "critical": true },
+    { "text": "Kẹp và cắt rốn đúng kỹ thuật vô khuẩn", "critical": false },
+    { "text": "Theo dõi co hồi tử cung, lượng máu mất của mẹ; không kéo dây rốn mạnh", "critical": true },
+    { "text": "Ghi giờ sinh, giới, điểm Apgar vào ePCR phần Em bé", "critical": false }
+   ]
+  },
+  {
+   "code": "QTKT-CC-06", "title": "Xử trí phản vệ: tiêm bắp adrenalin", "version": "0.1", "category": "Phản vệ",
+   "roles": ["Bác sĩ", "Y sĩ", "Điều dưỡng"], "epcrFlags": [], "passPct": 80, "privilegeMonths": 24,
+   "steps": [
+    { "text": "Nhận biết phản vệ theo tiêu chuẩn chẩn đoán; ngừng ngay tiếp xúc dị nguyên", "critical": true },
+    { "text": "Gọi hỗ trợ; cho người bệnh nằm, kê cao chân (tư thế phù hợp nếu khó thở)", "critical": false },
+    { "text": "Tính đúng liều adrenalin theo cân nặng, kiểm tra nồng độ 1 mg/ml", "critical": true },
+    { "text": "Tiêm bắp mặt trước bên 1/3 giữa đùi", "critical": true },
+    { "text": "Cho thở oxy, đặt đường truyền tĩnh mạch", "critical": false },
+    { "text": "Theo dõi mạch, huyết áp, SpO2 mỗi 3–5 phút; nhắc lại liều theo phác đồ nếu chưa cải thiện", "critical": true },
+    { "text": "Ghi thuốc, liều, giờ tiêm, số lô vào ePCR", "critical": false }
+   ]
+  },
+  {
+   "code": "QTKT-CC-07", "title": "Đặt đường truyền tĩnh mạch ngoại vi", "version": "0.1", "category": "Kỹ thuật chung",
+   "roles": ["Bác sĩ", "Y sĩ", "Điều dưỡng"], "epcrFlags": ["iv"], "passPct": 80, "privilegeMonths": 24,
+   "steps": [
+    { "text": "Đối chiếu người bệnh và chỉ định", "critical": true },
+    { "text": "Vệ sinh tay, mang găng", "critical": true },
+    { "text": "Chọn tĩnh mạch và cỡ kim phù hợp", "critical": false },
+    { "text": "Garô, sát khuẩn vị trí chọc đúng kỹ thuật, để khô", "critical": true },
+    { "text": "Chọc kim, thấy máu trào, luồn catheter, rút nòng", "critical": false },
+    { "text": "Tháo garô, nối dây truyền, kiểm tra dịch chảy tốt, không phù", "critical": false },
+    { "text": "Cố định catheter, bỏ kim vào hộp kháng thủng ngay", "critical": true },
+    { "text": "Ghi vị trí, cỡ kim, giờ đặt vào ePCR", "critical": false }
+   ]
+  }
+ ]
+}

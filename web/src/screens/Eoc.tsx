@@ -6,6 +6,7 @@ import {
 import { FleetTable, type Board } from '../components/FleetTable';
 import { HospitalPicker } from '../components/HospitalPicker';
 import { MapView } from '../components/MapView';
+import { SharePanel } from '../components/SharePanel';
 import { FLAG_LABEL, TriageQuestions, type Protocol, type TriageResult } from '../components/Triage';
 
 interface Call { id: string; phone: string; line: string; state: string; ringing_at: string; incident_id: string | null }
@@ -367,6 +368,7 @@ function IncidentWorkspace({ id, protocol, board, version, canDispatch, onClose 
           {inc.confirmed_at && canDispatch && !closed && (
             <DispatchCard inc={inc} suggest={suggest} run={run} id={id} active={active} />
           )}
+          {inc.confirmed_at && !closed && <SharePanel inc={inc} version={version} canDispatch={canDispatch} run={run} />}
           {inc.outbox?.filter((o: any) => !o.sent_at).map((o: any) => (
             <div key={o.id} className="alert blue small">
               {o.topic === 'notify_115' ? 'Thông báo ca P1–P2 sang 115 tỉnh' : 'Chuyển ca sang 115'}: chưa có kết nối tự động, gọi đường nóng 115.

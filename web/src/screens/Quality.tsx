@@ -3,6 +3,7 @@ import { api, session } from '../api';
 import { useStations } from '../catalog';
 import { QualityCriteria } from './QualityCriteria';
 import { CapaList } from './Qms';
+import { CallSearch } from '../components/Telephony';
 
 interface Meta { categories: Record<string, string>; severity: Record<string, string>; factors: string[] }
 interface Staff { id: string; full_name: string; role: string; title: string | null }
@@ -24,7 +25,7 @@ export function Quality() {
   const isQuality = ['qa', 'supervisor', 'admin', 'director'].includes(role);
   const isIpc = ['ipc', 'qa', 'supervisor', 'admin', 'director'].includes(role);
   const tabs = [
-    ...(isQuality || role === 'ipc' ? ['Sự cố'] : []), 'Tiêu chí chất lượng', ...(isQuality ? ['Gợi ý từ dữ liệu', 'Khắc phục (CAPA)', 'Khiếu nại', 'Khảo sát hài lòng'] : []),
+    ...(isQuality || role === 'ipc' ? ['Sự cố'] : []), 'Tiêu chí chất lượng', ...(isQuality ? ['Gợi ý từ dữ liệu', 'Khắc phục (CAPA)', 'Khiếu nại', 'Khảo sát hài lòng', 'Lời thoại cuộc gọi'] : []),
     ...(isIpc ? ['Kiểm soát nhiễm khuẩn'] : []), ...(['admin', 'qa', 'supervisor'].includes(role) ? ['Tin nhắn chờ gửi'] : []),
   ];
   const [tab, setTab] = useState(tabs[0]);
@@ -53,6 +54,7 @@ export function Quality() {
       {tab === 'Khắc phục (CAPA)' && <CapaTab {...ctx} />}
       {tab === 'Khiếu nại' && <ComplaintsTab {...ctx} />}
       {tab === 'Khảo sát hài lòng' && <SurveyTab />}
+      {tab === 'Lời thoại cuộc gọi' && <CallSearch />}
       {tab === 'Kiểm soát nhiễm khuẩn' && <IpcTab {...ctx} />}
       {tab === 'Tin nhắn chờ gửi' && <OutboxTab run={run} />}
     </div>

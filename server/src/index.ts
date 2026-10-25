@@ -3,6 +3,7 @@ import { seedCatalog } from './catalog.js';
 import { config } from './config.js';
 import { createPool } from './db.js';
 import { migrate } from './migrate.js';
+import { startAsrWorker } from './asr.js';
 import { startSmsWorker } from './sms.js';
 
 const pool = createPool();
@@ -12,6 +13,7 @@ await seedCatalog(pool);
 const { app } = await buildApp(pool, { logger: true });
 await app.listen({ port: config.port, host: config.host });
 startSmsWorker(pool, (m) => app.log.info(m));
+startAsrWorker(pool, (m) => app.log.info(m));
 
 const shutdown = async () => {
   await app.close();

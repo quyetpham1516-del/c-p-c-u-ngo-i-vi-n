@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import { api, API_BASE, fmtTime, ROLE_LABEL, session, type Role } from '../api';
 
 /** Nghe lại ghi âm: trưởng ca, QLCL, quản trị, Ban Giám đốc (khớp quyền phía máy chủ) */
@@ -63,15 +63,26 @@ export function IncidentCalls({ incidentId, version }: { incidentId: string; ver
     }
   };
 
+  const [tx, setTx] = useState<Record<string, any>>({});
+  const showText = async (id: string) => {
+    if (tx[id]?.text) return setTx((t) => ({ ...t, [id]: { ...t[id], open: !t[id].open } }));
+    try { const r = await api('GET', `/api/calls/${id}/transcript`); setTx((t) => ({ ...t, [id]: { ...r, open: true } })); } catch (e) { setTx((t) => ({ ...t, [id]: { error: (e as Error).message, open: true } })); }
+  };
+  const retranscribe = async (id: string) => {
+    try { await api('POST', `/api/calls/${id}/transcript`); setCalls((cs) => cs!.map((c) => (c.id === id ? { ...c, transcript_status: 'cho' } : c))); setTx((t) => ({ ...t, [id]: undefined })); }
+    catch (e) { setTx((t) => ({ ...t, [id]: { error: (e as Error).message, open: true } })); }
+  };
+
   if (!calls?.length) return null;
   return (
     <div className="panel">
       <h3>Cuộc gọi của ca <span className="badge">{calls.length}</span></h3>
       <table className="small">
-        <thead><tr><th>Giờ</th><th>Chiều</th><th>Số</th><th>Máy lẻ</th><th>Người nghe</th><th>Thời lượng</th><th>Ghi âm</th></tr></thead>
+        <thead><tr><th>Giờ</th><th>Chiều</th><th>Số</th><th>Máy lẻ</th><th>Người nghe</th><th>Thời lượng</th><th>Ghi âm</th>{canListen && <th>Lời thoại</th>}</tr></thead>
         <tbody>
           {calls.map((c) => (
-            <tr key={c.id}>
+            <Fragment key={c.id}>
+            <tr>
               <td className="mono">{fmtTime(c.ringing_at)}</td>
               <td>{DIRECTION[c.direction] ?? c.direction}{c.state !== 'ended' ? ` · ${STATE[c.state] ?? c.state}` : ''}</td>
               <td className="mono">{c.phone}</td>
@@ -89,11 +100,31 @@ export function IncidentCalls({ incidentId, version }: { incidentId: string; ver
                     ) : audio[c.id]?.error ? <span className="error">{audio[c.id].error}</span>
                       : <button type="button" className="small" disabled={!!audio[c.id]} onClick={() => play(c.id)}>{audio[c.id] ? 'Đang tải…' : 'Nghe lại'}</button>}
               </td>
+              {canListen && <td>
+                {c.transcript_status === 'xong' ? <button type="button" className="ghost small" onClick={() => showText(c.id)}>{tx[c.id]?.open ? 'Ẩn' : 'Xem lời thoại'}</button>
+                  : c.transcript_status === 'cho' ? <span className="muted">Đang chép…</span>
+                    : c.transcript_status === 'loi' ? <span className="row" style={{ gap: 4 }}><span className="badge red">Chép lỗi</span><button type="button" className="ghost small" onClick={() => retranscribe(c.id)}>Chép lại</button></span>
+                      : c.has_recording ? <button type="button" className="ghost small" onClick={() => retranscribe(c.id)}>Chép lời</button> : <span className="muted">—</span>}
+              </td>}
             </tr>
+            {tx[c.id]?.open && (
+              <tr><td colSpan={8}>
+                {tx[c.id].error ? <span className="error">{tx[c.id].error}</span> : (
+                  <div className="col" style={{ gap: 4 }}>
+                    <div style={{ whiteSpace: 'pre-wrap', lineHeight: 1.5 }}>{tx[c.id].text}</div>
+                    <div className="row small muted" style={{ gap: 8 }}>
+                      <span>Máy chép lời ({tx[c.id].model}), có thể sai: đối chiếu với ghi âm trước khi dùng làm bằng chứng.</span>
+                      <button type="button" className="ghost small" onClick={() => retranscribe(c.id)}>Chép lại</button>
+                    </div>
+                  </div>
+                )}
+              </td></tr>
+            )}
+            </Fragment>
           ))}
         </tbody>
       </table>
-      {canListen && <div className="small muted">Mỗi lượt nghe được ghi vào nhật ký ca.</div>}
+      {canListen && <div className="small muted">Mỗi lượt nghe và xem lời thoại được ghi vào nhật ký ca.</div>}
     </div>
   );
 }
@@ -119,6 +150,7 @@ export function TelephonyAdmin() {
           : s.reachable ? <span className="badge green">Tổng đài trực tuyến{s.version ? ` · Asterisk ${String(s.version).split('~')[0]}` : ''}</span>
             : <span className="badge red">Không kết nối được tổng đài</span>}
         <span className={`badge ${s.recordingsDir ? 'green' : 'amber'}`}>{s.recordingsDir ? 'Đã cấu hình thư mục ghi âm' : 'Chưa cấu hình thư mục ghi âm (MEDONE_RECORDINGS_DIR)'}</span>
+        <span className="badge">{s.asr ? 'Đang chép lời cuộc gọi' : 'Chưa cài máy chép lời (MEDONE_ASR_URL)'}</span>
       </div>
       {error && <div className="error">{error}</div>}
       <table className="small">
@@ -157,6 +189,42 @@ export function TelephonyAdmin() {
         Người được gán máy lẻ nhấc máy cuộc gọi trong hàng chờ thì màn hình EOC của họ tự mở ca. Mỗi người chỉ dùng một máy lẻ;
         mật khẩu điện thoại nằm trong tệp may-le.txt do lệnh <span className="mono">npm run asterisk:config</span> tạo, không hiện ở đây.
       </div>
+    </div>
+  );
+}
+
+/** QLCL tìm cuộc gọi theo lời thoại đã chép (ví dụ "ngừng thở", "co giật") để rà soát cách xử trí */
+export function CallSearch() {
+  const [q, setQ] = useState('');
+  const [days, setDays] = useState(90);
+  const [rows, setRows] = useState<any[] | null>(null);
+  const [error, setError] = useState('');
+  const search = async (e: React.FormEvent) => {
+    e.preventDefault(); setError('');
+    try { setRows(await api('GET', `/api/calls/search?q=${encodeURIComponent(q)}&days=${days}`)); } catch (er) { setError((er as Error).message); }
+  };
+  return (
+    <div className="panel col">
+      <form className="row" onSubmit={search} style={{ flexWrap: 'wrap' }}>
+        <input style={{ flex: 1, minWidth: 220 }} placeholder="Cụm từ trong lời thoại, ví dụ: ngừng thở" value={q} onChange={(e) => setQ(e.target.value)} />
+        <select value={days} onChange={(e) => setDays(Number(e.target.value))}>{[7, 30, 90, 365].map((d) => <option key={d} value={d}>{d} ngày qua</option>)}</select>
+        <button className="primary" disabled={q.trim().length < 2}>Tìm</button>
+      </form>
+      {error && <div className="error">{error}</div>}
+      {rows && (rows.length ? (
+        <table className="small">
+          <thead><tr><th>Giờ</th><th>Ca</th><th>Số</th><th>Đoạn lời thoại</th></tr></thead>
+          <tbody>{rows.map((r) => (
+            <tr key={r.id}>
+              <td className="mono">{new Date(r.ringing_at).toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}</td>
+              <td>{r.incident_id ? <a className="mono" href={`/ca/${r.incident_id}/truy-xuat`}>{r.incident_code}</a> : '—'}</td>
+              <td className="mono">{r.phone}</td>
+              <td>{String(r.snippet).split(/(«[^»]*»)/).map((part, k) => part.startsWith('«') ? <mark key={k}>{part.slice(1, -1)}</mark> : <span key={k}>{part}</span>)}</td>
+            </tr>
+          ))}</tbody>
+        </table>
+      ) : <div className="muted small">Không có cuộc gọi nào có cụm từ này.</div>)}
+      <div className="small muted">Chỉ tìm trong cuộc gọi đã chép lời. Mỗi lượt tìm được ghi nhật ký.</div>
     </div>
   );
 }

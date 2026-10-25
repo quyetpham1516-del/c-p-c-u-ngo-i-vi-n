@@ -2,6 +2,7 @@ import { timingSafeEqual } from 'node:crypto';
 import { createReadStream } from 'node:fs';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { z } from 'zod';
+import { asrConfig, queueTranscript } from '../asr.js';
 import { audit } from '../audit.js';
 import { config } from '../config.js';
 import { many, one, withTx } from '../db.js';
@@ -72,6 +73,8 @@ export function registerTelephony(app: FastifyInstance, { pool, hub }: Ctx) {
       WHERE id = $1 RETURNING id, state, incident_id`,
       [call.id, call.answered_at ? (b.duration ?? null) : 0, rec ? b.recording : null, rec?.bytes ?? null, rec?.sha256 ?? null, b.cause ?? null]);
     if (rec && r.incident_id) await withTx(pool, (tx) => audit(tx, incidentScope(r.incident_id), { id: null, name: 'Tổng đài' }, 'call.recorded', 'call', call.id, { file: b.recording, sha256: rec.sha256, bytes: rec.bytes }));
+    // Cuộc gọi đã có người nghe và có ghi âm: đưa vào hàng chép lời (cuộc bỏ dở thường chỉ có nhạc chờ, không chép)
+    if (rec && r.state === 'ended') await queueTranscript(pool, call.id);
     await pushCall(call.id);
     return { ok: true, state: r.state, recorded: !!rec };
   });
@@ -86,7 +89,7 @@ export function registerTelephony(app: FastifyInstance, { pool, hub }: Ctx) {
   app.get('/api/telephony/extensions', { preHandler: guard('admin', 'supervisor') }, async () => ({
     extensions: await many(pool, `SELECT s.ext, s.label, s.user_id, u.full_name, u.role FROM sip_extensions s LEFT JOIN users u ON u.id = s.user_id ORDER BY s.ext`),
     users: await many(pool, `SELECT id, full_name, role FROM users WHERE active AND role IN ('calltaker', 'dispatcher', 'supervisor', 'admin') ORDER BY full_name`),
-    status: { ...(await ariStatus()), recordingsDir: !!recordingsDir() },
+    status: { ...(await ariStatus()), recordingsDir: !!recordingsDir(), asr: !!asrConfig() },
   }));
 
   app.put('/api/telephony/extensions/:ext', { preHandler: guard('admin', 'supervisor') }, async (req) => {
@@ -159,7 +162,7 @@ export function registerTelephony(app: FastifyInstance, { pool, hub }: Ctx) {
 
   app.get('/api/incidents/:id/calls', { preHandler: guard(...CALL_VIEW) }, async (req) => many(pool, `
     SELECT c.id, c.phone, c.line, c.direction, c.state, c.ringing_at, c.answered_at, c.ended_at, c.duration_s, c.extension,
-           (c.recording_file IS NOT NULL) AS has_recording, c.recording_bytes, u.full_name AS operator_name
+           (c.recording_file IS NOT NULL) AS has_recording, c.recording_bytes, u.full_name AS operator_name, c.transcript_status
       FROM calls c LEFT JOIN users u ON u.id = c.operator_id WHERE c.incident_id = $1 ORDER BY c.ringing_at`, [idParam(req.params)]));
 
   /** Nghe lại ghi âm: hỗ trợ tua (Range); kiểm tra tệp còn nguyên theo mã băm lúc gác máy */
@@ -185,6 +188,39 @@ export function registerTelephony(app: FastifyInstance, { pool, hub }: Ctx) {
     return reply.header('content-length', info.bytes).send(createReadStream(info.path));
   });
 
+  /** Lời thoại chép từ ghi âm: nhạy cảm như ghi âm nên cùng quyền nghe lại, mỗi lượt xem ghi nhật ký */
+  app.get('/api/calls/:id/transcript', { preHandler: guard(...LISTEN) }, async (req) => {
+    const id = idParam(req.params);
+    const c = await one(pool, 'SELECT id, incident_id, transcript, transcript_status, transcript_at, transcript_model, transcript_error FROM calls WHERE id = $1', [id]);
+    if (!c) throw new HttpError(404, 'Không có cuộc gọi này');
+    if (c.transcript_status === 'xong') {
+      await withTx(pool, (tx) => audit(tx, c.incident_id ? incidentScope(c.incident_id) : 'system', actorOf(req), 'call.transcript_viewed', 'call', id));
+    }
+    return { status: c.transcript_status, text: c.transcript, at: c.transcript_at, model: c.transcript_model, error: c.transcript_error, enabled: !!asrConfig() };
+  });
+
+  /** Chép lại (máy chép lời lỗi, hoặc đổi mô hình tốt hơn) */
+  app.post('/api/calls/:id/transcript', { preHandler: guard(...LISTEN) }, async (req) => {
+    const id = idParam(req.params);
+    if (!asrConfig()) throw new HttpError(503, 'Chưa cài máy chép lời (MEDONE_ASR_URL)');
+    if (!(await queueTranscript(pool, id, true))) throw new HttpError(404, 'Cuộc gọi không có ghi âm');
+    return { ok: true, status: 'cho' };
+  });
+
+  /** QLCL tìm cuộc gọi theo lời thoại, ví dụ "ngừng thở", "co giật" */
+  app.get('/api/calls/search', { preHandler: guard(...LISTEN) }, async (req) => {
+    const q = z.object({ q: z.string().trim().min(2).max(100), days: z.coerce.number().int().min(1).max(3650).default(90) }).parse(req.query);
+    const rows = await many(pool, `
+      SELECT c.id, c.phone, c.direction, c.ringing_at, c.duration_s, c.incident_id, i.code AS incident_code,
+             ts_headline('simple', c.transcript, plainto_tsquery('simple', $1), 'MaxFragments=2, MaxWords=18, MinWords=6, StartSel=«, StopSel=»') AS snippet
+        FROM calls c LEFT JOIN incidents i ON i.id = c.incident_id
+       WHERE c.transcript_status = 'xong' AND c.ringing_at > now() - make_interval(days => $2)
+         AND to_tsvector('simple', coalesce(c.transcript, '')) @@ plainto_tsquery('simple', $1)
+       ORDER BY c.ringing_at DESC LIMIT 100`, [q.q, q.days]);
+    await withTx(pool, (tx) => audit(tx, 'system', actorOf(req), 'call.transcript_searched', 'call', null, { q: q.q, results: rows.length }));
+    return rows;
+  });
+
   /** Trạng thái tổng đài cho màn hình EOC */
-  app.get('/api/telephony/status', { preHandler: guard(...CALL_VIEW) }, async () => ({ ...(await ariStatus()), recordingsDir: !!recordingsDir() }));
+  app.get('/api/telephony/status', { preHandler: guard(...CALL_VIEW) }, async () => ({ ...(await ariStatus()), recordingsDir: !!recordingsDir(), asr: !!asrConfig() }));
 }

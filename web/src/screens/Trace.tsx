@@ -31,6 +31,7 @@ function describe(e: any): string {
     case 'call.answered_on_phone': return `Nhấc máy lẻ ${d.extension ?? ''}, tự mở ca`;
     case 'call.recorded': return `Lưu ghi âm cuộc gọi (${Math.round((d.bytes ?? 0) / 1024)} KB, mã băm ${String(d.sha256 ?? '').slice(0, 12)}…)`;
     case 'call.dialed': return `Gọi ra ${d.phone} từ máy lẻ ${d.extension}`;
+    case 'call.transcript_viewed': return 'Xem lời thoại chép từ ghi âm';
     case 'call.recording_played': return `Nghe lại ghi âm${d.intact === false ? ' (tệp đã bị thay đổi)' : ''}`;
     default: return e.action;
   }

@@ -41,6 +41,9 @@ export function QrLabels() {
         Tem chứa đường dẫn {origin}/tb/… — điện thoại phải truy cập được địa chỉ này (cùng mạng nội bộ hoặc tên miền của Medone) thì quét mới mở được.
         In khổ A4, tỷ lệ 100%, rồi cắt theo viền đứt và dán lên thiết bị.
       </div>
+      {/^https?:\/\/(localhost|127\.0\.0\.1)(:|$)/.test(origin) && <div className="alert amber no-print">
+        Trang đang mở bằng "localhost": tem in ra điện thoại sẽ không mở được. Hãy mở trang này bằng địa chỉ IP mạng nội bộ của máy chủ (ví dụ http://192.168.x.x:3000) hoặc tên miền của Medone rồi mới in.
+      </div>}
       {error && <div className="alert red">{error}</div>}
       <div className="qr-sheet">
         {labels?.map((l) => (

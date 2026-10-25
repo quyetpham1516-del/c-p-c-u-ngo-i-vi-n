@@ -189,9 +189,18 @@ Mô hình nhỏ (base, small) nghe tiếng Việt qua điện thoại kém; nên
 
 Đăng nhập bằng mật khẩu Medone vẫn dùng được song song (để quản trị vào được khi máy chủ SSO hỏng).
 
+## Chữ ký số nội bộ
+
+Ký phiếu chuyển viện (và ký bản bổ sung) tạo thêm một chữ ký số ECDSA P-256 bằng chứng thư của người ký. Medone tự làm CA gốc
+(tạo lần đầu khi cần, hiệu lực 10 năm) và tự cấp chứng thư 1 năm cho từng người khi họ ký lần đầu; khóa bí mật mã hóa bằng `MEDONE_DATA_KEY`.
+Phiếu, bản in và trang tra cứu công khai hiện chữ ký còn hợp lệ hay không: sửa nội dung, sửa chữ ký, chứng thư lạ hoặc bị thu hồi trước lúc ký đều bị báo.
+Quản trị → Chữ ký số nội bộ: tải chứng thư CA (`/api/pki/ca.pem`) gửi bệnh viện đối chiếu, xem chứng thư, thu hồi khi nghỉ việc hoặc mất máy.
+Giá trị pháp lý: trong nội bộ và với đơn vị đã thỏa thuận. Giai đoạn sau thêm CA công cộng (MobiFone CA, VNPT SmartCA, Viettel MySign) vào
+`SIGNING_PROVIDERS` trong `server/src/pki.ts` và chọn bằng `MEDONE_SIGN_PROVIDER`.
+
 ## Biến môi trường
 
 Tất cả nằm trong `.env` (tạo bằng `npm run setup`): `DATABASE_URL`, `MEDONE_JWT_SECRET`, `MEDONE_DATA_KEY` (mã hóa số định danh),
 `MEDONE_LOOKUP_KEY` (tìm kiếm), `MEDONE_TELEPHONY_KEY` (webhook tổng đài), `MEDONE_WEB_ORIGIN` (địa chỉ frontend được phép gọi API),
-`NEXT_PUBLIC_API_URL` (địa chỉ backend cho frontend), `NEXT_PUBLIC_VERIFY_URL` (địa chỉ công khai của trang tra cứu mã phiếu in trên QR; để trống là địa chỉ máy chủ đang mở), `MEDONE_AUTO_DISPATCH_KM` (bán kính tự báo xe, mặc định 5), `MEDONE_SMS_URL` và `MEDONE_SMS_TOKEN` (cổng SMS của nhà cung cấp: máy chủ POST JSON `{to, message, purpose, ref}` kèm `Authorization: Bearer`; để trống thì tin nằm trong hàng đợi để gửi tay), `MEDONE_ORG_NAME` (tên đơn vị ghi trên tệp FHIR gửi bệnh viện), `MEDONE_RECORDINGS_DIR` (thư mục tổng đài ghi âm), `MEDONE_ARI_URL`, `MEDONE_ARI_USER`, `MEDONE_ARI_PASSWORD` (ARI của Asterisk để gọi ra; lệnh `npm run asterisk:config` tự thêm cả bốn biến), `MEDONE_OIDC_ISSUER`, `MEDONE_OIDC_CLIENT_ID`, `MEDONE_OIDC_CLIENT_SECRET`, `MEDONE_OIDC_LABEL`, `MEDONE_OIDC_REDIRECT_URI`, `MEDONE_OIDC_USERNAME_CLAIM`, `MEDONE_OIDC_PROMPT` (đăng nhập một lần, xem dưới), `MEDONE_ASR_URL` (máy chép lời, ví dụ `http://127.0.0.1:8178/v1`), `MEDONE_ASR_KEY`, `MEDONE_ASR_MODEL` (mặc định `whisper-1`), `MEDONE_ASR_LANGUAGE` (mặc định `vi`). Khóa phải dài ít nhất 32 ký tự; thiếu là backend không chạy.
+`NEXT_PUBLIC_API_URL` (địa chỉ backend cho frontend), `NEXT_PUBLIC_VERIFY_URL` (địa chỉ công khai của trang tra cứu mã phiếu in trên QR; để trống là địa chỉ máy chủ đang mở), `MEDONE_AUTO_DISPATCH_KM` (bán kính tự báo xe, mặc định 5), `MEDONE_SMS_URL` và `MEDONE_SMS_TOKEN` (cổng SMS của nhà cung cấp: máy chủ POST JSON `{to, message, purpose, ref}` kèm `Authorization: Bearer`; để trống thì tin nằm trong hàng đợi để gửi tay), `MEDONE_ORG_NAME` (tên đơn vị ghi trên tệp FHIR gửi bệnh viện), `MEDONE_RECORDINGS_DIR` (thư mục tổng đài ghi âm), `MEDONE_ARI_URL`, `MEDONE_ARI_USER`, `MEDONE_ARI_PASSWORD` (ARI của Asterisk để gọi ra; lệnh `npm run asterisk:config` tự thêm cả bốn biến), `MEDONE_OIDC_ISSUER`, `MEDONE_OIDC_CLIENT_ID`, `MEDONE_OIDC_CLIENT_SECRET`, `MEDONE_OIDC_LABEL`, `MEDONE_OIDC_REDIRECT_URI`, `MEDONE_OIDC_USERNAME_CLAIM`, `MEDONE_OIDC_PROMPT` (đăng nhập một lần, xem dưới), `MEDONE_ASR_URL` (máy chép lời, ví dụ `http://127.0.0.1:8178/v1`), `MEDONE_ASR_KEY`, `MEDONE_ASR_MODEL` (mặc định `whisper-1`), `MEDONE_ASR_LANGUAGE` (mặc định `vi`), `MEDONE_SIGN_PROVIDER` (nhà cung cấp chữ ký số, mặc định `noi_bo`). Khóa phải dài ít nhất 32 ký tự; thiếu là backend không chạy.
 **Mất `MEDONE_DATA_KEY` là mất khả năng đọc số CCCD đã lưu**: cất khóa trong kho khóa (HSM/KMS) và có bản sao.

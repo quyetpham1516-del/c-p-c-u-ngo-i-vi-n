@@ -1,5 +1,6 @@
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import { z } from 'zod';
+import { signDocument, verifyDocument } from '../pki.js';
 import { createChargeForTransfer } from '../finance.js';
 import { audit, verifyChain } from '../audit.js';
 import { ORG_NAME, transferBundle } from '../fhir.js';
@@ -251,7 +252,8 @@ export function registerRecords(app: FastifyInstance, { pool, hub }: Ctx) {
         WHERE cs.vehicle_id = $1 AND cs.started_at <= COALESCE($2::timestamptz, now()) AND (cs.ended_at IS NULL OR cs.ended_at >= $3::timestamptz)`,
     [t.vehicle_id, t.signed_at, t.created_at]) : [];
     await withTx(pool, (tx) => audit(tx, t.incident_id ? incidentScope(t.incident_id) : 'system', actorOf(req), 'transfer.viewed', 'transfer', id));
-    return { ...t, times: times.map((x) => ({ ...x, label: TIME_LABEL[x.code] })), amendments, crew };
+    const digitalSignature = t.status === 'signed' ? await verifyDocument(pool, 'transfer', t.id, t.content_hash, t.version) : null;
+    return { ...t, times: times.map((x) => ({ ...x, label: TIME_LABEL[x.code] })), amendments, crew, digitalSignature };
   });
 
   /** Xuất phiếu theo chuẩn HL7 FHIR R4 (Bundle "document") để gửi bệnh viện nhận; số định danh đầy đủ chỉ khi người có quyền chọn */
@@ -296,8 +298,11 @@ export function registerRecords(app: FastifyInstance, { pool, hub }: Ctx) {
       await consumeForTransfer(tx, actor, id, epcr.medications);
       // Chữ ký điện tử: băm từng chữ ký để phát hiện sửa về sau; phiếu nhận mã xác thực in kèm QR cho bệnh viện tra cứu
       const signed = { ...epcr, signatures: epcr.signatures?.map((s) => ({ ...s, hash: signatureHash(s) })) };
+      const hash = contentHash(signed);
       await tx.query(`UPDATE transfers SET status = 'signed', signed_by = $2, signed_at = now(), updated_at = now(), epcr = $3,
-                             verify_code = $4, content_hash = $5 WHERE id = $1`, [id, actor.id, signed, newVerifyCode(), contentHash(signed)]);
+                             verify_code = $4, content_hash = $5 WHERE id = $1`, [id, actor.id, signed, newVerifyCode(), hash]);
+      // Chữ ký số của người ký phiếu (CA nội bộ Medone ở giai đoạn 1)
+      await signDocument(tx, actor.id!, { type: 'transfer', id, version: t.version, contentHash: hash, purpose: 'ky_phieu' });
       await createChargeForTransfer(tx, actor, id);
       const scope = t.incident_id ? incidentScope(t.incident_id) : 'system';
       await audit(tx, scope, actor, 'transfer.signed', 'transfer', id, { number: t.transfer_number, version: t.version });
@@ -329,7 +334,10 @@ export function registerRecords(app: FastifyInstance, { pool, hub }: Ctx) {
         [id, t.version, b.reason, t.epcr, actor.id]);
       // Chữ ký của người bệnh, người nhà đã cố định lúc ký phiếu: bản bổ sung giữ nguyên, không thêm bớt
       const epcr = { ...b.epcr, signatures: t.epcr?.signatures };
-      await tx.query('UPDATE transfers SET epcr = $2, version = version + 1, content_hash = $3, updated_at = now() WHERE id = $1', [id, epcr, contentHash(epcr)]);
+      const hash = contentHash(epcr);
+      await tx.query('UPDATE transfers SET epcr = $2, version = version + 1, content_hash = $3, updated_at = now() WHERE id = $1', [id, epcr, hash]);
+      // Người bổ sung ký số bản mới: bản cũ vẫn giữ chữ ký cũ trong lịch sử
+      await signDocument(tx, actor.id!, { type: 'transfer', id, version: t.version + 1, contentHash: hash, purpose: 'bo_sung' });
       await audit(tx, t.incident_id ? incidentScope(t.incident_id) : 'system', actor, 'transfer.amended', 'transfer', id, { fromVersion: t.version, reason: b.reason });
     });
     return { ok: true };

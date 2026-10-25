@@ -5,7 +5,7 @@ import { createPool } from '../src/db.js';
 import { seed } from '../src/seed.js';
 
 // Mật khẩu sinh ngẫu nhiên cho mỗi lần chạy kiểm thử
-const testPassword = randomBytes(12).toString('base64url');
+export const testPassword = randomBytes(12).toString('base64url');
 
 export async function freshApp() {
   const pool = createPool();

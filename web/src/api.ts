@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 
 export type Role = 'calltaker' | 'dispatcher' | 'supervisor' | 'crew' | 'qa' | 'admin'
   | 'pharmacist' | 'technician' | 'ipc' | 'hr' | 'accountant' | 'director';
-export interface User { id: string; username: string; name: string; role: Role }
+export interface User { id: string; username: string; name: string; role: Role; mfaSetup?: boolean }
 
 /**
  * Địa chỉ backend Fastify, đặt qua NEXT_PUBLIC_API_URL trong .env (để trống = cùng địa chỉ với frontend).
@@ -68,9 +68,13 @@ export async function api<T = any>(method: string, url: string, body?: unknown):
   });
   const text = await res.text();
   const json = text ? JSON.parse(text) : null;
-  if (res.status === 401 && !url.endsWith('/login')) {
+  if (res.status === 401 && !url.startsWith('/api/auth/')) {
     session.clear();
     location.href = '/dang-nhap';
+  }
+  // Vai trò bắt buộc xác thực hai lớp mà chưa cài: chuyển sang trang cài đặt
+  if (res.status === 403 && json?.details?.code === 'MFA_SETUP_REQUIRED' && !location.pathname.startsWith('/bao-mat')) {
+    location.href = '/bao-mat';
   }
   if (!res.ok) {
     const details = Array.isArray(json?.details) && typeof json.details[0] === 'string' ? `: ${json.details.join('; ')}` : '';

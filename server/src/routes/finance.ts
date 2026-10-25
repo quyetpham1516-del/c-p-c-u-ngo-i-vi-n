@@ -168,7 +168,7 @@ export function registerFinance(app: FastifyInstance, { pool }: Ctx) {
   app.post('/api/finance/charges/:id/waiver/decide', { preHandler: guard(...WAIVER_APPROVERS) }, async (req) => {
     const id = idParam(req.params);
     const b = z.object({ approve: z.boolean(), note: opt() }).parse(req.body);
-    return withTx(pool, (tx) => decideWaiver(tx, actorOf(req), id, b.approve, b.note));
+    return withTx(pool, (tx) => decideWaiver(tx, actorOf(req), req.user.role, id, b.approve, b.note));
   });
 
   app.post('/api/finance/charges/:id/cancel', { preHandler: guard(...FIN) }, async (req) => {

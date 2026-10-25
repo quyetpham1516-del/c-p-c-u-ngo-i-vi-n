@@ -25,7 +25,8 @@ import { registerOps } from './routes/ops.js';
 import { registerCompliance } from './routes/compliance.js';
 import { registerSafety } from './routes/safety.js';
 import { registerReports } from './routes/reports.js';
-import type { Ctx } from './http.js';
+import { isSession, type Ctx, type TokenUser } from './http.js';
+import { registerSecurity } from './routes/security.js';
 
 export * from './http.js';
 
@@ -53,7 +54,8 @@ export async function buildApp(pool: pg.Pool, opts: { logger?: boolean } = {}) {
   app.get('/ws', { websocket: true }, (socket, req) => {
     const token = (req.query as { token?: string }).token;
     try {
-      app.jwt.verify(token ?? '');
+      const u = app.jwt.verify<TokenUser>(token ?? '');
+      if (!isSession(u) || u.mfaSetup) throw new Error('not a session');
     } catch {
       socket.close(4401, 'unauthorized');
       return;
@@ -79,6 +81,7 @@ export async function buildApp(pool: pg.Pool, opts: { logger?: boolean } = {}) {
   registerOps(app, ctx);
   registerCompliance(app, ctx);
   registerSafety(app, ctx);
+  registerSecurity(app, ctx);
   registerAdmin(app, ctx);
 
   app.setNotFoundHandler((_req, reply) => reply.code(404).send({ error: 'Không tìm thấy' }));

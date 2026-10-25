@@ -3,6 +3,7 @@ import { many, nextCounter, one, type Queryable, type Tx } from './db.js';
 import { equipmentGaps, gapText } from './equipment.js';
 import { assertVehicleLegal } from './ops.js';
 import { haversineKm } from './fleet.js';
+import { recordLimited } from './security.js';
 import { assertDisinfected, ensureDisinfection, queueSurvey } from './quality.js';
 import { evaluate, type Answers } from './triage/engine.js';
 import type { Priority } from './triage/protocol.js';
@@ -289,6 +290,9 @@ export async function assignVehicle(tx: Tx, actor: Actor, incidentId: string, ve
       [vehicleId, cur.id, `Rút xe cho ca P1 ${inc.code}: ${divertReason}`]);
     await tx.query(`UPDATE incidents SET status = 'confirmed', updated_at = now() WHERE id = $1`, [cur.id]);
     await audit(tx, incidentScope(cur.id), actor, 'assignment.diverted', 'vehicle', vehicleId, { toIncident: inc.code, reason: divertReason });
+    // Vẫn rút xe ngay (ca P1); vượt hạn mức trong ngày thì trưởng ca hậu kiểm
+    await recordLimited(tx, actor, 'rut_xe', { incidentId, vehicleId, reason: divertReason,
+      detail: { fromIncident: cur.code, fromPriority: cur.final_priority, toIncident: inc.code, vehicleStatus: v.status } });
   }
   // Đăng kiểm, bảo hiểm bắt buộc hết hạn: khóa cứng, không ai cho đi được
   await assertVehicleLegal(tx, vehicleId);

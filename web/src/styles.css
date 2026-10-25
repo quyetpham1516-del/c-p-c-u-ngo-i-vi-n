@@ -321,3 +321,9 @@ td.cell-khong_dat { color: var(--p1); background: color-mix(in srgb, var(--p1) 1
 .sos-banner input { color: var(--text); }
 @keyframes sos-blink { 50% { opacity: .55; } }
 .sos-banner b { color: #fff; }
+
+/* Bảo mật: mã QR cài xác thực hai lớp, mã dự phòng */
+.mfa-qr { display: inline-block; width: 200px; height: 200px; background: #fff; padding: 4px; border-radius: 8px; }
+.mfa-qr svg { width: 100%; height: 100%; }
+.mfa-codes { display: grid; grid-template-columns: repeat(2, max-content); gap: 6px 24px; font-size: 18px; letter-spacing: 1px; }
+.nav-count { display: inline-block; min-width: 18px; padding: 0 5px; margin-left: 4px; border-radius: 999px; background: var(--p1); color: #fff; font-size: 11px; font-weight: 700; text-align: center; }

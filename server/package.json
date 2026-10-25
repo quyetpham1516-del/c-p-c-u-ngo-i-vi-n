@@ -18,7 +18,8 @@
     "import:hospitals": "tsx src/tools/import-hospitals.ts",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "load": "tsx load/sim.ts"
+    "load": "tsx load/sim.ts",
+    "asterisk:config": "tsx src/tools/asterisk-config.ts"
   },
   "keywords": [],
   "author": "",

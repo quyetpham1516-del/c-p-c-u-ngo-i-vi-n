@@ -9,6 +9,8 @@ import {
   incidentScope, incidentSummary, recordTime, saveTriage, unassignVehicle,
 } from '../domain.js';
 import { queueSurvey } from '../quality.js';
+import { takeCall } from '../telephony.js';
+import { pbxKeyOk } from './telephony.js';
 import { evaluate } from '../triage/engine.js';
 import { protocolDescriptor, type Priority, type VehicleType } from '../triage/protocol.js';
 import { suggestVehicles } from '../fleet.js';
@@ -28,7 +30,7 @@ export function registerEoc(app: FastifyInstance, { pool, hub }: Ctx) {
     await hub.publish({ type: 'incident', id, incident: s });
   };
   const pushCall = async (id: string) => {
-    const c = await one(pool, 'SELECT id, phone, line, state, ringing_at, answered_at, ended_at, incident_id, operator_id FROM calls WHERE id = $1', [id]);
+    const c = await one(pool, 'SELECT id, phone, line, state, direction, ringing_at, answered_at, ended_at, incident_id, operator_id, extension FROM calls WHERE id = $1', [id]);
     await hub.publish({ type: 'call', id, call: c });
   };
 
@@ -42,13 +44,21 @@ export function registerEoc(app: FastifyInstance, { pool, hub }: Ctx) {
   /* ---------- Cuộc gọi (tổng đài báo qua webhook) ---------- */
 
   const telephonyAuth = async (req: FastifyRequest, reply: import('fastify').FastifyReply) => {
-    if (req.headers['x-medone-telephony-key'] === config.telephonyKey) return;
+    if (pbxKeyOk(req.headers['x-medone-telephony-key'])) return;
     return guard(...EOC_ROLES)(req, reply);
   };
 
   app.post('/api/telephony/ring', { preHandler: telephonyAuth }, async (req) => {
-    const b = z.object({ phone: z.string().min(3).max(20), line: z.enum(['1800', '115']).default('1800'), recordingRef: z.string().optional() }).parse(req.body);
-    const c = await one(pool, 'INSERT INTO calls(phone, line, recording_ref) VALUES ($1,$2,$3) RETURNING *', [b.phone, b.line, b.recordingRef ?? null]);
+    const b = z.object({
+      phone: z.string().trim().min(3).max(20), line: z.enum(['1800', '115']).default('1800'), recordingRef: z.string().optional(),
+      pbxId: z.string().trim().regex(/^[\w.-]{1,64}$/).optional(),
+    }).parse(req.body);
+    // Tổng đài gửi lại cùng mã cuộc gọi (mạng chập chờn) thì không tạo cuộc gọi trùng
+    if (b.pbxId) {
+      const ex = await one(pool, 'SELECT * FROM calls WHERE pbx_id = $1', [b.pbxId]);
+      if (ex) return ex;
+    }
+    const c = await one(pool, 'INSERT INTO calls(phone, line, recording_ref, pbx_id) VALUES ($1,$2,$3,$4) RETURNING *', [b.phone, b.line, b.recordingRef ?? null, b.pbxId ?? null]);
     await pushCall(c.id);
     return c;
   });
@@ -64,7 +74,7 @@ export function registerEoc(app: FastifyInstance, { pool, hub }: Ctx) {
     const q = z.object({ state: z.enum(['ringing', 'abandoned', 'answered']).default('ringing') }).parse(req.query);
     const extra = q.state === 'abandoned' ? 'AND callback_done_at IS NULL' : '';
     return many(pool, `SELECT id, phone, line, state, ringing_at, answered_at, ended_at, incident_id, operator_id FROM calls
-                        WHERE state = $1 ${extra} ORDER BY ringing_at LIMIT 500`, [q.state]);
+                        WHERE state = $1 AND direction = 'in' ${extra} ORDER BY ringing_at LIMIT 500`, [q.state]);
   });
 
   /** Nhận cuộc gọi: tạo ca mới, Mã ca sinh tại T0 (giờ chuông reo) */
@@ -72,24 +82,7 @@ export function registerEoc(app: FastifyInstance, { pool, hub }: Ctx) {
     const id = idParam(req);
     const actor = actorOf(req);
     const b = z.object({ attachTo: z.string().uuid().optional() }).parse(req.body ?? {});
-    const out = await withTx(pool, async (tx) => {
-      const call = await one(tx, `SELECT * FROM calls WHERE id = $1 FOR UPDATE SKIP LOCKED`, [id]);
-      if (!call) throw new HttpError(409, 'Cuộc gọi đang được người khác nhận');
-      if (call.state !== 'ringing') throw new HttpError(409, 'Cuộc gọi không còn chờ');
-      let incidentId = b.attachTo;
-      if (incidentId) {
-        await getIncident(tx, incidentId);
-        await audit(tx, incidentScope(incidentId), actor, 'call.attached', 'call', id, { phone: call.phone });
-      } else {
-        const inc = await createIncident(tx, actor, {
-          source: call.line === '115' ? '115' : '1800', callerPhone: call.phone, t0: call.ringing_at, t1: new Date(),
-        });
-        incidentId = inc.id;
-      }
-      await tx.query(`UPDATE calls SET state = 'answered', answered_at = now(), operator_id = $2, incident_id = $3 WHERE id = $1`,
-        [id, actor.id, incidentId]);
-      return incidentId!;
-    });
+    const out = await withTx(pool, (tx) => takeCall(tx, id, actor, { attachTo: b.attachTo, via: 'web' }));
     await Promise.all([pushCall(id), pushIncident(out)]);
     return incidentDetail(pool, out);
   });

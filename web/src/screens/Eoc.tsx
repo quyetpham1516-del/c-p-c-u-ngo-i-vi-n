@@ -7,6 +7,7 @@ import { FleetTable, type Board } from '../components/FleetTable';
 import { HospitalPicker } from '../components/HospitalPicker';
 import { MapView } from '../components/MapView';
 import { SharePanel } from '../components/SharePanel';
+import { DialButton, IncidentCalls, useTelephony } from '../components/Telephony';
 import { FLAG_LABEL, TriageQuestions, type Protocol, type TriageResult } from '../components/Triage';
 
 interface Call { id: string; phone: string; line: string; state: string; ringing_at: string; incident_id: string | null }
@@ -54,6 +55,7 @@ export function Eoc() {
   const [error, setError] = useState('');
   const { board, onEvent: boardEvent } = useBoard();
   const now = useNow();
+  const tel = useTelephony();
 
   const loadLists = useCallback(() => {
     api<Call[]>('GET', '/api/calls?state=ringing').then(setCalls).catch(() => {});
@@ -69,6 +71,8 @@ export function Eoc() {
   const connected = useLive((e) => {
     boardEvent(e);
     if (e.type === 'reconnected') loadLists();
+    // Nhấc máy lẻ trên điện thoại: tổng đài báo về, màn hình của chính người nhấc máy mở ca ngay
+    if (e.type === 'call_taken' && e.userId === session.user?.id && e.incidentId) setSelected(e.incidentId);
     if (e.type === 'call' && e.call) {
       const c = e.call as Call;
       setCalls((cs) => (c.state === 'ringing' ? (cs.some((x) => x.id === c.id) ? cs : [...cs, c]) : cs.filter((x) => x.id !== c.id)));
@@ -156,7 +160,10 @@ export function Eoc() {
               {abandoned.map((c) => (
                 <div key={c.id} className="item row" style={{ justifyContent: 'space-between', cursor: 'default' }}>
                   <div><b className="mono">{c.phone}</b><div className="small muted">{fmtTime(c.ringing_at)}</div></div>
-                  <button onClick={async () => { await api('POST', `/api/calls/${c.id}/callback-done`); setAbandoned((a) => a.filter((x) => x.id !== c.id)); }}>Đã gọi lại</button>
+                  <span className="row" style={{ gap: 4 }}>
+                    {tel.canDial && <DialButton phone={c.phone} callbackOf={c.id} onDone={() => setAbandoned((a) => a.filter((x) => x.id !== c.id))} />}
+                    <button onClick={async () => { await api('POST', `/api/calls/${c.id}/callback-done`); setAbandoned((a) => a.filter((x) => x.id !== c.id)); }}>Đã gọi lại</button>
+                  </span>
                 </div>
               ))}
             </div>
@@ -189,7 +196,7 @@ export function Eoc() {
 
       <section>
         {selected && protocol
-          ? <IncidentWorkspace key={selected} id={selected} protocol={protocol} board={board} version={version} canDispatch={canDispatch} onClose={() => setSelected(null)} />
+          ? <IncidentWorkspace key={selected} id={selected} protocol={protocol} board={board} version={version} canDispatch={canDispatch} canDial={tel.canDial} onClose={() => setSelected(null)} />
           : <div className="panel muted">Chọn một cuộc gọi chờ hoặc một ca để bắt đầu.</div>}
       </section>
 
@@ -218,8 +225,8 @@ export function Eoc() {
 
 /* ------------------------------------------------------------------ */
 
-function IncidentWorkspace({ id, protocol, board, version, canDispatch, onClose }: {
-  id: string; protocol: Protocol; board: Board | null; version: number; canDispatch: boolean; onClose: () => void;
+function IncidentWorkspace({ id, protocol, board, version, canDispatch, canDial, onClose }: {
+  id: string; protocol: Protocol; board: Board | null; version: number; canDispatch: boolean; canDial: boolean; onClose: () => void;
 }) {
   const [inc, setInc] = useState<any>(null);
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -311,7 +318,10 @@ function IncidentWorkspace({ id, protocol, board, version, canDispatch, onClose 
             <input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} onBlur={() => form.address !== (inc.address ?? '') && saveField({ address: form.address })} disabled={closed} />
           </label>
           <label className="field">Số gọi lại
-            <input value={form.callbackPhone} onChange={(e) => setForm({ ...form, callbackPhone: e.target.value })} onBlur={() => form.callbackPhone !== (inc.callback_phone ?? '') && saveField({ callbackPhone: form.callbackPhone })} disabled={closed} />
+            <span className="row" style={{ gap: 4 }}>
+              <input style={{ flex: 1 }} value={form.callbackPhone} onChange={(e) => setForm({ ...form, callbackPhone: e.target.value })} onBlur={() => form.callbackPhone !== (inc.callback_phone ?? '') && saveField({ callbackPhone: form.callbackPhone })} disabled={closed} />
+              {canDial && <DialButton phone={form.callbackPhone || inc.caller_phone} incidentId={id} className="small" />}
+            </span>
           </label>
           <label className="field">Mô tả thêm (mốc, tầng, hẻm)
             <input value={form.addressNote} onChange={(e) => setForm({ ...form, addressNote: e.target.value })} onBlur={() => saveField({ addressNote: form.addressNote })} disabled={closed} />
@@ -375,6 +385,7 @@ function IncidentWorkspace({ id, protocol, board, version, canDispatch, onClose 
               {canDispatch && <div><button style={{ marginTop: 6 }} onClick={() => run(() => api('POST', `/api/outbox/${o.id}/mark-sent`))}>Đã báo 115 qua điện thoại</button></div>}
             </div>
           ))}
+          <IncidentCalls incidentId={id} version={version} />
         </div>
       </div>
     </div>

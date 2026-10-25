@@ -1,3 +1,4 @@
+import { assertWaiverLimit } from './security.js';
 import { audit, type Actor } from './audit.js';
 import { many, nextCounter, one, type Queryable, type Tx } from './db.js';
 import { HttpError } from './domain.js';
@@ -197,13 +198,15 @@ export async function requestWaiver(tx: Tx, actor: Actor, id: string, b: { kind:
   await audit(tx, 'system', actor, 'finance.waiver_requested', 'charge', id, b);
 }
 
-export const WAIVER_APPROVERS: Role[] = ['director'];
-export async function decideWaiver(tx: Tx, actor: Actor, id: string, approve: boolean, note?: string | null) {
+/** Vai trò có thể duyệt miễn/giảm; mỗi vai trò chỉ duyệt tới hạn mức của mình (bảng approval_limits) */
+export const WAIVER_APPROVERS: Role[] = ['accountant', 'director'];
+export async function decideWaiver(tx: Tx, actor: Actor, role: Role, id: string, approve: boolean, note?: string | null) {
   const c = await one(tx, 'SELECT * FROM charges WHERE id = $1 FOR UPDATE', [id]);
   if (!c || c.waiver_status !== 'cho_duyet') throw new HttpError(409, 'Không có đề nghị miễn/giảm chờ duyệt');
   if (c.waiver_amount == null) throw new HttpError(409, 'Kế toán chưa nhập số tiền giảm');
   if (c.waiver_by === actor.id) throw new HttpError(403, 'Người đề nghị miễn/giảm không tự duyệt');
   if (approve && Number(c.waiver_amount) > Number(c.total) - Number(c.paid)) throw new HttpError(409, 'Số miễn/giảm vượt số còn phải thu');
+  if (approve) await assertWaiverLimit(tx, role, Number(c.waiver_amount));
   await tx.query(`UPDATE charges SET waiver_status = $2, waiver_decided_by = $3, waiver_decided_at = now(),
                          note = coalesce($4, note) WHERE id = $1`, [id, approve ? 'da_duyet' : 'tu_choi', actor.id, note ?? null]);
   const r = await refreshCharge(tx, id);

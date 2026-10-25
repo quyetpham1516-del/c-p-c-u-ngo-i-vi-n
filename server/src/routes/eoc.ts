@@ -1,5 +1,6 @@
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import { z } from 'zod';
+import { recordLimited } from '../security.js';
 import { audit } from '../audit.js';
 import { config } from '../config.js';
 import { many, one, withTx } from '../db.js';
@@ -292,6 +293,8 @@ export function registerEoc(app: FastifyInstance, { pool, hub }: Ctx) {
       await audit(tx, incidentScope(id), actor, 'incident.closed', 'incident', id, b);
       const served = await one(tx, 'SELECT 1 FROM assignments WHERE incident_id = $1 LIMIT 1', [id]);
       if (b.status === 'closed' && served) await queueSurvey(tx, id);
+      // Hủy ca đã điều xe: vượt hạn mức trong ngày thì trưởng ca hậu kiểm
+      if (b.status === 'cancelled' && served) await recordLimited(tx, actor, 'huy_ca', { incidentId: id, reason: b.reason, detail: { duplicateOf: b.duplicateOf ?? null } });
       if (b.duplicateOf) {
         await audit(tx, incidentScope(b.duplicateOf), actor, 'incident.duplicate_linked', 'incident', id, {});
         await tx.query(`UPDATE calls SET incident_id = $2 WHERE incident_id = $1`, [id, b.duplicateOf]);

@@ -44,13 +44,14 @@ Phần mềm cho **Dịch vụ Chuyển viện – Cấp cứu ngoại viện Me
 | Bảng kê BHYT (QĐ 130/QĐ-BYT, sửa đổi QĐ 4750) | Tab **BHYT** ở Tài chính: các lượt đối tượng BHYT, kế toán nhập thẻ (mã thẻ, nơi ĐKBĐ, hạn, mức hưởng), hệ thống báo thiếu gì (mã KCB bệnh viện nhận, số km...); quỹ trả theo định mức nhiên liệu × km × giá xăng, phần chênh người bệnh trả; **xuất XML** gồm Bảng 1 và Bảng 3 (dòng `VC.<mã nơi đến>`) gói trong hồ sơ `GIAMDINHHS`, mỗi lượt chỉ xuất một lần (có nhật ký và mã băm). Chưa kê thuốc (Bảng 2), chưa ký số: tải lên Cổng giám định bằng công cụ ký số của đơn vị. Mã mặc định là bản nháp | 7.5 |
 | Xác thực hai lớp | Ứng dụng xác thực trên điện thoại (Google/Microsoft Authenticator, chuẩn TOTP): trang **Bảo mật** nhập lại mật khẩu, quét QR, nhập mã đầu tiên, nhận 10 **mã dự phòng** dùng một lần; đăng nhập cần mật khẩu và mã 6 số; nhập sai 5 lần khóa 15 phút; mã đã dùng không dùng lại được; khóa TOTP mã hóa AES-GCM. Quản trị chọn vai trò bắt buộc (mặc định điều phối viên, trưởng ca, kế toán, Ban Giám đốc, quản trị) và bật **Bắt buộc ngay** khi mọi người đã cài: người chưa cài chỉ vào được trang cài đặt. Mất điện thoại thì quản trị khác đặt lại | 12.5 |
 | Hạn mức phê duyệt | Ban Giám đốc đặt hạn mức ở trang **Bảo mật**: miễn/giảm phí theo số tiền cho từng vai trò; **rút xe** và **hủy ca đã điều xe** vẫn làm ngay (việc khẩn) nhưng vượt số lần trong ngày thì vào danh sách **Hậu kiểm** cho trưởng ca (đồng ý hoặc không đồng ý có lý do, ghi nhật ký); số mục chờ hiện trên thanh điều hướng | 7.5 |
+| Vùng phủ, vùng bị hở | Trang **Vùng phủ** (điều phối, trưởng ca, QLCL, Ban Giám đốc): địa bàn chia ô 1 km, mỗi ô tô màu theo thời gian xe gần nhất tới được (trong chỉ tiêu, gần quá, bị hở), chấm đen là ca thật trong 30–365 ngày qua (lọc mọi ca, P1, P1–P2); kịch bản **hiện tại** (chỉ xe đang sẵn sàng, ở vị trí hiện tại) hoặc **đủ xe** (mọi xe trực đứng tại trạm); bỏ chọn một xe để xem nếu xe đó đi làm thì hở chỗ nào; tỉ lệ diện tích và tỉ lệ ca nằm trong vùng tới kịp; **gợi ý 3 chỗ đặt xe tạm trú** phủ thêm nhiều ca nhất. Bảng đội xe có huy hiệu **Vùng phủ %** (xanh ≥ 90%, cam ≥ 75%, đỏ dưới) cập nhật khi xe đổi trạng thái. Thời gian ước tính theo khoảng cách như phần gợi ý xe, chưa có giao thông | 12.5, 12.7 |
 | Điểm, trạm do quản trị quyết định | Tài khoản `admin` thêm/sửa/tạm ngưng điểm (trụ sở, trạm xe, kho trung tâm, điểm trực sự kiện), đặt tọa độ trên bản đồ, chuyển xe giữa các điểm, phân nhân viên về điểm; kíp chỉ nhận được xe thuộc điểm mình | 5.5 |
 
 ## Chưa có trong bản này (theo đúng lộ trình)
 
 Nối tổng đài SIP thật (đã có webhook `/api/telephony/ring` và `/abandon` chờ nối), ghi âm, ASR; bản đồ Việt Nam có giao thông
 (đang dùng OpenStreetMap và ước tính theo khoảng cách); chữ ký số CA; FHIR sang bệnh viện; ứng dụng Android gốc
-(bản này là ứng dụng web cài được, chạy offline); đăng nhập một lần (Keycloak); vùng bị hở trên bản đồ. Xem mục 12.5, 12.7 của kế hoạch.
+(bản này là ứng dụng web cài được, chạy offline); đăng nhập một lần (Keycloak). Xem mục 12.5, 12.7 của kế hoạch.
 
 ## Kiến trúc 3 lớp
 

@@ -31,6 +31,7 @@ import { registerAttendance } from './routes/attendance.js';
 import { registerSharing } from './routes/sharing.js';
 import { registerPayroll } from './routes/payroll.js';
 import { registerOrg } from './routes/org.js';
+import { registerCoverage } from './routes/coverage.js';
 
 export * from './http.js';
 
@@ -90,6 +91,7 @@ export async function buildApp(pool: pg.Pool, opts: { logger?: boolean } = {}) {
   registerSharing(app, ctx);
   registerPayroll(app, ctx);
   registerOrg(app, ctx);
+  registerCoverage(app, ctx);
   registerAdmin(app, ctx);
 
   app.setNotFoundHandler((_req, reply) => reply.code(404).send({ error: 'Không tìm thấy' }));

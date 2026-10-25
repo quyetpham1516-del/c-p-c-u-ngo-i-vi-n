@@ -6,3 +6,5 @@ coverage/
 load/results/
 backups/
 certs/
+deploy/asterisk/generated/
+data/

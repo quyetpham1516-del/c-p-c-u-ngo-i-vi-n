@@ -46,11 +46,12 @@ Phần mềm cho **Dịch vụ Chuyển viện – Cấp cứu ngoại viện Me
 | Hạn mức phê duyệt | Ban Giám đốc đặt hạn mức ở trang **Bảo mật**: miễn/giảm phí theo số tiền cho từng vai trò; **rút xe** và **hủy ca đã điều xe** vẫn làm ngay (việc khẩn) nhưng vượt số lần trong ngày thì vào danh sách **Hậu kiểm** cho trưởng ca (đồng ý hoặc không đồng ý có lý do, ghi nhật ký); số mục chờ hiện trên thanh điều hướng | 7.5 |
 | Liên thông FHIR với bệnh viện | Trang phiếu có nút **Tải FHIR (JSON)**: phiếu chuyển viện xuất theo **HL7 FHIR R4**, dạng Bundle `document` (Composition đứng đầu, có phần tóm tắt dễ đọc) gồm Patient (Số BA; số CCCD chỉ 4 số cuối), Encounter (cấp cứu, mã ca, số chuyển viện, mốc thời gian, bệnh viện nhận kèm mã KCB), Practitioner (kíp, số GPHN), Observation sinh hiệu theo mã **LOINC** (mạch, huyết áp, SpO2, nhịp thở, nhiệt độ, GCS, đường huyết, đau), Condition **ICD-10**, Procedure (can thiệp), MedicationAdministration (thuốc, liều, đường dùng, số lô), AllergyIntolerance. Trưởng ca, QLCL, quản trị tải được bản kèm số định danh đầy đủ; mỗi lượt tải ghi nhật ký. Tên đơn vị lấy từ `MEDONE_ORG_NAME`. Chưa gửi tự động sang máy chủ FHIR của bệnh viện (cần bệnh viện cấp địa chỉ và khóa) | 12.7 |
 | Vùng phủ, vùng bị hở | Trang **Vùng phủ** (điều phối, trưởng ca, QLCL, Ban Giám đốc): địa bàn chia ô 1 km, mỗi ô tô màu theo thời gian xe gần nhất tới được (trong chỉ tiêu, gần quá, bị hở), chấm đen là ca thật trong 30–365 ngày qua (lọc mọi ca, P1, P1–P2); kịch bản **hiện tại** (chỉ xe đang sẵn sàng, ở vị trí hiện tại) hoặc **đủ xe** (mọi xe trực đứng tại trạm); bỏ chọn một xe để xem nếu xe đó đi làm thì hở chỗ nào; tỉ lệ diện tích và tỉ lệ ca nằm trong vùng tới kịp; **gợi ý 3 chỗ đặt xe tạm trú** phủ thêm nhiều ca nhất. Bảng đội xe có huy hiệu **Vùng phủ %** (xanh ≥ 90%, cam ≥ 75%, đỏ dưới) cập nhật khi xe đổi trạng thái. Thời gian ước tính theo khoảng cách như phần gợi ý xe, chưa có giao thông | 12.5, 12.7 |
+| Tổng đài SIP và ghi âm | Tổng đài **Asterisk** tự cài (không phụ thuộc nhà cung cấp): lệnh `npm run asterisk:config` sinh toàn bộ cấu hình (máy lẻ, hàng chờ `dieu-phoi`, ghi âm, webhook, ARI). Cuộc gọi 1800/115 vào hàng chờ hiện ngay trên màn hình EOC; điều phối viên **nhấc máy lẻ trên điện thoại là màn hình của họ tự mở ca** (Mã ca tính T0 lúc chuông reo). Mọi cuộc gọi được **ghi âm**, gác máy thì lưu tệp, thời lượng và **mã băm SHA-256**; trưởng ca, QLCL, quản trị, Ban Giám đốc **nghe lại** ngay trên ca và trang truy xuất (tua được, báo nếu tệp bị sửa, mỗi lượt nghe ghi nhật ký). Nút **Gọi lại** cho cuộc gọi bỏ dở và số gọi lại của ca: máy lẻ của mình đổ chuông, nhấc máy thì tổng đài quay số, cuộc gọi ra cũng được ghi âm. Quản trị gán máy lẻ cho người trực ở trang **Quản trị** | 5.1, 5.2, 6.3 |
 | Điểm, trạm do quản trị quyết định | Tài khoản `admin` thêm/sửa/tạm ngưng điểm (trụ sở, trạm xe, kho trung tâm, điểm trực sự kiện), đặt tọa độ trên bản đồ, chuyển xe giữa các điểm, phân nhân viên về điểm; kíp chỉ nhận được xe thuộc điểm mình | 5.5 |
 
 ## Chưa có trong bản này (theo đúng lộ trình)
 
-Nối tổng đài SIP thật (đã có webhook `/api/telephony/ring` và `/abandon` chờ nối), ghi âm, ASR; bản đồ Việt Nam có giao thông
+Trung kế nhà mạng cho đầu số 1800/115 (đã có mẫu cấu hình, cần hợp đồng với nhà mạng), chép lời cuộc gọi (ASR); bản đồ Việt Nam có giao thông
 (đang dùng OpenStreetMap và ước tính theo khoảng cách); chữ ký số CA; gửi FHIR tự động sang máy chủ của bệnh viện (đã xuất được tệp FHIR); ứng dụng Android gốc
 (bản này là ứng dụng web cài được, chạy offline); đăng nhập một lần (Keycloak). Xem mục 12.5, 12.7 của kế hoạch.
 
@@ -147,9 +148,29 @@ web/      Next.js + React + TypeScript
 ứng dụng kíp offline. Kiến trúc giữ đúng nguyên tắc của kế hoạch (PostgreSQL, bảng sự kiện chỉ ghi thêm, outbox thay Kafka,
 WebSocket, phần sống còn tách khỏi hành chính); đội phát triển chính thức có thể giữ hoặc viết lại phần máy chủ sau giai đoạn 0.
 
+## Nối tổng đài Asterisk
+
+1. Cài Asterisk 20 trở lên trên máy chủ (Ubuntu: `sudo apt install asterisk`; Docker: một ảnh Asterisk bất kỳ có `res_ari`, `app_queue`, `func_curl`).
+2. Sinh cấu hình (chạy lại không đổi mật khẩu đã cài trên điện thoại):
+   ```
+   cd server
+   npm run asterisk:config -- --may-le=101-110 --api=http://127.0.0.1:8080 --ghi-am=/var/lib/medone/ghi-am --duong-115=<số DID của đường 115>
+   ```
+   Lệnh ghi vào `deploy/asterisk/generated/` (không đưa lên Git): các tệp `.conf`, tệp `may-le.txt` (mật khẩu từng máy lẻ, quyền 600)
+   và thêm biến ARI, thư mục ghi âm vào `.env`. Mật khẩu không in ra màn hình.
+3. Chạy: `asterisk -C deploy/asterisk/generated/asterisk.conf` (hoặc chép các tệp vào `/etc/asterisk`). Khởi động lại backend để đọc `.env` mới.
+4. Cài tài khoản SIP trên điện thoại bàn hoặc phần mềm (Zoiper, Linphone, MicroSIP): máy chủ là địa chỉ máy tổng đài, tên là số máy lẻ,
+   mật khẩu lấy trong `may-le.txt`.
+5. Trang **Quản trị → Tổng đài và máy lẻ**: gán máy lẻ cho từng điều phối viên. Chưa có trung kế thì gọi **1800** từ một máy lẻ để giả lập
+   người báo vào hàng chờ.
+6. Trung kế nhà mạng: điền khối `nha-mang` (đang để chú thích) trong `pjsip.conf` theo thông số nhà mạng cấp, rồi `pjsip reload`.
+
+Ghi âm nằm trên đĩa máy tổng đài; backend cần đọc được thư mục đó (cùng máy hoặc thư mục chia sẻ). Lưu giữ và sao lưu ghi âm theo quy định
+lưu hồ sơ của đơn vị.
+
 ## Biến môi trường
 
 Tất cả nằm trong `.env` (tạo bằng `npm run setup`): `DATABASE_URL`, `MEDONE_JWT_SECRET`, `MEDONE_DATA_KEY` (mã hóa số định danh),
 `MEDONE_LOOKUP_KEY` (tìm kiếm), `MEDONE_TELEPHONY_KEY` (webhook tổng đài), `MEDONE_WEB_ORIGIN` (địa chỉ frontend được phép gọi API),
-`NEXT_PUBLIC_API_URL` (địa chỉ backend cho frontend), `NEXT_PUBLIC_VERIFY_URL` (địa chỉ công khai của trang tra cứu mã phiếu in trên QR; để trống là địa chỉ máy chủ đang mở), `MEDONE_AUTO_DISPATCH_KM` (bán kính tự báo xe, mặc định 5), `MEDONE_SMS_URL` và `MEDONE_SMS_TOKEN` (cổng SMS của nhà cung cấp: máy chủ POST JSON `{to, message, purpose, ref}` kèm `Authorization: Bearer`; để trống thì tin nằm trong hàng đợi để gửi tay), `MEDONE_ORG_NAME` (tên đơn vị ghi trên tệp FHIR gửi bệnh viện). Khóa phải dài ít nhất 32 ký tự; thiếu là backend không chạy.
+`NEXT_PUBLIC_API_URL` (địa chỉ backend cho frontend), `NEXT_PUBLIC_VERIFY_URL` (địa chỉ công khai của trang tra cứu mã phiếu in trên QR; để trống là địa chỉ máy chủ đang mở), `MEDONE_AUTO_DISPATCH_KM` (bán kính tự báo xe, mặc định 5), `MEDONE_SMS_URL` và `MEDONE_SMS_TOKEN` (cổng SMS của nhà cung cấp: máy chủ POST JSON `{to, message, purpose, ref}` kèm `Authorization: Bearer`; để trống thì tin nằm trong hàng đợi để gửi tay), `MEDONE_ORG_NAME` (tên đơn vị ghi trên tệp FHIR gửi bệnh viện), `MEDONE_RECORDINGS_DIR` (thư mục tổng đài ghi âm), `MEDONE_ARI_URL`, `MEDONE_ARI_USER`, `MEDONE_ARI_PASSWORD` (ARI của Asterisk để gọi ra; lệnh `npm run asterisk:config` tự thêm cả bốn biến). Khóa phải dài ít nhất 32 ký tự; thiếu là backend không chạy.
 **Mất `MEDONE_DATA_KEY` là mất khả năng đọc số CCCD đã lưu**: cất khóa trong kho khóa (HSM/KMS) và có bản sao.

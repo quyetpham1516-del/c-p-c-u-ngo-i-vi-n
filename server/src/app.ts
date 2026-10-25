@@ -32,6 +32,7 @@ import { registerSharing } from './routes/sharing.js';
 import { registerPayroll } from './routes/payroll.js';
 import { registerOrg } from './routes/org.js';
 import { registerCoverage } from './routes/coverage.js';
+import { registerTelephony } from './routes/telephony.js';
 
 export * from './http.js';
 
@@ -44,6 +45,10 @@ export async function buildApp(pool: pg.Pool, opts: { logger?: boolean } = {}) {
   await app.register(cors, { origin: (origin, cb) => cb(null, corsAllowed(origin)) });
   await app.register(jwt, { secret: config.jwtSecret, sign: { expiresIn: '14h' } });
   await app.register(websocket);
+  // Tổng đài Asterisk gửi webhook dạng biểu mẫu (hàm CURL): đọc như JSON phẳng
+  app.addContentTypeParser('application/x-www-form-urlencoded', { parseAs: 'string' }, (_req, body, done) => {
+    done(null, Object.fromEntries(new URLSearchParams(body as string)));
+  });
 
   app.setErrorHandler((err, _req, reply) => {
     if (err instanceof HttpError) return reply.code(err.statusCode).send({ error: err.message, details: err.details });
@@ -92,6 +97,7 @@ export async function buildApp(pool: pg.Pool, opts: { logger?: boolean } = {}) {
   registerPayroll(app, ctx);
   registerOrg(app, ctx);
   registerCoverage(app, ctx);
+  registerTelephony(app, ctx);
   registerAdmin(app, ctx);
 
   app.setNotFoundHandler((_req, reply) => reply.code(404).send({ error: 'Không tìm thấy' }));

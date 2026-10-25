@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { api, ROLE_LABEL, type Role } from '../api';
 import { STATION_KIND, useStations, type Station } from '../catalog';
 import { MapView } from '../components/MapView';
+import { TelephonyAdmin } from '../components/Telephony';
 
 interface UserRow { id: string; username: string; full_name: string; title: string | null; role: Role; active: boolean; station_id: string | null }
 interface VehicleRow { id: string; type: string; status: string; station_id: string; station_name: string }
@@ -122,6 +123,7 @@ export function Admin() {
         </div>
       </div>
       <Accounts users={users} run={run} />
+      <TelephonyAdmin />
     </div>
   );
 }

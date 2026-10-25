@@ -1,0 +1,39 @@
+{
+  "note": "Mẫu do phần mềm đề xuất, QLCL và Ban Giám đốc rà soát, sửa chỉ tiêu theo kế hoạch Medone trước khi dùng",
+  "indicators": [
+    { "code": "CS-01", "name": "Cuộc gọi được nhấc máy trong 10 giây", "definition": "Cuộc gọi vào tổng đài được điều phối viên nhấc máy trong vòng 10 giây kể từ khi đổ chuông", "formula": "Số cuộc nhấc máy ≤ 10 giây / tổng cuộc gọi đã kết thúc (gồm cuộc nhỡ)", "unit": "%", "direction": "cao_tot", "target": 90, "warn": 93, "auto_key": "answer_10s" },
+    { "code": "CS-02", "name": "Ca P1 tới hiện trường trong 15 phút", "definition": "Ca ưu tiên P1 có xe tới hiện trường trong 15 phút kể từ lúc đổ chuông (T0 đến T7)", "formula": "Số ca P1 có T7 − T0 ≤ 15 phút / số ca P1 có đủ mốc T0, T7", "unit": "%", "direction": "cao_tot", "target": 90, "warn": 93, "auto_key": "p1_response" },
+    { "code": "CS-03", "name": "Ca có giao xe đã ký phiếu chăm sóc", "definition": "Ca đã đóng có giao xe và có phiếu chăm sóc người bệnh (ePCR) đã ký", "formula": "Số ca đã đóng có phiếu đã ký / số ca đã đóng có giao xe", "unit": "%", "direction": "cao_tot", "target": 98, "auto_key": "epcr_signed" },
+    { "code": "CS-04", "name": "Tuân thủ vệ sinh tay", "definition": "Quan sát theo 5 thời điểm vệ sinh tay của WHO", "formula": "Số cơ hội tuân thủ / tổng số cơ hội được quan sát", "unit": "%", "direction": "cao_tot", "target": 80, "warn": 85, "auto_key": "hand_hygiene" },
+    { "code": "CS-05", "name": "Phiếu khử khuẩn xe đã ký", "definition": "Phiếu khử khuẩn xe sau ca được ký đủ bước", "formula": "Số phiếu đã ký / số phiếu phát sinh", "unit": "%", "direction": "cao_tot", "target": 100, "auto_key": "disinfection_signed" },
+    { "code": "CS-06", "name": "Sự cố gây tổn hại trên 1000 ca", "definition": "Sự cố y khoa mức NC2–NC3 (theo TT 43/2018/TT-BYT) xảy ra trong kỳ", "formula": "Số sự cố NC2–NC3 × 1000 / số ca có giao xe", "unit": "/1000 ca", "direction": "thap_tot", "target": 1, "auto_key": "harm_events" },
+    { "code": "CS-07", "name": "Người bệnh hài lòng", "definition": "Phiếu khảo sát chấm điểm chung 4–5 trên thang 5", "formula": "Số phiếu điểm chung ≥ 4 / số phiếu trả lời", "unit": "%", "direction": "cao_tot", "target": 90, "auto_key": "satisfaction" },
+    { "code": "CS-08", "name": "Khiếu nại được phản hồi đúng hạn", "definition": "Phản hồi trong 24 giờ (khẩn) hoặc 48 giờ", "formula": "Số khiếu nại phản hồi đúng hạn / số khiếu nại nhận trong kỳ", "unit": "%", "direction": "cao_tot", "target": 95, "auto_key": "complaint_on_time" },
+    { "code": "CS-09", "name": "Nhân viên lâm sàng có chứng chỉ BLS còn hạn", "definition": "Nhân viên kíp đang làm có chứng chỉ BLS hoặc ACLS còn hạn tại cuối kỳ", "formula": "Số nhân viên kíp có BLS/ACLS còn hạn / số nhân viên kíp đang làm", "unit": "%", "direction": "cao_tot", "target": 100, "auto_key": "bls_valid" },
+    { "code": "CS-10", "name": "Hành động khắc phục xong đúng hạn", "definition": "Hành động khắc phục, phòng ngừa đến hạn trong kỳ đã làm xong trước hạn", "formula": "Số hành động xong đúng hạn / số hành động đến hạn trong kỳ", "unit": "%", "direction": "cao_tot", "target": 85, "auto_key": "capa_on_time" },
+    { "code": "CS-11", "name": "Xe đủ thiết bị, thuốc khi nhận ca", "definition": "Lượt kiểm tra xe đầu ca đủ danh mục thiết bị, thuốc theo cơ số", "formula": "Số lượt kiểm tra đủ / số lượt kiểm tra đầu ca", "unit": "%", "direction": "cao_tot", "target": 100, "auto_key": null },
+    { "code": "CS-12", "name": "Tai nạn giao thông của xe cứu thương", "definition": "Va chạm giao thông khi xe đang làm nhiệm vụ, có hoặc không có thiệt hại", "formula": "Số vụ trong kỳ", "unit": "vụ", "direction": "thap_tot", "target": 0, "auto_key": null }
+  ],
+  "risks": [
+    { "area": "Tiếp nhận cuộc gọi", "hazard": "Tổng đài gián đoạn, mất cuộc gọi cấp cứu", "cause": "Mất điện, mất mạng, lỗi nhà mạng", "consequence": "Người bệnh không được tiếp nhận, chậm cấp cứu", "likelihood": 2, "impact": 5, "controls": "Hai đường truyền, UPS và máy phát, chuyển hướng cuộc gọi sang điện thoại di động trực" },
+    { "area": "Điều phối", "hazard": "Phân loại sai mức ưu tiên", "cause": "Hỏi chưa đủ theo bộ câu hỏi, áp lực nhiều cuộc gọi", "consequence": "Ca nặng được xếp mức thấp, chậm xe", "likelihood": 3, "impact": 4, "controls": "Bộ câu hỏi phân loại trong phần mềm, ghi lý do khi đổi mức, rà soát ca hằng tuần" },
+    { "area": "Vận chuyển", "hazard": "Tai nạn giao thông khi chạy ưu tiên", "cause": "Tốc độ cao, vượt đèn đỏ, lái xe mệt", "consequence": "Thương tích cho kíp, người bệnh, người đi đường", "likelihood": 2, "impact": 5, "controls": "Đào tạo lái xe an toàn, giới hạn giờ lái liên tục, kiểm tra xe đầu ca" },
+    { "area": "Vận chuyển", "hazard": "Xe hỏng khi đang làm nhiệm vụ", "cause": "Bảo dưỡng không đúng hạn", "consequence": "Chậm đưa người bệnh tới viện", "likelihood": 2, "impact": 4, "controls": "Lịch bảo dưỡng, kiểm tra xe đầu ca, xe dự phòng" },
+    { "area": "Thuốc", "hazard": "Dùng nhầm thuốc hoặc sai liều", "cause": "Thuốc nhìn giống nhau, tính liều trẻ em, áp lực thời gian", "consequence": "Tổn hại người bệnh", "likelihood": 2, "impact": 5, "controls": "Sắp xếp túi thuốc theo màu, bảng liều trẻ em, đọc to xác nhận chéo" },
+    { "area": "Thiết bị", "hazard": "Máy sốc điện, máy hút không hoạt động khi cần", "cause": "Hết pin, không kiểm tra đầu ca", "consequence": "Không cấp cứu được ngừng tuần hoàn", "likelihood": 2, "impact": 5, "controls": "Kiểm tra thiết bị đầu ca có tem QR, bảo dưỡng định kỳ" },
+    { "area": "Kiểm soát nhiễm khuẩn", "hazard": "Phơi nhiễm nghề nghiệp (kim đâm, máu bắn)", "cause": "Thao tác trên xe đang chạy, thiếu thùng vật sắc", "consequence": "Nhân viên nhiễm HBV, HCV, HIV", "likelihood": 3, "impact": 4, "controls": "Thùng vật sắc cố định trên xe, phương tiện phòng hộ, quy trình xử trí phơi nhiễm" },
+    { "area": "An ninh", "hazard": "Kíp bị hành hung tại hiện trường", "cause": "Người nhà kích động, hiện trường ẩu đả", "consequence": "Thương tích cho nhân viên", "likelihood": 3, "impact": 3, "controls": "Đánh giá an toàn trước khi vào hiện trường, phối hợp công an" },
+    { "area": "Bàn giao", "hazard": "Bàn giao bệnh viện thiếu thông tin", "cause": "Không dùng mẫu bàn giao, phiếu chưa hoàn thiện", "consequence": "Bệnh viện xử trí chậm hoặc trùng lặp", "likelihood": 3, "impact": 3, "controls": "Phiếu chuyển viện in từ ePCR, bàn giao theo mẫu" },
+    { "area": "Công nghệ thông tin", "hazard": "Mất dữ liệu hoặc lộ dữ liệu người bệnh", "cause": "Hỏng máy chủ, tấn công mạng, mật khẩu yếu", "consequence": "Gián đoạn điều phối, vi phạm Nghị định 13/2023", "likelihood": 2, "impact": 5, "controls": "Sao lưu hằng ngày, phân quyền theo vai trò, nhật ký truy cập có chuỗi băm" }
+  ],
+  "retention": [
+    { "key": "benh_an", "label": "Bệnh án, phiếu chăm sóc và chuyển viện", "years": 10, "basis": "Luật Khám bệnh, chữa bệnh: bệnh án lưu ít nhất 10 năm (ca tử vong, tai nạn có thời hạn dài hơn). QLCL đối chiếu văn bản hiện hành" },
+    { "key": "cuoc_goi", "label": "Cuộc gọi tiếp nhận, ghi âm", "years": 5, "basis": "Đề xuất nội bộ, cần QLCL xác nhận" },
+    { "key": "nhat_ky", "label": "Nhật ký thao tác hệ thống", "years": 10, "basis": "Đề xuất nội bộ, bằng thời hạn bệnh án; cần QLCL xác nhận" },
+    { "key": "su_co", "label": "Hồ sơ sự cố y khoa đã đóng", "years": 10, "basis": "Đề xuất nội bộ, cần QLCL xác nhận" },
+    { "key": "khieu_nai", "label": "Hồ sơ khiếu nại đã đóng", "years": 5, "basis": "Đề xuất nội bộ, cần QLCL xác nhận" },
+    { "key": "khao_sat", "label": "Phiếu khảo sát hài lòng", "years": 3, "basis": "Đề xuất nội bộ, cần QLCL xác nhận" },
+    { "key": "khu_khuan", "label": "Phiếu khử khuẩn xe", "years": 5, "basis": "Đề xuất nội bộ, cần QLCL xác nhận" },
+    { "key": "bai_thi", "label": "Bài thi sát hạch", "years": 5, "basis": "Đề xuất nội bộ, cần QLCL xác nhận" }
+  ]
+}

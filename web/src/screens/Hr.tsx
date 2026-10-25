@@ -9,7 +9,7 @@ interface Meta {
 const STATUS: Record<string, string> = { dang_lam: 'Đang làm', tam_nghi: 'Tạm nghỉ', nghi_viec: 'Nghỉ việc' };
 const CONTRACT: Record<string, string> = { thu_viec: 'Thử việc', xac_dinh: 'Xác định thời hạn', khong_xac_dinh: 'Không xác định thời hạn', cong_tac_vien: 'Cộng tác viên' };
 const LSTATUS: Record<string, string> = { cho_duyet: 'Chờ duyệt', da_duyet: 'Đã duyệt', tu_choi: 'Từ chối', huy: 'Hủy' };
-const TABS = ['Nhân viên', 'Giấy tờ hết hạn', 'Lịch trực', 'Nghỉ phép', 'Bảng công'] as const;
+const TABS = ['Nhân viên', 'Giấy tờ hết hạn', 'Lịch trực', 'Nghỉ phép', 'Bảng công', 'Chấm công QR'] as const;
 const vnDate = (d = 0) => new Date(Date.now() + 7 * 3600_000 + d * 86400_000).toISOString().slice(0, 10);
 const dm = (s: string) => s.slice(8, 10) + '/' + s.slice(5, 7);
 
@@ -51,6 +51,7 @@ export function Hr() {
       {tab === 'Lịch trực' && <RosterTab {...ctx} />}
       {tab === 'Nghỉ phép' && <LeaveTab {...ctx} />}
       {tab === 'Bảng công' && <TimesheetTab {...ctx} />}
+      {tab === 'Chấm công QR' && <QrAttendanceTab {...ctx} />}
     </div>
   );
 }
@@ -315,7 +316,7 @@ function TimesheetTab({ run }: Ctx) {
       <div className="row">
         <input type="month" value={month} onChange={(e) => setMonth(e.target.value)} />
         <button onClick={() => run(() => download(`/api/hr/timesheet?month=${month}&format=csv`, `bang-cong-${month}.csv`))}>Tải bảng công (Excel/CSV)</button>
-        <span className="small muted">Giờ trên xe lấy từ lúc kíp bắt đầu đến kết thúc ca trên máy tính bảng; nhân viên văn phòng chấm công ở trang Cá nhân.</span>
+        <span className="small muted">Giờ trên xe lấy từ lúc kíp bắt đầu đến kết thúc ca trên máy tính bảng; nhân viên văn phòng chấm công bằng mã QR tại trạm (tab Chấm công QR) hoặc bấm tay ở trang Cá nhân.</span>
       </div>
       <table>
         <thead><tr><th>Mã</th><th>Họ tên</th><th>Ca theo lịch</th><th>Giờ theo lịch</th><th>Ca đêm/24h</th><th>Giờ trên xe</th><th>Giờ chấm công</th><th>Tổng thực tế</th><th>Ngày nghỉ</th></tr></thead>
@@ -325,6 +326,95 @@ function TimesheetTab({ run }: Ctx) {
             <td><b>{r.actual_hours}</b>{r.planned_hours > 0 && r.actual_hours < r.planned_hours * 0.9 && <span className="badge far" style={{ marginLeft: 4 }}>thiếu giờ</span>}</td><td>{r.leave_days}</td></tr>
         ))}</tbody>
       </table>
+    </div>
+  );
+}
+
+/* ---------- Chấm công QR tại trạm ---------- */
+
+const AFLAG: Record<string, string> = { khong_vi_tri: 'Không vị trí', sai_so_lon: 'Sai số lớn', ra_khac_tram: 'Ra trạm khác', thu_cong: 'Bấm tay' };
+const hm = (d: string | null) => d ? new Date(d).toLocaleTimeString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh', hour: '2-digit', minute: '2-digit' }) : '';
+
+function QrAttendanceTab({ canEdit, run }: Ctx) {
+  const [stations, setStations] = useState<any[]>([]);
+  const [day, setDay] = useState(vnDate());
+  const [station, setStation] = useState('');
+  const [flagged, setFlagged] = useState(false);
+  const [log, setLog] = useState<any[]>([]);
+  const [issued, setIssued] = useState<{ name: string; url: string } | null>(null);
+  const loadStations = () => api<any[]>('GET', '/api/attendance/stations').then(setStations).catch(() => {});
+  useEffect(() => { loadStations(); }, []);
+  useEffect(() => {
+    const q = new URLSearchParams({ date: day, ...(station ? { stationId: station } : {}), ...(flagged ? { flagged: '1' } : {}) });
+    api<any[]>('GET', `/api/attendance/log?${q}`).then(setLog).catch(() => {});
+  }, [day, station, flagged]);
+  const issue = (s: any) => {
+    if (s.configured && !confirm(`Cấp lại máy chấm công cho ${s.name}? Máy đang dùng sẽ ngừng hiện mã cho đến khi mở đường dẫn mới.`)) return;
+    run(async () => {
+      const r = await api<any>('POST', `/api/attendance/stations/${encodeURIComponent(s.id)}/kiosk`);
+      setIssued({ name: r.name, url: window.location.origin + r.kioskPath });
+      await loadStations();
+    });
+  };
+  const patch = (s: any, body: object) => run(async () => { await api('PATCH', `/api/attendance/stations/${encodeURIComponent(s.id)}`, body); await loadStations(); }, 'Đã lưu.');
+  const revoke = (s: any) => confirm(`Thu hồi máy chấm công của ${s.name}? Mã trên máy đó sẽ không còn được nhận.`)
+    && run(async () => { await api('DELETE', `/api/attendance/stations/${encodeURIComponent(s.id)}/kiosk`); await loadStations(); }, 'Đã thu hồi.');
+  return (
+    <div className="col">
+      <div className="panel col" style={{ overflowX: 'auto' }}>
+        <h3 style={{ margin: 0 }}>Máy chấm công tại trạm</h3>
+        <div className="small muted">Mỗi trạm đặt một máy tính bảng mở đường dẫn được cấp; máy hiện mã QR đổi mỗi 30 giây. Nhân viên quét bằng điện thoại đã đăng nhập, máy chủ kiểm tra mã còn hạn và vị trí trong bán kính trạm. Trạm và tọa độ do quản trị khai báo ở Quản trị.</div>
+        {issued && (
+          <div className="alert amber col">
+            <div><b>Đường dẫn máy chấm công {issued.name}</b> (chỉ hiện một lần): mở trên máy tính bảng ở trạm. Không gửi đường dẫn này qua nhóm chat chung.</div>
+            <div className="row"><input readOnly value={issued.url} style={{ flex: 1, minWidth: 240 }} onFocus={(e) => e.target.select()} />
+              <button onClick={() => navigator.clipboard?.writeText(issued.url)}>Sao chép</button><button onClick={() => setIssued(null)}>Đã lưu, ẩn đi</button></div>
+          </div>
+        )}
+        <table>
+          <thead><tr><th>Trạm</th><th>Trạng thái</th><th>Bán kính (m)</th><th>Bắt buộc vị trí</th><th>Đang trong ca</th><th>Lượt vào hôm nay</th><th></th></tr></thead>
+          <tbody>{stations.filter((s) => s.active).map((s) => (
+            <tr key={s.id}>
+              <td>{s.name}<div className="small muted mono">{s.id}</div></td>
+              <td>{s.configured ? <span className="badge green">Đã cấp máy</span> : <span className="badge">Chưa cấp</span>}
+                {s.updated_by_name && <div className="small muted">{s.updated_by_name}</div>}</td>
+              <td>{s.configured && (canEdit
+                ? <input type="number" min={50} max={5000} step={50} defaultValue={s.radius_m} style={{ width: 90 }}
+                    onBlur={(e) => Number(e.target.value) !== s.radius_m && patch(s, { radiusM: Number(e.target.value) })} />
+                : s.radius_m)}</td>
+              <td>{s.configured && <input type="checkbox" checked={s.require_gps} disabled={!canEdit} onChange={(e) => patch(s, { requireGps: e.target.checked })} />}</td>
+              <td>{s.present}</td><td>{s.today}</td>
+              <td>{canEdit && <div className="row">
+                <button onClick={() => issue(s)}>{s.configured ? 'Cấp lại' : 'Cấp máy chấm công'}</button>
+                {s.configured && <button onClick={() => revoke(s)}>Thu hồi</button>}
+              </div>}</td>
+            </tr>
+          ))}</tbody>
+        </table>
+      </div>
+      <div className="panel col" style={{ overflowX: 'auto' }}>
+        <div className="row">
+          <h3 style={{ margin: 0 }}>Nhật ký chấm công</h3>
+          <input type="date" value={day} onChange={(e) => setDay(e.target.value)} />
+          <select value={station} onChange={(e) => setStation(e.target.value)}>
+            <option value="">Mọi trạm</option>{stations.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+          </select>
+          <label className="row small"><input type="checkbox" checked={flagged} onChange={(e) => setFlagged(e.target.checked)} /> Chỉ lượt cần xem lại</label>
+        </div>
+        <table>
+          <thead><tr><th>Nhân viên</th><th>Vào</th><th>Ra</th><th>Giờ</th><th>Cần xem lại</th></tr></thead>
+          <tbody>{log.map((r) => (
+            <tr key={r.id}>
+              <td>{r.full_name}<div className="small muted">{r.code} · {r.title}</div></td>
+              <td><b>{hm(r.check_in)}</b> <span className="small muted">{r.source === 'qr' ? `QR ${r.station_name ?? ''}${r.in_distance_m != null ? ` · ${r.in_distance_m} m` : ''}` : 'Bấm tay'}</span></td>
+              <td>{r.check_out ? <><b>{hm(r.check_out)}</b> <span className="small muted">{r.source_out === 'qr' ? `QR ${r.out_station_name ?? ''}${r.out_distance_m != null ? ` · ${r.out_distance_m} m` : ''}` : 'Bấm tay'}</span></> : <span className="badge green">Đang trong ca</span>}</td>
+              <td>{r.hours}</td>
+              <td>{r.flags.map((f: string) => <span key={f} className="badge far" style={{ marginRight: 4 }}>{AFLAG[f] ?? f}</span>)}</td>
+            </tr>
+          ))}</tbody>
+        </table>
+        {!log.length && <div className="muted">Không có lượt chấm công.</div>}
+      </div>
     </div>
   );
 }

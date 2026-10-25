@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { api, fmtDateTime } from '../api';
+import { api, download, fmtDateTime, session } from '../api';
 import { TRAUMA_TYPES } from '../components/EpcrForm';
 import { StarOfLife } from '../Logo';
 import qrcode from 'qrcode-generator';
@@ -99,6 +99,12 @@ export function TransferPrint() {
     <div>
       <div className="no-print row" style={{ justifyContent: 'center', marginBottom: 8 }}>
         <button className="primary" onClick={() => print()}>In phiếu (A4)</button>
+        <button onClick={() => download(`/api/transfers/${t.id}/fhir`, `fhir-${t.transfer_number ?? t.id}.json`).catch((e) => alert(e.message))}
+          title="Hồ sơ chuẩn HL7 FHIR R4 để bệnh viện nhập vào phần mềm của họ; số định danh chỉ hiện 4 số cuối">Tải FHIR (JSON)</button>
+        {['supervisor', 'qa', 'admin'].includes(session.user?.role ?? '') && (
+          <button className="ghost" onClick={() => download(`/api/transfers/${t.id}/fhir?nationalId=1`, `fhir-${t.transfer_number ?? t.id}-day-du.json`).catch((e) => alert(e.message))}
+            title="Kèm số CCCD/hộ chiếu đầy đủ; lượt tải được ghi nhật ký">FHIR kèm số định danh</button>
+        )}
       </div>
       <div className="ba">
         <div className="hdr">

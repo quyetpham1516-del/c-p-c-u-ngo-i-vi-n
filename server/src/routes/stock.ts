@@ -6,7 +6,7 @@ import { HttpError } from '../domain.js';
 import { actorOf, guard, type Ctx, type Role } from '../http.js';
 import { importParWorkbook, ITEM_KIND, parWorkbook } from '../items.js';
 import {
-  createDisposal, createStocktake, decideVoucher, lotsForVehicle, orderSuggestion, receiveStock, restockVehicle, returnFromVehicle,
+  caseRestockList, createDisposal, createStocktake, pendingRestock, restockForTransfer, decideVoucher, lotsForVehicle, orderSuggestion, receiveStock, restockVehicle, returnFromVehicle,
   STOCK_APPROVERS, stockAlerts, transferBetweenStations, vehicleParStatus,
 } from '../stock.js';
 
@@ -44,7 +44,24 @@ export function registerStock(app: FastifyInstance, { pool }: Ctx) {
   });
 
   /** Lô dùng được cho ePCR của xe: cơ số trên xe trước, kho điểm sau */
-  app.get('/api/stock/vehicle/:vehicleId', { preHandler: guard(...STOCK_VIEW) }, async (req) => lotsForVehicle(pool, vehicleParam(req)));
+  app.get('/api/stock/vehicle/:vehicleId', { preHandler: guard(...STOCK_VIEW) }, async (req) =>
+    lotsForVehicle(pool, vehicleParam(req), (req.query as { all?: string }).all === '1'));
+
+  /** Phiếu đã ký của xe còn chờ bù cơ số sau ca */
+  app.get('/api/stock/vehicle/:vehicleId/pending-restock', { preHandler: guard(...STOCK_VIEW) }, async (req) => pendingRestock(pool, vehicleParam(req)));
+
+  /** Danh sách bù sau ca: từng thứ đã dùng trên xe; điều dưỡng bù rồi bấm xác nhận */
+  app.get('/api/transfers/:id/restock', { preHandler: guard(...STOCK_VIEW) }, async (req) =>
+    caseRestockList(pool, z.object({ id: z.string().uuid() }).parse(req.params).id));
+
+  app.post('/api/transfers/:id/restock', { preHandler: guard('crew', ...STOCK_MANAGE) }, async (req) => {
+    const id = z.object({ id: z.string().uuid() }).parse(req.params).id;
+    const b = z.object({ witness: opt, items: z.array(z.object({ drugId: z.number().int(), qty: z.number().positive().max(100000) })).max(300).optional() }).parse(req.body ?? {});
+    const t = await one(pool, 'SELECT vehicle_id FROM transfers WHERE id = $1', [id]);
+    if (!t?.vehicle_id) throw new HttpError(404, 'Không tìm thấy phiếu có gắn xe');
+    await assertVehicle(req, t.vehicle_id);
+    return withTx(pool, (tx) => restockForTransfer(tx, actorOf(req), id, b.witness, b.items));
+  });
 
   app.get('/api/stock/vehicle/:vehicleId/par', { preHandler: guard(...STOCK_VIEW) }, async (req) => vehicleParStatus(pool, vehicleParam(req)));
 

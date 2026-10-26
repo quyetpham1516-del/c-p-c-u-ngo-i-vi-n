@@ -34,3 +34,6 @@ CREATE TABLE notifications (
   read_at      timestamptz
 );
 CREATE INDEX notifications_user ON notifications(user_id, created_at DESC);
+
+-- Danh sách bù cơ số sau từng ca: đã bù lúc nào, ai bù, phiếu cấp xe nào
+ALTER TABLE transfers ADD COLUMN restocked_at timestamptz, ADD COLUMN restocked_by uuid REFERENCES users(id), ADD COLUMN restock_voucher_id uuid REFERENCES stock_vouchers(id);

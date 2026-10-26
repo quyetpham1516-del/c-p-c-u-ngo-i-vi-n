@@ -8,7 +8,7 @@ import { api } from './api';
  */
 export interface Department { id: number; name: string }
 export interface Hospital { id: number; name: string; kcb_code: string | null; phone?: string | null; kind: string | null; address: string | null; capabilities: string[]; departments: Department[] }
-export interface StockLot { id: string; lot: string; expiry: string; qty: number; drug_id: number; drug_name: string; unit: string; default_route: string | null; controlled?: boolean; place?: 'xe' | 'kho' }
+export interface StockLot { id: string; lot: string; expiry: string; qty: number; drug_id: number; drug_name: string; unit: string; default_route: string | null; controlled?: boolean; place?: 'xe' | 'kho'; kind?: string; track_lot?: boolean }
 export interface Station { id: string; name: string; kind: string; address: string | null; phone: string | null; lat: number; lng: number; active: boolean; vehicle_count: number; staff_count: number; stock_qty: number }
 
 function useCached<T>(key: string, url: string | null, initial: T): [T, () => void] {
@@ -32,6 +32,9 @@ export const useHospitals = () => useCached<Hospital[]>('cat:hospitals', '/api/h
 export const useStations = (all = false) => useCached<Station[]>(`cat:stations:${all ? 'all' : 'active'}`, `/api/stations${all ? '?all=1' : ''}`, []);
 export const useVehicleStock = (vehicleId: string | null | undefined) =>
   useCached<StockLot[]>(`cat:stock:${vehicleId ?? '-'}`, vehicleId ? `/api/stock/vehicle/${encodeURIComponent(vehicleId)}` : null, [])[0];
+/** Mọi mặt hàng dùng được cho phiếu (thuốc, dịch truyền, vật tư, dụng cụ): trên xe trước, kho điểm sau */
+export const useVehicleItems = (vehicleId: string | null | undefined) =>
+  useCached<StockLot[]>(`cat:items:${vehicleId ?? '-'}`, vehicleId ? `/api/stock/vehicle/${encodeURIComponent(vehicleId)}?all=1` : null, [])[0];
 
 export const STATION_KIND: Record<string, string> = {
   tru_so: 'Trụ sở', tram: 'Trạm xe', kho_trung_tam: 'Kho trung tâm', diem_su_kien: 'Điểm trực sự kiện',

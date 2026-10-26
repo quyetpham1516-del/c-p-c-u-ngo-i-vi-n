@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { api, fmtTime } from '../api';
 import { saveDraft, syncDraft, type Draft } from '../offline';
-import { ruleKey, scopeCheck, useLabTypes, useScope, useVehicleStock, type LabType, type StockLot } from '../catalog';
+import { ruleKey, scopeCheck, useLabTypes, useScope, useVehicleItems, useVehicleStock, type LabType, type StockLot } from '../catalog';
 import { HospitalPicker } from './HospitalPicker';
 import { IcdInput } from './IcdInput';
 import { PatientPicker, type PatientRow } from './PatientPicker';
@@ -88,6 +88,73 @@ function TimeAt({ label, value, onChange, locked }: { label: string; value?: str
 }
 
 /** Mẫu Utstein 2014 (cập nhật 2024) cho ngừng tuần hoàn ngoài viện: sự kiện, hồi sức của người dân, can thiệp, kết cục tại hiện trường */
+interface PickItem { drug_id: number; name: string; unit: string; kind: string; onVehicle: number; inStation: number }
+const KIND_LABEL: Record<string, string> = { thuoc: 'Thuốc', dich_truyen: 'Dịch truyền', vat_tu: 'Vật tư', dung_cu: 'Dụng cụ', van_phong_pham: 'Văn phòng phẩm' };
+
+/** Gõ tên: gợi ý thuốc, dịch truyền, vật tư kèm số còn trên xe; chọn rồi chọn số lượng */
+function ItemPicker({ lots, onPick }: { lots: StockLot[]; onPick: (it: PickItem, qty: number) => void }) {
+  const [q, setQ] = useState('');
+  const [sel, setSel] = useState<PickItem | null>(null);
+  const [qty, setQty] = useState(1);
+  const [hi, setHi] = useState(0);
+  const items = (() => {
+    const m = new Map<number, PickItem>();
+    for (const l of lots) {
+      const it = m.get(l.drug_id) ?? { drug_id: l.drug_id, name: l.drug_name, unit: l.unit, kind: l.kind ?? 'thuoc', onVehicle: 0, inStation: 0 };
+      if (l.place === 'xe') it.onVehicle += Number(l.qty); else it.inStation += Number(l.qty);
+      m.set(l.drug_id, it);
+    }
+    return [...m.values()];
+  })();
+  const n = norm(q.trim());
+  const matches = n.length < 1 ? [] : items
+    .filter((it) => norm(it.name).includes(n))
+    .sort((a, b) => Number(norm(b.name).startsWith(n)) - Number(norm(a.name).startsWith(n)) || b.onVehicle - a.onVehicle || a.name.localeCompare(b.name))
+    .slice(0, 12);
+  const choose = (it: PickItem) => { setSel(it); setQty(1); setQ(''); };
+  const add = () => { if (sel && qty > 0) { onPick(sel, qty); setSel(null); } };
+  return (
+    <div className="panel col" style={{ background: 'var(--panel-2)', position: 'relative' }}>
+      {!sel ? (
+        <>
+          <input placeholder="Gõ tên thuốc, dịch truyền, vật tư (vd: adre, bơm tiêm 5, ringer, băng)..." value={q} autoComplete="off"
+            onChange={(ev) => { setQ(ev.target.value); setHi(0); }}
+            onKeyDown={(ev) => {
+              if (ev.key === 'ArrowDown') { ev.preventDefault(); setHi((h) => Math.min(h + 1, matches.length - 1)); }
+              if (ev.key === 'ArrowUp') { ev.preventDefault(); setHi((h) => Math.max(h - 1, 0)); }
+              if (ev.key === 'Enter' && matches[hi]) { ev.preventDefault(); choose(matches[hi]); }
+            }} />
+          {matches.length > 0 && (
+            <div className="list" style={{ maxHeight: 280, overflowY: 'auto' }}>
+              {matches.map((it, i) => (
+                <div key={it.drug_id} className="item row" style={{ justifyContent: 'space-between', background: i === hi ? 'var(--panel)' : undefined }} onMouseEnter={() => setHi(i)} onClick={() => choose(it)}>
+                  <span>{it.name} <span className="small muted">· {KIND_LABEL[it.kind] ?? it.kind}</span></span>
+                  <span className={`small mono ${it.onVehicle ? '' : 'red'}`}>Trên xe {it.onVehicle} {it.unit}{it.inStation ? <span className="muted"> · kho {it.inStation}</span> : null}</span>
+                </div>
+              ))}
+            </div>
+          )}
+          {n.length > 0 && !matches.length && <div className="small muted">Không có mặt hàng này trên xe và kho điểm. Thuốc ngoài kho: dùng nút "+" bên dưới rồi ghi tên.</div>}
+        </>
+      ) : (
+        <div className="row" style={{ flexWrap: 'wrap' }}>
+          <b>{sel.name}</b><span className="small muted">{KIND_LABEL[sel.kind] ?? sel.kind} · trên xe còn {sel.onVehicle} {sel.unit}</span>
+          <span className="row" style={{ flexWrap: 'nowrap', gap: 2 }}>
+            <button className="big" onClick={() => setQty((x) => Math.max(1, x - 1))}>−</button>
+            <input style={{ width: 64, fontSize: 20, textAlign: 'center' }} inputMode="numeric" autoFocus value={qty}
+              onChange={(ev) => setQty(Math.max(0, Number(ev.target.value.replace(/[^\d.]/g, '')) || 0))} onKeyDown={(ev) => ev.key === 'Enter' && add()} />
+            <button className="big" onClick={() => setQty((x) => x + 1)}>+</button>
+          </span>
+          <span className="small">{sel.unit}</span>
+          {qty > sel.onVehicle && <span className="small red">Nhiều hơn số trên xe</span>}
+          <button className="primary" disabled={qty <= 0} onClick={add}>Thêm vào phiếu</button>
+          <button className="ghost" onClick={() => setSel(null)}>Hủy</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 const REASON: Record<string, string> = { cccd: 'trùng số định danh', phone: 'trùng số điện thoại', name: 'trùng họ tên, năm sinh' };
 
 /**
@@ -318,6 +385,20 @@ export function EpcrForm({ draft: initial, onChange, initialTab }: { draft: Draf
     return x;
   });
   const stock = useVehicleStock(d.vehicleId);
+  const allItems = useVehicleItems(d.vehicleId);
+  /** Chọn từ ô gõ tên: thuốc, dịch truyền vào bảng thuốc (gắn lô hết hạn sớm nhất); vật tư, dụng cụ vào bảng vật tư */
+  const pickItem = (it: PickItem, qty: number) => update((x) => {
+    if (it.kind === 'thuoc' || it.kind === 'dich_truyen') {
+      const lot = stock.find((l) => l.drug_id === it.drug_id) ?? allItems.find((l) => l.drug_id === it.drug_id);
+      (x.medications ??= []).push(applyLot({ at: nowIso(), name: it.name, drugId: it.drug_id, qty }, lot as StockLot | undefined));
+      x.medications[x.medications.length - 1].qty = qty;
+    } else {
+      const cur = (x.supplies ??= []).find((y: any) => y.drugId === it.drug_id);
+      if (cur) cur.qty = (Number(cur.qty) || 0) + qty;
+      else x.supplies.push({ at: nowIso(), name: it.name, drugId: it.drug_id, unit: it.unit, qty });
+    }
+    return x;
+  });
   const stockDrugs = [...new Map(stock.map((l) => [l.drug_id, l])).values()];
   /** Gắn một lô trong kho xe vào dòng thuốc: tự điền tên, số lô, hạn dùng, đường dùng mặc định */
   const applyLot = (m: any, l: StockLot | undefined) => {
@@ -692,6 +773,8 @@ export function EpcrForm({ draft: initial, onChange, initialTab }: { draft: Draf
                 <button key={n} onClick={() => update((x) => { (x.interventions ??= []).push({ at: nowIso(), name: n }); return x; })}>+ {n}</button>
               ))}
             </div>
+            <h3>Thuốc, dịch truyền, vật tư đã dùng</h3>
+            {d.vehicleId && <ItemPicker lots={allItems} onPick={pickItem} />}
             <h3>Thuốc (số lô lấy từ kho của điểm, lô hết hạn sớm nhất được chọn trước)</h3>
             {!d.vehicleId && <div className="small muted">Phiếu chưa gắn xe nên chưa lấy được kho thuốc; nhập số lô bằng tay.</div>}
             {(e.medications ?? []).map((m: any, i: number) => {
@@ -733,6 +816,29 @@ export function EpcrForm({ draft: initial, onChange, initialTab }: { draft: Draf
             <div className="row">
               {QUICK_DRUGS.map((n) => <button key={n} onClick={() => addDrug(n)}>+ {n}</button>)}
             </div>
+            <h3>Vật tư, dụng cụ đã dùng (trừ cơ số xe khi ký phiếu)</h3>
+            {(e.supplies ?? []).length > 0 && (
+              <table className="sheet">
+                <thead><tr><th>Vật tư</th><th className="right">Số lượng</th><th>ĐVT</th><th className="right">Trên xe còn</th><th /></tr></thead>
+                <tbody>{(e.supplies ?? []).map((sp: any, i: number) => {
+                  const onVeh = allItems.filter((l) => l.drug_id === sp.drugId && l.place === 'xe').reduce((a, l) => a + Number(l.qty), 0);
+                  return (
+                    <tr key={i}>
+                      <td>{sp.name}</td>
+                      <td className="right"><span className="row" style={{ flexWrap: 'nowrap', justifyContent: 'flex-end', gap: 2 }}>
+                        <button className="ghost small" onClick={() => set(`supplies.${i}.qty`, Math.max(1, (Number(sp.qty) || 1) - 1))}>−</button>
+                        <input style={{ width: 52, textAlign: 'right' }} inputMode="numeric" value={sp.qty ?? ''} onChange={(ev) => set(`supplies.${i}.qty`, toNum(ev.target.value))} />
+                        <button className="ghost small" onClick={() => set(`supplies.${i}.qty`, (Number(sp.qty) || 0) + 1)}>+</button>
+                      </span></td>
+                      <td className="small">{sp.unit ?? ''}</td>
+                      <td className={`right mono small ${onVeh < (Number(sp.qty) || 0) ? 'red' : ''}`}>{onVeh}</td>
+                      <td><button className="ghost small" onClick={() => update((x) => { x.supplies.splice(i, 1); return x; })}>✕</button></td>
+                    </tr>
+                  );
+                })}</tbody>
+              </table>
+            )}
+            {!(e.supplies ?? []).length && <div className="small muted">Chưa ghi vật tư nào. Gõ tên ở ô phía trên (bơm tiêm, kim luồn, băng, gạc...).</div>}
             <div className="hr" />
             <h3>Bác sĩ đã trao đổi (y lệnh qua điện thoại, video)</h3>
             <div className="small muted">Bắt buộc khi kíp dùng thuốc, can thiệp ngoài phạm vi chức danh (danh sách do quản trị quy định).

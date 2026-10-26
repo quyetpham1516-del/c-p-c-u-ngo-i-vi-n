@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { api, fmtDuration, INFECTION_RISK, fmtTime, PRIORITY_LABEL, STATUS_LABEL, useLive, useNow } from '../api';
 import { ParSheet } from '../components/ParSheet';
 import { MciReport } from '../components/MciReport';
+import { CaseRestock } from '../components/CaseRestock';
 import { EpcrForm } from '../components/EpcrForm';
 import { CrewSos } from '../components/Sos';
 import { FLAG_LABEL } from '../components/Triage';
@@ -322,6 +323,7 @@ export function Crew() {
         <OfflineDrafts drafts={drafts.filter((d) => !inc?.transfers?.some((t: any) => t.id === d.id) && d.id !== draft?.id)} onOpen={(d) => openDraft(d.id)} />
       </div>
       {draft && <EpcrForm key={draft.id} draft={draft} initialTab={autoOpened.current === draft.id ? 'ABCDE và can thiệp' : undefined} onChange={() => allDrafts().then(setDrafts)} />}
+      <CaseRestock vehicleId={v.id} />
       <VehicleKit vehicleId={v.id} incidentId={inc?.id ?? null} act={act} />
       <Disinfection vehicleId={v.id} status={v.status} refreshKey={error} />
       {error && <div className="error">{error}</div>}

@@ -87,6 +87,8 @@ export const EpcrSchema = z.object({
   labs: z.array(z.object({
     at: z.string().max(40), type: z.string().max(40), name: str, value: z.string().max(500), unit: str, by: str, note: str,
   })).max(500).default([]),
+  /** Vật tư, dụng cụ đã dùng (chọn theo tên từ cơ số trên xe): trừ cơ số khi ký phiếu, vào danh sách bù sau ca */
+  supplies: z.array(z.object({ at: str, name: z.string().max(200), drugId: num, unit: str, qty: num })).max(300).default([]),
   newborn: z.object({
     born: bool, at: str, sex: z.enum(['M', 'F', 'U']).optional(),
     heartRate: str, respiration: str, movement: str, reflex: str, color: str,

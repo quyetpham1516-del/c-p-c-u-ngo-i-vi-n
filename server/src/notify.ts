@@ -1,5 +1,5 @@
 import { many, one, type Queryable, type Tx } from './db.js';
-import { stockAlerts, STOCK_APPROVERS, vehicleParStatus } from './stock.js';
+import { pendingRestock, stockAlerts, STOCK_APPROVERS, vehicleParStatus } from './stock.js';
 
 /**
  * Nút chuông thông báo trên mọi tài khoản. Hai loại:
@@ -38,8 +38,13 @@ export async function remindersFor(q: Queryable, user: { id: string; role: strin
       if (!t.patient_id) out.push({ key: `ba:${t.id}`, level: 'red', title: `Chưa làm bệnh án cho phiếu ${name}`, body: 'Lập bệnh án ở thẻ "Ký phiếu" (dò trùng CCCD, số điện thoại)', link: '/kip' });
       else if (t.status === 'draft' && t.late) out.push({ key: `sign:${t.id}`, level: 'red', title: `Chưa ký phiếu chuyển viện ${name}`, link: '/kip' });
     }
-    // Hết ca trên xe (không còn đi ca) mà xe còn thiếu so với cơ số: nhắc bù
-    if (shift && ['S1', 'S2', 'S8'].includes(shift.status)) {
+    // Ca đã ký có dùng cơ số trên xe mà chưa xác nhận danh sách bù sau ca
+    const restock = shift ? await pendingRestock(q, shift.vehicle_id) : [];
+    for (const r of restock) {
+      out.push({ key: `restock:${r.id}`, level: 'red', title: `Chưa bù cơ số sau ca ${r.transfer_number ?? r.incident_code ?? ''}`.trim(), body: `${r.items} mặt hàng đã dùng trên xe`, link: '/kip' });
+    }
+    // Xe đang rảnh mà còn thiếu so với cơ số (ngoài các ca ở trên): nhắc bù
+    if (shift && !restock.length && ['S1', 'S2', 'S8'].includes(shift.status)) {
       const par = await vehicleParStatus(q, shift.vehicle_id);
       if (par.short) {
         const names = par.items.filter((i) => i.missing > 0).slice(0, 4).map((i) => `${i.drug_name} (${i.missing})`).join(', ');

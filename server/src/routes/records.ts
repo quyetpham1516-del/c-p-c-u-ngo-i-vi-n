@@ -359,7 +359,7 @@ export function registerRecords(app: FastifyInstance, { pool, hub }: Ctx) {
       const outOfScope = uncoveredScope(epcr, await activeRules(tx), await crewForScope(tx, t.vehicle_id, actor.id!));
       if (outOfScope.length) throw new HttpError(422, 'Có thuốc, can thiệp ngoài phạm vi chức danh của kíp: ghi bác sĩ đã trao đổi',
         outOfScope.map((r) => `Bác sĩ trao đổi cho: ${r.label}`));
-      await consumeForTransfer(tx, actor, id, epcr.medications);
+      const { shortages } = await consumeForTransfer(tx, actor, id, [...epcr.medications, ...epcr.supplies]);
       await patientFromEpcr(tx, actor, t.patient_id, epcr);
       // Chữ ký điện tử: băm từng chữ ký để phát hiện sửa về sau; phiếu nhận mã xác thực in kèm QR cho bệnh viện tra cứu
       const signed = { ...epcr, signatures: epcr.signatures?.map((s) => ({ ...s, hash: signatureHash(s) })) };
@@ -380,7 +380,7 @@ export function registerRecords(app: FastifyInstance, { pool, hub }: Ctx) {
       // Can thiệp người ký chưa được phân quyền kỹ thuật (QLCL-14): không chặn cấp cứu, ghi vết để quản lý chất lượng rà soát
       const gaps = await privilegeGaps(tx, actor.id!, epcr.care as Record<string, unknown>);
       if (gaps.length) await audit(tx, scope, actor, 'training.privilege_gap', 'transfer', id, { procedures: gaps.map((g) => g.code) });
-      return gaps.map((g) => `Bạn chưa được phân quyền kỹ thuật "${g.title}" (${g.code}); quản lý chất lượng sẽ rà soát ca này`);
+      return [...shortages, ...gaps.map((g) => `Bạn chưa được phân quyền kỹ thuật "${g.title}" (${g.code}); quản lý chất lượng sẽ rà soát ca này`)];
     });
     const t = await one(pool, 'SELECT incident_id FROM transfers WHERE id = $1', [id]);
     if (t?.incident_id) await hub.publish({ type: 'incident', id: t.incident_id, refetch: true });

@@ -255,14 +255,15 @@ export async function decideVoucher(tx: Tx, actor: Actor, id: string, approve: b
  * Các lô còn dùng được cho một xe: lô trên xe (cơ số) trước, sau đó lô ở kho điểm của xe;
  * trong mỗi nơi, lô hết hạn sớm nhất đứng trước (FEFO)
  */
-export async function lotsForVehicle(q: Queryable, vehicleId: string) {
+/** all = cả vật tư, dụng cụ, văn phòng phẩm (ô gõ tên trên phiếu); mặc định chỉ thuốc, dịch truyền */
+export async function lotsForVehicle(q: Queryable, vehicleId: string, all = false) {
   return many(q, `
-    SELECT l.id, l.lot, l.expiry, l.qty, d.id AS drug_id, d.name AS drug_name, d.unit, d.default_route, d.controlled,
+    SELECT l.id, l.lot, l.expiry, l.qty, d.id AS drug_id, d.name AS drug_name, d.unit, d.default_route, d.controlled, d.kind, d.track_lot,
            CASE WHEN l.vehicle_id IS NULL THEN 'kho' ELSE 'xe' END AS place
       FROM stock_lots l JOIN drugs d ON d.id = l.drug_id JOIN vehicles v ON v.id = $1
      WHERE (l.vehicle_id = v.id OR (l.vehicle_id IS NULL AND l.station_id = v.station_id))
-       AND l.qty > 0 AND l.expiry >= vn_today() AND d.active AND d.kind IN ('thuoc', 'dich_truyen')
-     ORDER BY d.name, (l.vehicle_id IS NULL), l.expiry, l.received_at`, [vehicleId]);
+       AND l.qty > 0 AND l.expiry >= vn_today() AND d.active AND ($2 OR d.kind IN ('thuoc', 'dich_truyen'))
+     ORDER BY d.name, (l.vehicle_id IS NULL), l.expiry, l.received_at`, [vehicleId, all]);
 }
 
 /**
@@ -270,7 +271,27 @@ export async function lotsForVehicle(q: Queryable, vehicleId: string) {
  * Thuốc kiểm soát đặc biệt phải có người chứng kiến.
  */
 export async function consumeForTransfer(tx: Tx, actor: Actor, transferId: string,
-  medications: { name: string; lot?: string; lotId?: string; qty?: number; witness?: string }[]) {
+  items: { name: string; lot?: string; lotId?: string; drugId?: number; qty?: number; witness?: string }[]) {
+  // Dòng chỉ có mặt hàng (vật tư chọn theo tên): tự lấy lô trên xe hết hạn sớm nhất trước, thiếu thì lấy kho điểm.
+  // Không đủ thì trừ được bao nhiêu hay bấy nhiêu và báo lại, không chặn việc ký phiếu cấp cứu.
+  const t = await one(tx, 'SELECT vehicle_id FROM transfers WHERE id = $1', [transferId]);
+  const shortages: string[] = [];
+  const medications: { name: string; lot?: string; lotId?: string; qty?: number; witness?: string }[] = [];
+  for (const m of items) {
+    if (m.lotId || m.drugId == null) { medications.push(m); continue; }
+    let need = m.qty && m.qty > 0 ? m.qty : 1;
+    const lots = t?.vehicle_id ? await many(tx, `
+      SELECT l.id, l.lot, l.qty::float FROM stock_lots l JOIN vehicles v ON v.id = $1
+       WHERE l.drug_id = $2 AND l.qty > 0 AND l.expiry >= vn_today() AND (l.vehicle_id = v.id OR (l.vehicle_id IS NULL AND l.station_id = v.station_id))
+       ORDER BY (l.vehicle_id IS NULL), l.expiry, l.received_at`, [t.vehicle_id, m.drugId]) : [];
+    for (const l of lots) {
+      if (need <= 0) break;
+      const take = Math.min(need, l.qty);
+      medications.push({ ...m, lotId: l.id, lot: l.lot, qty: take });
+      need -= take;
+    }
+    if (need > 0) shortages.push(`${m.name}: trên xe và kho điểm không đủ, thiếu ${need}`);
+  }
   for (const m of medications) {
     if (!m.lotId) continue;
     const qty = m.qty && m.qty > 0 ? m.qty : 1;
@@ -286,9 +307,81 @@ export async function consumeForTransfer(tx: Tx, actor: Actor, transferId: strin
   }
   if (medications.some((m) => m.lotId)) {
     await audit(tx, 'system', actor, 'stock.consumed', 'transfer', transferId, {
-      items: medications.filter((m) => m.lotId).map((m) => ({ lotId: m.lotId, lot: m.lot, qty: m.qty ?? 1 })),
+      items: medications.filter((m) => m.lotId).map((m) => ({ lotId: m.lotId, lot: m.lot, qty: m.qty ?? 1 })), shortages,
     });
   }
+  return { shortages };
+}
+
+/**
+ * Danh sách bù sau ca: mọi thứ phiếu đã trừ trên xe (thuốc, dịch truyền, từng bơm kim tiêm, băng cá nhân...),
+ * kèm số xe còn thiếu so với cơ số và số kho điểm đang có để điều dưỡng lấy bù.
+ */
+export async function caseRestockList(q: Queryable, transferId: string) {
+  const t = await one(q, 'SELECT id, transfer_number, vehicle_id, status, restocked_at, restocked_by FROM transfers WHERE id = $1', [transferId]);
+  if (!t) throw new HttpError(404, 'Không tìm thấy phiếu');
+  const used = await many(q, `
+    SELECT d.id AS drug_id, d.name AS drug_name, d.unit, d.kind, d.controlled, g.name AS group_name, g.sort, sum(-m.delta)::float AS used
+      FROM stock_moves m JOIN stock_lots l ON l.id = m.lot_id JOIN drugs d ON d.id = l.drug_id JOIN item_groups g ON g.code = d.group_code
+     WHERE m.transfer_id = $1 AND m.reason = 'dung_cho_nguoi_benh' AND l.vehicle_id IS NOT NULL
+     GROUP BY d.id, g.name, g.sort ORDER BY g.sort, d.name`, [transferId]);
+  const par = t.vehicle_id && used.length ? await vehicleParStatus(q, t.vehicle_id) : null;
+  const items = used.map((u) => {
+    const p = par?.items.find((i) => i.drug_id === u.drug_id);
+    return { ...u, missing: p?.missing ?? 0, in_station: p?.in_station ?? 0, on_vehicle: p?.on_vehicle ?? 0, par: p?.par ?? 0 };
+  });
+  return { transfer: t, items };
+}
+
+/** Bù theo danh sách sau ca: lấy từ kho điểm lên xe (lô hết hạn sớm nhất trước), đánh dấu phiếu đã bù */
+export async function restockForTransfer(tx: Tx, actor: Actor, transferId: string, witness?: string | null, pick?: { drugId: number; qty: number }[]) {
+  const { transfer: t, items } = await caseRestockList(tx, transferId);
+  if (!t.vehicle_id) throw new HttpError(409, 'Phiếu không gắn xe');
+  if (t.restocked_at) throw new HttpError(409, 'Danh sách bù của ca này đã được xác nhận');
+  const v = await one(tx, 'SELECT station_id FROM vehicles WHERE id = $1', [t.vehicle_id]);
+  const wanted = pick ?? items.map((i) => ({ drugId: i.drug_id, qty: i.used }));
+  const plan: { lotId: string; qty: number; drug: string; controlled: boolean }[] = [];
+  const unfilled: { drug: string; missing: number }[] = [];
+  for (const w of wanted) {
+    const it = items.find((i) => i.drug_id === w.drugId);
+    if (!it) continue;
+    let need = Math.min(w.qty, it.used);
+    const lots = await many(tx, `SELECT id, qty::float FROM stock_lots WHERE station_id = $1 AND vehicle_id IS NULL AND drug_id = $2 AND qty > 0 AND expiry >= vn_today()
+                                  ORDER BY expiry, received_at`, [v.station_id, w.drugId]);
+    for (const l of lots) {
+      if (need <= 0) break;
+      const take = Math.min(need, l.qty);
+      plan.push({ lotId: l.id, qty: take, drug: it.drug_name, controlled: it.controlled });
+      need -= take;
+    }
+    if (need > 0) unfilled.push({ drug: it.drug_name, missing: need });
+  }
+  requireWitness(plan.map((p) => ({ controlled: p.controlled, drug_name: p.drug })), witness);
+  let voucher: { id: string; code: string } | null = null;
+  if (plan.length) {
+    const vc = await newVoucher(tx, actor, { kind: 'cap_xe', status: 'da_duyet', stationId: v.station_id, vehicleId: t.vehicle_id, witness, note: `Bù sau ca, phiếu ${t.transfer_number ?? t.id}` });
+    for (const p of plan) {
+      await tx.query('INSERT INTO stock_voucher_lines(voucher_id, lot_id, qty) VALUES ($1,$2,$3)', [vc.id, p.lotId, p.qty]);
+      await moveLot(tx, actor, p.lotId, p.qty, { stationId: v.station_id, vehicleId: t.vehicle_id }, 'cap_xe', vc.id);
+    }
+    voucher = vc;
+  }
+  await tx.query('UPDATE transfers SET restocked_at = now(), restocked_by = $2, restock_voucher_id = $3 WHERE id = $1', [transferId, actor.id, voucher?.id ?? null]);
+  await audit(tx, 'system', actor, 'stock.case_restocked', 'transfer', transferId, { voucher: voucher?.code ?? null, lines: plan.length, unfilled });
+  return { voucher, lines: plan.length, unfilled };
+}
+
+/** Phiếu đã ký của xe có trừ cơ số trên xe mà chưa xác nhận bù */
+export async function pendingRestock(q: Queryable, vehicleId: string) {
+  return many(q, `
+    SELECT t.id, t.transfer_number, t.signed_at, i.code AS incident_code,
+           (SELECT count(DISTINCT l.drug_id)::int FROM stock_moves m JOIN stock_lots l ON l.id = m.lot_id
+             WHERE m.transfer_id = t.id AND m.reason = 'dung_cho_nguoi_benh' AND l.vehicle_id IS NOT NULL) AS items
+      FROM transfers t LEFT JOIN incidents i ON i.id = t.incident_id
+     WHERE t.vehicle_id = $1 AND t.status = 'signed' AND t.restocked_at IS NULL AND t.signed_at > now() - interval '7 days'
+       AND EXISTS (SELECT 1 FROM stock_moves m JOIN stock_lots l ON l.id = m.lot_id
+                    WHERE m.transfer_id = t.id AND m.reason = 'dung_cho_nguoi_benh' AND l.vehicle_id IS NOT NULL)
+     ORDER BY t.signed_at`, [vehicleId]);
 }
 
 /* ---------- Cảnh báo và đặt hàng ---------- */

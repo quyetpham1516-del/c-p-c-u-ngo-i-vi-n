@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api, money } from '../api';
 import { ProposalForm } from './Finance';
+import { MyPpe } from './Logistics';
 import { Payslip } from './Payroll';
 
 const DOC: Record<string, string> = {
@@ -36,6 +37,7 @@ export function Personal() {
       {msg && <div className="alert green">{msg}</div>}
       <CaseFeedback />
       <MyPayslips />
+      <MyPpe />
       {!me.staff && <div className="alert amber">Tài khoản chưa có hồ sơ nhân sự. Liên hệ phòng Nhân sự.</div>}
       {me.staff && (
         <>

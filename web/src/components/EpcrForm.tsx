@@ -170,9 +170,9 @@ function UtsteinSection({ r, set, locked }: { r: any; set: Setter; locked: boole
 }
 
 /** Phiếu chuyển viện / ePCR: lưu vào máy ngay mỗi lần sửa, đồng bộ khi có mạng */
-export function EpcrForm({ draft: initial, onChange }: { draft: Draft; onChange?: (d: Draft) => void }) {
+export function EpcrForm({ draft: initial, onChange, initialTab }: { draft: Draft; onChange?: (d: Draft) => void; initialTab?: (typeof TABS)[number] }) {
   const [d, setD] = useState<Draft>(initial);
-  const [tab, setTab] = useState<(typeof TABS)[number]>(TABS[0]);
+  const [tab, setTab] = useState<(typeof TABS)[number]>(initialTab ?? TABS[0]);
   const [msg, setMsg] = useState('');
   const [missing, setMissing] = useState<string[]>([]);
   const syncTimer = useRef<number | undefined>(undefined);

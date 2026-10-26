@@ -73,7 +73,10 @@ describe('báo trước bệnh viện nhận', () => {
     const epcr = { chiefComplaint: 'Đau ngực trái 30 phút', diagnosis: { text: 'Nghi nhồi máu cơ tim' },
       vitals: [{ at: new Date(Date.now() - 600_000).toISOString(), hr: 120 }, { at: new Date().toISOString(), hr: 104, sbp: 90, dbp: 60, spo2: 94 }] };
     expect((await crew('PUT', `/api/transfers/${randomUUID()}`, { incidentId: incId, vehicleId: 'MD-ALS-01', patientId: patient.id, baseVersion: 0, epcr })).http).toBe(200);
+    // Chưa rời hiện trường (ca không phải P1): chưa gửi thông tin cho bệnh viện
+    expect((await dpv('POST', `/api/incidents/${incId}/share`, { kind: 'benh_vien', baseUrl: BASE })).http).toBe(409);
     await pool.query(`UPDATE incidents SET status = 'transporting' WHERE id = $1`, [incId]);
+    await pool.query(`UPDATE vehicles SET status = 'S6' WHERE id = 'MD-ALS-01'`);
     const r = await dpv('POST', `/api/incidents/${incId}/share`, { kind: 'benh_vien', baseUrl: BASE, phone: '02838000000' });
     expect(r.url).toMatch(/\/bv\?m=/);
     token = tokenOf(r.url);

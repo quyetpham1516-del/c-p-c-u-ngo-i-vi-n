@@ -127,7 +127,24 @@ export function Crew() {
     await saveDraft(d);
     setDraft(d);
     setDrafts(await allDrafts());
+    return d;
   };
+
+  // Tới hiện trường (S5) trở đi: phiếu của ca tự mở (tạo mới nếu chưa có), xổ ra ở phần ABCDE, thuốc, can thiệp
+  const autoOpened = useRef<string | null>(null);
+  const curInc = cur?.incident;
+  const curStatus = cur?.vehicle?.status;
+  useEffect(() => {
+    if (!curInc || !['S5', 'S6', 'S7'].includes(curStatus) || autoOpened.current === `inc:${curInc.id}`) return;
+    (async () => {
+      const local = (await allDrafts()).find((x) => x.incidentId === curInc.id && x.status !== 'signed');
+      const server = curInc.transfers?.find((t: any) => t.status !== 'signed');
+      autoOpened.current = `inc:${curInc.id}`;
+      if (local) { autoOpened.current = local.id; setDraft(local); }
+      else if (server) { autoOpened.current = server.id; await openDraft(server.id, { number: server.transfer_number }); }
+      else if (!curInc.transfers?.length) { const d = await newDraft(); autoOpened.current = d.id; setDraft({ ...d }); }
+    })().catch(() => {});
+  }, [curInc?.id, curStatus]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!cur) return <div className="crew panel">{error || 'Đang tải…'}</div>;
 
@@ -162,6 +179,7 @@ export function Crew() {
   const v = cur.vehicle;
   const inc = cur.incident;
   const doneTimes = new Set((inc?.times ?? []).map((t: any) => t.code));
+  const atScene = ['S5', 'S6', 'S7', 'S8'].includes(v.status);
 
   return (
     <div className="crew col">
@@ -185,6 +203,25 @@ export function Crew() {
         <div className="alert red order-alarm" role="alert">
           <b>LỆNH MỚI {inc.priority} · {inc.code}</b> {inc.address ?? ''}
           <button className="danger big" style={{ marginLeft: 12 }} onClick={() => act(() => api('POST', '/api/crew/ack'))}>Xác nhận lệnh</button>
+        </div>
+      )}
+      {inc && (
+        <div className="panel sticky-status">
+          <div className="row small" style={{ justifyContent: 'space-between' }}>
+            <span><span className={`st ${v.status}`}>{v.status}</span> {STATUS_LABEL[v.status]} · {fmtDuration(now - new Date(v.status_since).getTime())}</span>
+            <span className="mono">{inc.code} · {inc.priority}</span>
+          </div>
+          <div className="status-grid" style={{ marginTop: 6 }}>
+            {STEPS.filter((s) => s.from.includes(v.status)).map((s, i) => {
+              const done = s.milestone ? doneTimes.has(s.milestone) : false;
+              return (
+                <button key={s.key} className={i === 0 && !done ? 'next' : ''} disabled={done}
+                  onClick={() => act(() => (s.status ? api('POST', `/api/vehicles/${v.id}/status`, { status: s.status }) : api('POST', '/api/crew/milestone', { code: s.milestone })))}>
+                  {s.label}{done ? ' ✓' : ''}
+                </button>
+              );
+            })}
+          </div>
         </div>
       )}
       {inc ? (
@@ -217,18 +254,6 @@ export function Crew() {
               {Object.entries(INFECTION_RISK).map(([k, l]) => <option key={k} value={k}>{l}</option>)}
             </select>
           </label>
-          <div className="hr" />
-          <div className="status-grid">
-            {STEPS.filter((s) => s.from.includes(v.status)).map((s, i) => {
-              const done = s.milestone ? doneTimes.has(s.milestone) : false;
-              return (
-                <button key={s.key} className={i === 0 && !done ? 'next' : ''} disabled={done}
-                  onClick={() => act(() => (s.status ? api('POST', `/api/vehicles/${v.id}/status`, { status: s.status }) : api('POST', '/api/crew/milestone', { code: s.milestone })))}>
-                  {s.label}{done ? ' ✓' : ''}
-                </button>
-              );
-            })}
-          </div>
           <div className="times" style={{ marginTop: 10 }}>
             {inc.times.sort((a: any, b: any) => a.at.localeCompare(b.at)).map((t: any) => <div key={t.code} className="done"><b>{t.code}</b><span className="mono">{fmtTime(t.at)}</span></div>)}
           </div>
@@ -259,25 +284,39 @@ export function Crew() {
         }}>Cập nhật cơ số</button>
       </div>
       {v.equipment_gaps && <div className="alert red">Xe đang thiếu thiết bị bắt buộc nên EOC không giao được: {v.equipment_gaps}. Báo kỹ thuật hoặc trưởng ca.</div>}
+      <div className="panel">
+        <div className="row" style={{ justifyContent: 'space-between' }}>
+          <h2 style={{ margin: 0 }}>Phiếu chuyển viện (ePCR)</h2>
+          {inc && atScene && <button onClick={newDraft}>+ Phiếu cho người bệnh khác</button>}
+        </div>
+        {inc && !atScene && (
+          <div className="col small" style={{ marginTop: 8 }}>
+            <div className="muted">Phiếu tự mở khi bấm <b>Tới hiện trường</b>. Thông tin tổng đài viên đã nhập sẽ được điền sẵn:</div>
+            <div className="grid2">
+              <div>Người gọi: <b>{inc.callerName ?? '—'}</b> · {inc.callbackPhone ?? '—'}</div>
+              <div>Địa chỉ: <b>{inc.address ?? '—'}</b></div>
+              <div>Lý do gọi: <b>{inc.complaint ?? '—'}</b>{inc.flags?.length ? ` (${inc.flags.map((f: string) => FLAG_LABEL[f] ?? f).join(', ')})` : ''}</div>
+              <div>Ưu tiên: <b>{inc.priority}</b> · {inc.patientCount} người bệnh{inc.destination ? ` · BV dự kiến: ${inc.destination}` : ''}</div>
+            </div>
+          </div>
+        )}
+        {!inc && <div className="small muted" style={{ marginTop: 8 }}>Phiếu chỉ mở khi có ca bệnh và kíp đã tới hiện trường. Phiếu còn dở của các ca trước ở dưới.</div>}
+        {inc && atScene && (
+          <div className="list" style={{ marginTop: 8 }}>
+            {inc.transfers?.map((t: any) => (
+              <div key={t.id} className="item row" style={{ justifyContent: 'space-between' }} onClick={() => openDraft(t.id, { number: t.transfer_number })}>
+                <span><b>{t.transfer_number}</b> {t.status === 'signed' ? '· đã ký' : '· nháp'}</span><span className="small muted">Mở</span>
+              </div>
+            ))}
+          </div>
+        )}
+        <OfflineDrafts drafts={drafts.filter((d) => !inc?.transfers?.some((t: any) => t.id === d.id) && d.id !== draft?.id)} onOpen={(d) => openDraft(d.id)} />
+      </div>
+      {draft && <EpcrForm key={draft.id} draft={draft} initialTab={autoOpened.current === draft.id ? 'ABCDE và can thiệp' : undefined} onChange={() => allDrafts().then(setDrafts)} />}
       <VehicleKit vehicleId={v.id} incidentId={inc?.id ?? null} act={act} />
       <Disinfection vehicleId={v.id} status={v.status} refreshKey={error} />
       {error && <div className="error">{error}</div>}
 
-      <div className="panel">
-        <div className="row" style={{ justifyContent: 'space-between' }}>
-          <h2 style={{ margin: 0 }}>Phiếu chuyển viện (ePCR)</h2>
-          <button className="primary" onClick={newDraft}>+ Phiếu mới{inc ? ` cho ca ${inc.code}` : ''}</button>
-        </div>
-        <div className="list" style={{ marginTop: 8 }}>
-          {inc?.transfers?.map((t: any) => (
-            <div key={t.id} className="item row" style={{ justifyContent: 'space-between' }} onClick={() => openDraft(t.id, { number: t.transfer_number })}>
-              <span><b>{t.transfer_number}</b> {t.status === 'signed' ? '· đã ký' : '· nháp'}</span><span className="small muted">Mở</span>
-            </div>
-          ))}
-        </div>
-        <OfflineDrafts drafts={drafts.filter((d) => !inc?.transfers?.some((t: any) => t.id === d.id))} onOpen={(d) => openDraft(d.id)} />
-      </div>
-      {draft && <EpcrForm key={draft.id} draft={draft} onChange={() => allDrafts().then(setDrafts)} />}
     </div>
   );
 }

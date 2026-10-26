@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { api, fmtTime } from '../api';
-import { saveDraft, syncDraft, type Draft } from '../offline';
+import { resolveConflict, saveDraft, syncDraft, type Draft } from '../offline';
 import { ruleKey, scopeCheck, useLabTypes, useScope, useVehicleItems, useVehicleStock, type LabType, type StockLot } from '../catalog';
 import { HospitalPicker } from './HospitalPicker';
 import { IcdInput } from './IcdInput';
@@ -432,7 +432,8 @@ export function EpcrForm({ draft: initial, onChange, initialTab }: { draft: Draf
       clearTimeout(syncTimer.current);
       syncTimer.current = window.setTimeout(async () => {
         const s = await syncDraft(next.id);
-        if (s) setD((x) => ({ ...x, baseVersion: s.baseVersion, number: s.number, dirty: x.updatedAt !== next.updatedAt || s.dirty, conflict: s.conflict, syncedAt: s.syncedAt }));
+        if (s) setD((x) => s.status === 'signed' && x.status !== 'signed' ? s
+          : ({ ...x, baseVersion: s.baseVersion, number: s.number, dirty: x.updatedAt !== next.updatedAt || s.dirty, conflict: s.conflict, server: s.server, syncedAt: s.syncedAt }));
       }, 1500);
       return next;
     });
@@ -537,7 +538,14 @@ export function EpcrForm({ draft: initial, onChange, initialTab }: { draft: Draf
     }
   };
 
-  const syncState = d.conflict ? <span className="error">Xung đột: {d.conflict}</span>
+  const resolve = async (keep: 'server' | 'local') => {
+    if (keep === 'server' && !confirm('Bỏ các thay đổi trên máy này, dùng bản trên máy chủ?')) return;
+    const s = await resolveConflict(d.id, keep);
+    if (s) setD(s);
+  };
+  const syncState = d.conflict ? <span className="error">Xung đột: {d.conflict}{d.server && <>
+      {' '}<button className="small" onClick={() => resolve('server')}>Dùng bản trên máy chủ</button>
+      {' '}<button className="small" onClick={() => resolve('local')}>Giữ bản trên máy</button></>}</span>
     : d.dirty ? <span style={{ color: 'var(--warn)' }}>● Đã lưu trên máy, chờ đồng bộ</span>
     : <span style={{ color: 'var(--ok)' }}>● Đã đồng bộ {d.syncedAt ? fmtTime(d.syncedAt) : ''}</span>;
 

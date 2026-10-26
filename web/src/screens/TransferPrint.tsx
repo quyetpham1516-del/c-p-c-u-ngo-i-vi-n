@@ -28,6 +28,21 @@ function VerifyBox({ code }: { code: string }) {
   );
 }
 
+/** QR cho bác sĩ bệnh viện nhận: đăng nhập tài khoản bệnh viện để điền phần trong viện (Utstein, chấn thương, đột quỵ) */
+function HospitalEntryBox({ id, forms }: { id: string; forms: string }) {
+  const url = `${verifyBase()}/benh-vien?phieu=${id}`;
+  const q = qrcode(0, 'M');
+  q.addData(url);
+  q.make();
+  return (
+    <div className="verify" title={url}>
+      <span dangerouslySetInnerHTML={{ __html: q.createSvgTag({ cellSize: 2, margin: 0, scalable: true }) }} />
+      <span>Bệnh viện điền<br />phần trong viện<br /><b>{forms}</b></span>
+    </div>
+  );
+}
+const REGISTRY_SHORT: Record<string, string> = { utstein: 'Utstein', patos: 'Chấn thương', stroke: 'Đột quỵ' };
+
 /** Ô đánh dấu như trên mẫu giấy */
 function Cb({ on, label }: { on: any; label?: string }) {
   return <span style={{ whiteSpace: 'nowrap' }}>{label ? `${label} ` : ''}<span className="cb">{on ? '☑' : '☐'}</span></span>;
@@ -114,7 +129,10 @@ export function TransferPrint() {
           <div className="l"><StarOfLife size={34} /><div><b>MEDONE</b><div>DỊCH VỤ CHUYỂN VIỆN –<br />CẤP CỨU NGOẠI VIỆN</div></div></div>
           <div>Cộng Hòa Xã Hội Chủ Nghĩa Việt Nam<br />Độc Lập – Tự Do – Hạnh Phúc</div>
           <div className="r">Số BA: <b>{t.ba_number ?? '……'}</b><br />Số chuyển viện: <b>{t.transfer_number}</b><br /><span style={{ fontSize: 9 }}>Mã ca: {t.incident_code ?? '—'}</span>
-            {t.verify_code && <VerifyBox code={t.verify_code} />}</div>
+            {t.verify_code && <VerifyBox code={t.verify_code} />}
+            {t.status === 'signed' && (t.registries?.length > 0 || e.arrest?.present) && (
+              <HospitalEntryBox id={t.id} forms={t.registries?.length ? t.registries.map((r: any) => REGISTRY_SHORT[r.registry] ?? r.registry).join(', ') : 'Utstein'} />
+            )}</div>
         </div>
         <h1>BỆNH ÁN CẤP CỨU NGOẠI VIỆN</h1>
         {t.status !== 'signed' && <div className="draft">BẢN NHÁP – CHƯA KÝ</div>}

@@ -8,6 +8,7 @@ import { decryptId, encryptId, isValidCccd, lookupHash, maskLast4, normalizeId }
 import { many, one, withTx, type Queryable } from '../db.js';
 import { HttpError, incidentScope, newBaNumber, newTransferNumber, patientScope, recordTime, TIME_LABEL } from '../domain.js';
 import { activeRules, crewForScope, uncoveredScope } from '../scope.js';
+import { enrollOnSign } from '../registry.js';
 import { EpcrSchema, missingForSign, type Epcr } from '../epcr.js';
 import { actorOf, guard, REVIEW_ROLES, type Ctx, type Role } from '../http.js';
 import { contentHash, newVerifyCode, signatureHash } from '../safety.js';
@@ -291,8 +292,17 @@ export function registerRecords(app: FastifyInstance, { pool, hub }: Ctx) {
     return res.row;
   });
 
-  app.get('/api/transfers/:id', clinical, async (req) => {
+  /** Tài khoản bệnh viện chỉ xem phiếu đã ký chuyển tới bệnh viện của mình */
+  async function assertHospitalAccess(req: FastifyRequest, transferId: string) {
+    if (req.user.role !== 'hospital') return;
+    const ok = await one(pool, `SELECT 1 FROM transfers t JOIN users u ON u.id = $2 WHERE t.id = $1 AND t.status = 'signed' AND t.hospital_id = u.hospital_id`, [transferId, req.user.id]);
+    if (!ok) throw new HttpError(403, 'Phiếu này không chuyển tới bệnh viện của bạn');
+  }
+  const clinicalOrHospital = { preHandler: guard(...CLINICAL, 'hospital') };
+
+  app.get('/api/transfers/:id', clinicalOrHospital, async (req) => {
     const id = uuidParam(req);
+    await assertHospitalAccess(req, id);
     const t = await one(pool, `
       SELECT t.*, i.code AS incident_code, i.final_priority, i.source, i.source_ref, i.address AS incident_address,
              i.caller_name, i.callback_phone, i.caller_phone,
@@ -313,12 +323,14 @@ export function registerRecords(app: FastifyInstance, { pool, hub }: Ctx) {
     [t.vehicle_id, t.signed_at, t.created_at]) : [];
     await withTx(pool, (tx) => audit(tx, t.incident_id ? incidentScope(t.incident_id) : 'system', actorOf(req), 'transfer.viewed', 'transfer', id));
     const digitalSignature = t.status === 'signed' ? await verifyDocument(pool, 'transfer', t.id, t.content_hash, t.version) : null;
-    return { ...t, times: times.map((x) => ({ ...x, label: TIME_LABEL[x.code] })), amendments, crew, digitalSignature };
+    const registries = await many(pool, 'SELECT id, registry, status FROM registry_cases WHERE transfer_id = $1 ORDER BY registry', [id]);
+    return { ...t, times: times.map((x) => ({ ...x, label: TIME_LABEL[x.code] })), amendments, crew, digitalSignature, registries };
   });
 
   /** Xuất phiếu theo chuẩn HL7 FHIR R4 (Bundle "document") để gửi bệnh viện nhận; số định danh đầy đủ chỉ khi người có quyền chọn */
-  app.get('/api/transfers/:id/fhir', clinical, async (req, reply) => {
+  app.get('/api/transfers/:id/fhir', clinicalOrHospital, async (req, reply) => {
     const id = uuidParam(req);
+    await assertHospitalAccess(req, id);
     const full = z.object({ nationalId: z.enum(['0', '1']).default('0') }).parse(req.query).nationalId === '1';
     if (full && !REVIEW_ROLES.includes(req.user.role)) throw new HttpError(403, 'Chỉ Ban Giám đốc, trưởng ca, QLCL được xuất kèm số định danh đầy đủ');
     const t = await one(pool, `
@@ -369,6 +381,8 @@ export function registerRecords(app: FastifyInstance, { pool, hub }: Ctx) {
       // Chữ ký số của người ký phiếu (CA nội bộ Medone ở giai đoạn 1)
       await signDocument(tx, actor.id!, { type: 'transfer', id, version: t.version, contentHash: hash, purpose: 'ky_phieu' });
       await createChargeForTransfer(tx, actor, id);
+      // Bệnh viện nhận được báo có ca chuyển tới; ca đúng tiêu chí vào các biểu mẫu nghiên cứu đang bật
+      await enrollOnSign(tx, actor, id, signed);
       const scope = t.incident_id ? incidentScope(t.incident_id) : 'system';
       await audit(tx, scope, actor, 'transfer.signed', 'transfer', id, { number: t.transfer_number, version: t.version });
       await audit(tx, patientScope(t.patient_id), actor, 'transfer.signed', 'transfer', id, { number: t.transfer_number });

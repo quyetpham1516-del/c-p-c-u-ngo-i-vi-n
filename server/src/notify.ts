@@ -1,4 +1,5 @@
 import { many, one, type Queryable, type Tx } from './db.js';
+import { REGISTRIES } from './registry.js';
 import { pendingRestock, stockAlerts, STOCK_APPROVERS, vehicleParStatus } from './stock.js';
 
 /**
@@ -22,7 +23,15 @@ const LATE_SIGN = `(t.created_at < now() - interval '3 hours' OR NOT EXISTS (
 
 export async function remindersFor(q: Queryable, user: { id: string; role: string }): Promise<Reminder[]> {
   const out: Reminder[] = [];
-  const me = await one(q, 'SELECT station_id FROM users WHERE id = $1', [user.id]);
+  const me = await one(q, 'SELECT station_id, hospital_id FROM users WHERE id = $1', [user.id]);
+
+  // Tài khoản bệnh viện: chỉ nhắc biểu mẫu nghiên cứu của ca chuyển tới bệnh viện mình còn thiếu phần trong viện
+  if (user.role === 'hospital') {
+    const open = await many(q, `SELECT c.registry, count(*)::int AS n FROM registry_cases c
+                                 WHERE c.hospital_id = $1 AND c.status <> 'du' GROUP BY c.registry ORDER BY c.registry`, [me?.hospital_id ?? -1]);
+    for (const r of open) out.push({ key: `reg:${r.registry}`, level: 'amber', title: `${r.n} ca ${REGISTRIES[r.registry]?.name ?? r.registry} chưa điền đủ phần trong viện`, link: '/benh-vien' });
+    return out;
+  }
 
   if (user.role === 'crew') {
     const shift = await one(q, `SELECT cs.vehicle_id, v.status FROM crew_shifts cs JOIN vehicles v ON v.id = cs.vehicle_id
@@ -76,6 +85,10 @@ export async function remindersFor(q: Queryable, user: { id: string; role: strin
   if (['dispatcher', 'supervisor', 'admin', 'director'].includes(user.role)) {
     const mci = await many(q, `SELECT code FROM incidents WHERE mci_declared_at IS NOT NULL AND mci_ended_at IS NULL ORDER BY mci_declared_at`);
     if (mci.length) out.push({ key: 'mci', level: 'red', title: `Đang đông nạn nhân: ${mci.map((m) => m.code).join(', ')}`, link: '/van-hanh' });
+  }
+  if (['qa', 'supervisor', 'admin', 'director'].includes(user.role)) {
+    const stale = await one(q, `SELECT count(*)::int AS n FROM registry_cases WHERE status <> 'du' AND created_at < now() - interval '30 days'`);
+    if (stale?.n) out.push({ key: 'reg:stale', level: 'info', title: `${stale.n} ca biểu mẫu nghiên cứu quá 30 ngày chưa đủ phần trong viện`, link: '/nghien-cuu' });
   }
   return out;
 }

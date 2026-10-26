@@ -238,4 +238,33 @@ describe('bộ sinh cấu hình Asterisk', () => {
     expect(gosub(c20['extensions.conf'])).toBe(7);
     expect(gosub(renderConfig({ ...base, major: 21 })['extensions.conf'])).toBe(6);
   });
+
+  it('trung kế MobiFone: kiểu kết nối IP và kiểu đăng ký tài khoản, đổi số khi gọi ra', async () => {
+    const { renderConfig, trunkFromEnv } = await import('../src/tools/asterisk-config.js');
+    const base = {
+      dir: '/tmp/pbx', exts: ['101'], testExt: null, api: 'http://127.0.0.1:8080', telephonyKey: 'k'.repeat(32),
+      recordings: '/tmp/ghi-am', did115: null, ariUser: 'medone', ariPassword: 'p'.repeat(24), secrets: { 101: 'a'.repeat(24) }, major: 20,
+    };
+    expect(trunkFromEnv({})).toBeNull();
+    expect(renderConfig({ ...base, trunk: null })['pjsip.conf']).toContain('MEDONE_TRUNK_HOST');
+
+    const ip = trunkFromEnv({ MEDONE_TRUNK_HOST: '10.1.2.3', MEDONE_TRUNK_MATCH: '10.1.2.4, 10.1.2.0/28', MEDONE_TRUNK_CALLER_ID: '18001234' })!;
+    const ci = renderConfig({ ...base, trunk: ip });
+    expect(ci['pjsip.conf']).not.toContain('type=registration');
+    expect(ci['pjsip.conf']).toMatch(/match=10\.1\.2\.3\nmatch=10\.1\.2\.4\nmatch=10\.1\.2\.0\/28/);
+    expect(ci['pjsip.conf']).toContain('allow=alaw,ulaw');
+    expect(ci['extensions.conf']).toContain('Set(CALLERID(num)=18001234)');
+    expect(ci['extensions.conf']).toContain('Dial(PJSIP/${SO}@nha-mang,60)');
+
+    const reg = trunkFromEnv({ MEDONE_TRUNK_HOST: 'sip.mobifone.example', MEDONE_TRUNK_MODE: 'dang-ky', MEDONE_TRUNK_USER: 'medone1800', MEDONE_TRUNK_PASSWORD: 'x'.repeat(20), MEDONE_TRUNK_DIAL_PREFIX: '84', MEDONE_TRUNK_STRIP_ZERO: '1' })!;
+    const cr = renderConfig({ ...base, trunk: reg });
+    expect(cr['pjsip.conf']).toContain('type=registration');
+    expect(cr['pjsip.conf']).toContain('client_uri=sip:medone1800@sip.mobifone.example');
+    expect(cr['extensions.conf']).toContain('Set(SO=${EXTEN:1})');
+    expect(cr['extensions.conf']).toContain('Dial(PJSIP/84${SO}@nha-mang,60)');
+
+    expect(() => trunkFromEnv({ MEDONE_TRUNK_HOST: 'a b' })).toThrow();
+    expect(() => trunkFromEnv({ MEDONE_TRUNK_HOST: 'h', MEDONE_TRUNK_MODE: 'dang-ky' })).toThrow();
+    expect(() => trunkFromEnv({ MEDONE_TRUNK_HOST: 'h', MEDONE_TRUNK_CALLER_ID: '1800;x' })).toThrow();
+  });
 });

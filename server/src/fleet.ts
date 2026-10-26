@@ -102,6 +102,8 @@ export interface Suggestion {
   type: string;
   status: string;
   distanceKm: number | null;
+  /** Quãng đường theo đường bộ khi có máy chủ chỉ đường (OSRM) */
+  roadKm?: number | null;
   etaMin: number | null;
   rank: number;
   note?: string;
@@ -113,12 +115,20 @@ export interface SuggestResult {
   basis: string;
 }
 
+/** Vị trí dùng để tính đường: GPS của xe, chưa có thì vị trí điểm trực */
+export const vehiclePos = (v: VehicleRow) => (v.lat != null && v.lng != null ? { lat: v.lat, lng: v.lng }
+  : v.station_lat != null && v.station_lng != null ? { lat: v.station_lat, lng: v.station_lng } : null);
+
+export type RoadTimes = Record<string, { km: number; min: number }>;
+const DISTANCE_BASIS = 'Ước tính theo khoảng cách đường chim bay × 1,4, 30 km/h; chưa tính giao thông';
+
 export function suggestVehicles(
   vehicles: VehicleRow[],
   scene: { lat: number; lng: number } | null,
   requested: VehicleType | null,
   priority: Priority | null,
   now = new Date(),
+  road?: { times: RoadTimes; basis: string },
 ): SuggestResult {
   const advice: string[] = [];
   if (!requested || requested === 'NONE') {
@@ -146,13 +156,14 @@ export function suggestVehicles(
       continue;
     }
     // BLS chỉ là phương án hỗ trợ cho P1/P2 khi ALS xa, xét ở dưới
-    const pos = v.lat != null && v.lng != null ? { lat: v.lat, lng: v.lng }
-      : v.station_lat != null && v.station_lng != null ? { lat: v.station_lat, lng: v.station_lng } : null;
+    const pos = vehiclePos(v);
     const km = scene && pos ? haversineKm(pos, scene) : null;
+    const r = road?.times[v.id];
     out.push({
       vehicleId: v.id, type: v.type, status: v.status,
       distanceKm: km == null ? null : Math.round(km * 10) / 10,
-      etaMin: km == null ? null : travelMinutes(km),
+      ...(r ? { roadKm: r.km } : {}),
+      etaMin: r ? r.min : km == null ? null : travelMinutes(km),
       rank: rule.rank, note: rule.note,
     });
   }
@@ -173,7 +184,8 @@ export function suggestVehicles(
   } else if (out.length === 0) {
     advice.push('Không có xe sẵn sàng phù hợp: đưa vào hàng chờ hoặc chuyển 115.');
   }
-  return { suggestions: out, advice, basis: 'Ước tính theo khoảng cách đường chim bay × 1,4, 30 km/h; chưa tính giao thông' };
+  const usedRoad = road && out.some((o) => road.times[o.vehicleId]);
+  return { suggestions: out, advice, basis: usedRoad ? road.basis : DISTANCE_BASIS };
 }
 
 /* ---------- Dự kiến rảnh lúc mấy (mục 5.12) ---------- */

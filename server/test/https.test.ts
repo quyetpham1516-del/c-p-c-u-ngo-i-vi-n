@@ -10,7 +10,7 @@ import WebSocket, { WebSocketServer } from 'ws';
 const dir = mkdtempSync(join(tmpdir(), 'medone-cert-'));
 const P = 40000 + Math.floor(Math.random() * 20000);
 Object.assign(process.env, {
-  MEDONE_CERT_DIR: dir, MEDONE_HTTPS_PORT: String(P), MEDONE_HTTPS_HELP_PORT: String(P + 1), MEDONE_WEB_PORT: String(P + 2), PORT: String(P + 3),
+  MEDONE_CERT_DIR: dir, MEDONE_HTTPS_PORT: String(P), MEDONE_HTTPS_HELP_PORT: String(P + 1), MEDONE_WEB_PORT: String(P + 2), PORT: String(P + 3), MEDONE_KEYCLOAK_PORT: String(P + 4),
 });
 
 let web: Server; let api: Server; let mod: typeof import('../src/tools/https.js'); let proxy: { server: Server; helpServer: Server };
@@ -66,6 +66,8 @@ describe('HTTPS nội bộ', () => {
     expect(mod.targetPort('/ws?token=x')).toBe(P + 3);
     expect(mod.targetPort('/kip')).toBe(P + 2);
     expect(mod.targetPort('/apix')).toBe(P + 2);
+    expect(mod.targetPort('/auth/realms/medone/protocol/openid-connect/auth?x=1')).toBe(P + 4);
+    expect(mod.targetPort('/authx')).toBe(P + 2);
   });
 
   it('chuyển tiếp http qua TLS, giữ thân yêu cầu, báo x-forwarded-proto', async () => {

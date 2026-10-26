@@ -19,7 +19,8 @@
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "load": "tsx load/sim.ts",
-    "asterisk:config": "tsx src/tools/asterisk-config.ts"
+    "asterisk:config": "tsx src/tools/asterisk-config.ts",
+    "keycloak:sync": "tsx src/tools/keycloak-sync.ts"
   },
   "keywords": [],
   "author": "",

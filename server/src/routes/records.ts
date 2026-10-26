@@ -387,6 +387,15 @@ export function registerRecords(app: FastifyInstance, { pool, hub }: Ctx) {
     return { ok: true, warnings };
   });
 
+  /** Số tiền tự tính sau khi ký phiếu (km, dịch vụ, thuốc vật tư tính riêng) để kíp báo người nhà */
+  app.get('/api/transfers/:id/charge', clinical, async (req) => {
+    const id = uuidParam(req);
+    const c = await one(pool, `SELECT c.code, c.km, c.km_source, c.night, c.lines, c.subtotal::float, c.discount::float, c.vat::float, c.total::float,
+                                      c.paid::float, c.status, c.payer_kind, p.name AS price_list_name
+                                 FROM charges c LEFT JOIN price_lists p ON p.id = c.price_list_id WHERE c.transfer_id = $1`, [id]);
+    return c ?? null;
+  });
+
   app.post('/api/transfers/:id/amend', clinical, async (req) => {
     const id = uuidParam(req);
     const b = z.object({ reason: z.string().min(3).max(500), epcr: EpcrSchema }).parse(req.body);

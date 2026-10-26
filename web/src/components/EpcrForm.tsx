@@ -88,6 +88,29 @@ function TimeAt({ label, value, onChange, locked }: { label: string; value?: str
 }
 
 /** Mẫu Utstein 2014 (cập nhật 2024) cho ngừng tuần hoàn ngoài viện: sự kiện, hồi sức của người dân, can thiệp, kết cục tại hiện trường */
+/** Số tiền tự tính khi ký phiếu: giá vận chuyển theo km (khai hoặc GPS), dịch vụ kỹ thuật, thuốc vật tư tính riêng */
+function ChargeView({ transferId }: { transferId: string }) {
+  const [c, setC] = useState<any>(undefined);
+  useEffect(() => { api<any>('GET', `/api/transfers/${transferId}/charge`).then(setC).catch(() => setC(null)); }, [transferId]);
+  if (!c) return null;
+  const vnd = (n: number) => `${Number(n).toLocaleString('vi-VN')} đ`;
+  return (
+    <div className="panel col" style={{ background: 'var(--panel-2)' }}>
+      <b>Chi phí tự tính · {c.code}</b>
+      <div className="small muted">{c.price_list_name ?? 'Chưa có bảng giá cho loại xe này'}{c.km != null ? ` · ${Number(c.km)} km (${c.km_source === 'gps' ? 'theo GPS' : 'kíp khai'})` : ' · chưa có số km'}{c.night ? ' · ca đêm' : ''}</div>
+      <table className="sheet">
+        <tbody>
+          {(c.lines ?? []).map((l: any, i: number) => <tr key={i}><td>{l.label}</td><td className="right mono">{Number(l.qty)}</td><td className="right mono">{vnd(l.unit_price)}</td><td className="right mono">{vnd(l.amount)}</td></tr>)}
+          {c.discount > 0 && <tr><td colSpan={3}>Chiết khấu hợp đồng</td><td className="right mono">−{vnd(c.discount)}</td></tr>}
+          {c.vat > 0 && <tr><td colSpan={3}>Thuế GTGT</td><td className="right mono">{vnd(c.vat)}</td></tr>}
+          <tr className="group-row"><td colSpan={3}><b>Tổng</b></td><td className="right mono"><b>{vnd(c.total)}</b></td></tr>
+        </tbody>
+      </table>
+      {c.status === 'thieu_thong_tin' && <div className="small red">Thiếu số km hoặc bảng giá: kế toán bổ sung trước khi thu.</div>}
+    </div>
+  );
+}
+
 interface PickItem { drug_id: number; name: string; unit: string; kind: string; onVehicle: number; inStation: number }
 const KIND_LABEL: Record<string, string> = { thuoc: 'Thuốc', dich_truyen: 'Dịch truyền', vat_tu: 'Vật tư', dung_cu: 'Dụng cụ', van_phong_pham: 'Văn phòng phẩm' };
 
@@ -997,6 +1020,7 @@ export function EpcrForm({ draft: initial, onChange, initialTab }: { draft: Draf
           {d.patientId && !locked && <div className="small muted">Bệnh án: <b>{d.patientLabel ?? 'đã gắn'}</b>. Khi ký, tên, năm sinh, giới, SĐT, dị ứng, tiền sử trên phiếu được đưa vào chỗ bệnh án còn trống.</div>}
           {missing.length > 0 && <div className="alert red">Còn thiếu: <ul>{missing.map((m) => <li key={m}>{m}</li>)}</ul></div>}
           {msg && <div className="alert blue">{msg}</div>}
+          {locked && <ChargeView transferId={d.id} />}
           <div className="row">
             {!locked && <button className="primary big" disabled={!d.patientId} title={d.patientId ? '' : 'Lập hoặc gắn bệnh án trước'} onClick={sign}>Ký và đóng phiếu</button>}
             <a className="btn" href={`/phieu/${d.id}`} target="_blank" rel="noreferrer">Xem / in phiếu theo mẫu</a>

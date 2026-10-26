@@ -1,3 +1,4 @@
+import { trackDistanceKm } from './ops.js';
 import { assertWaiverLimit } from './security.js';
 import { audit, type Actor } from './audit.js';
 import { many, nextCounter, one, type Queryable, type Tx } from './db.js';
@@ -59,7 +60,8 @@ export async function getSettings(q: Queryable): Promise<FinanceSettings> {
 
 /* ================= Tính giá ================= */
 
-interface PriceInput { km: number | null; waitHours: number; night: boolean; discountPct: number }
+export interface ExtraLine { kind: 'dich_vu' | 'thuoc_vat_tu'; label: string; qty: number; unit_price: number; amount: number }
+interface PriceInput { km: number | null; waitHours: number; night: boolean; discountPct: number; extras?: ExtraLine[] }
 export function priceLines(p: any, i: PriceInput) {
   const lines: { label: string; qty: number; unit_price: number; amount: number }[] = [];
   const baseKm = Number(p.base_km);
@@ -71,6 +73,8 @@ export function priceLines(p: any, i: PriceInput) {
   if (i.night && Number(p.night_surcharge_pct)) {
     lines.push({ label: `Phụ thu ban đêm ${Number(p.night_surcharge_pct)}%`, qty: 1, unit_price: Math.round(before * Number(p.night_surcharge_pct) / 100), amount: Math.round(before * Number(p.night_surcharge_pct) / 100) });
   }
+  // Dịch vụ kỹ thuật, thuốc, vật tư tính riêng: cộng sau phụ thu đêm (phụ thu chỉ tính trên phần vận chuyển)
+  for (const x of i.extras ?? []) lines.push({ label: x.label, qty: x.qty, unit_price: x.unit_price, amount: x.amount });
   const subtotal = lines.reduce((s, l) => s + l.amount, 0);
   const discount = Math.round(subtotal * i.discountPct / 100);
   const vat = Math.round((subtotal - discount) * Number(p.vat_rate) / 100);
@@ -81,7 +85,7 @@ async function reprice(tx: Tx, id: string) {
   const c = await one(tx, `SELECT c.*, cu.discount_pct, cu.payment_days FROM charges c LEFT JOIN customers cu ON cu.id = c.customer_id WHERE c.id = $1`, [id]);
   const p = c.price_list_id ? await one(tx, 'SELECT * FROM price_lists WHERE id = $1', [c.price_list_id]) : null;
   if (!p) return;
-  const r = priceLines(p, { km: c.km == null ? null : Number(c.km), waitHours: Number(c.wait_hours), night: c.night, discountPct: Number(c.discount_pct ?? 0) });
+  const r = priceLines(p, { km: c.km == null ? null : Number(c.km), waitHours: Number(c.wait_hours), night: c.night, discountPct: Number(c.discount_pct ?? 0), extras: c.extras ?? [] });
   if (r.total < Number(c.paid)) throw new HttpError(409, 'Số tiền mới nhỏ hơn số đã thu; hủy phiếu thu trước');
   await tx.query(`UPDATE charges SET lines = $2, subtotal = $3, discount = $4, vat = $5, total = $6,
                          due_date = service_date + $7::int, updated_at = now() WHERE id = $1`,
@@ -103,6 +107,36 @@ export async function refreshCharge(tx: Tx, id: string) {
   return one(tx, `UPDATE charges SET paid = $2, waived = $3, status = $4, updated_at = now() WHERE id = $1 RETURNING *`, [id, paid, waived, status]);
 }
 
+/**
+ * Dòng tính tiền riêng từ phiếu: dịch vụ kỹ thuật theo ô can thiệp đã đánh dấu và số kết quả cận lâm sàng
+ * (bảng giá dịch vụ), thuốc, vật tư được đánh dấu "tính tiền riêng" theo số lượng đã dùng × giá bán.
+ */
+export async function chargeExtras(q: Queryable, e: any): Promise<ExtraLine[]> {
+  const out: ExtraLine[] = [];
+  const services = await many(q, 'SELECT * FROM service_prices WHERE active ORDER BY sort, name');
+  const care = e.care ?? {};
+  const labs: any[] = Array.isArray(e.labs) ? e.labs.filter((l: any) => l?.value) : [];
+  for (const s of services) {
+    let qty = 0;
+    if (s.care_key && care[s.care_key] === true) qty = 1;
+    if (s.lab_type) qty = labs.filter((l) => l.type === s.lab_type).length;
+    if (qty > 0) out.push({ kind: 'dich_vu', label: s.name, qty, unit_price: Number(s.price), amount: qty * Number(s.price) });
+  }
+  const used = new Map<number, number>();
+  for (const m of [...(e.medications ?? []), ...(e.supplies ?? [])]) {
+    if (m?.drugId == null) continue;
+    used.set(Number(m.drugId), (used.get(Number(m.drugId)) ?? 0) + (Number(m.qty) > 0 ? Number(m.qty) : 1));
+  }
+  if (used.size) {
+    const items = await many(q, 'SELECT id, name, unit, sell_price FROM drugs WHERE id = ANY($1) AND billable AND sell_price > 0 ORDER BY name', [[...used.keys()]]);
+    for (const it of items) {
+      const qty = used.get(it.id)!;
+      out.push({ kind: 'thuoc_vat_tu', label: `${it.name} (${it.unit})`, qty, unit_price: Number(it.sell_price), amount: Math.round(qty * Number(it.sell_price)) });
+    }
+  }
+  return out;
+}
+
 /** Gọi trong giao dịch ký phiếu chuyển viện: sinh khoản phải thu theo bảng giá loại xe */
 export async function createChargeForTransfer(tx: Tx, actor: Actor, transferId: string) {
   const t = await one(tx, `SELECT t.id, t.incident_id, t.vehicle_id, t.payer, t.epcr, t.signed_at, v.type AS vehicle_type, v.station_id,
@@ -113,17 +147,28 @@ export async function createChargeForTransfer(tx: Tx, actor: Actor, transferId: 
   if (await one(tx, 'SELECT 1 FROM charges WHERE transfer_id = $1', [transferId])) return null;
   const price = t.vehicle_type ? await one(tx, 'SELECT * FROM price_lists WHERE vehicle_type = $1 AND active', [t.vehicle_type]) : null;
   const kmRaw = t.epcr?.disposition?.distanceKm;
-  const km = kmRaw == null || kmRaw === '' || Number.isNaN(Number(kmRaw)) ? null : Number(kmRaw);
+  let km = kmRaw == null || kmRaw === '' || Number.isNaN(Number(kmRaw)) ? null : Number(kmRaw);
+  let kmSource: 'khai' | 'gps' | null = km == null ? null : 'khai';
+  // Kíp không khai số km thì lấy quãng đường GPS của xe trong ca (từ lúc nhận lệnh tới khi xong ca)
+  if (km == null && t.incident_id && t.vehicle_id) {
+    const a = await one(tx, 'SELECT assigned_at, ended_at FROM assignments WHERE incident_id = $1 AND vehicle_id = $2 ORDER BY assigned_at DESC LIMIT 1', [t.incident_id, t.vehicle_id]);
+    if (a) {
+      const pts = await many(tx, `SELECT lat, lng, at, accuracy_m FROM ops_gps_track WHERE vehicle_id = $1 AND at >= $2 AND at <= coalesce($3::timestamptz, now()) ORDER BY at`,
+        [t.vehicle_id, a.assigned_at, a.ended_at]);
+      if (pts.length >= 2) { km = trackDistanceKm(pts); kmSource = 'gps'; }
+    }
+  }
+  const extras = await chargeExtras(tx, t.epcr ?? {});
   const at = new Date(t.incident_at ?? t.signed_at ?? Date.now());
   const vnHour = (at.getUTCHours() + 7) % 24;
   const night = vnHour >= 22 || vnHour < 6;
   const payerKind = ['MIEN', 'GIAM', 'THAT_THU', 'BHYT'].includes(t.payer) ? t.payer : t.customer_id ? 'HOP_DONG' : 'THU_PHI';
   const customer = t.customer_id ? await one(tx, 'SELECT name FROM customers WHERE id = $1', [t.customer_id]) : null;
   const c = await one(tx, `INSERT INTO charges(code, transfer_id, incident_id, vehicle_id, station_id, customer_id, payer_kind, payer_name, price_list_id,
-                                               service_date, km, night)
-                           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9, ($10::timestamptz AT TIME ZONE 'Asia/Ho_Chi_Minh')::date, $11, $12) RETURNING id, code`,
+                                               service_date, km, night, extras, km_source)
+                           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9, ($10::timestamptz AT TIME ZONE 'Asia/Ho_Chi_Minh')::date, $11, $12, $13, $14) RETURNING id, code`,
     [await code(tx, 'KT'), transferId, t.incident_id, t.vehicle_id, t.station_id, t.customer_id, payerKind, customer?.name ?? t.patient_name ?? null,
-      price?.id ?? null, at.toISOString(), km, night]);
+      price?.id ?? null, at.toISOString(), km, night, JSON.stringify(extras), kmSource]);
   await reprice(tx, c.id);
   if (['MIEN', 'THAT_THU', 'GIAM'].includes(payerKind)) {
     const total = Number((await one(tx, 'SELECT total FROM charges WHERE id = $1', [c.id])).total);

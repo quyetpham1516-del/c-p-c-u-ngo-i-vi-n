@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { ServicePrices } from '../components/ServicePrices';
 import { api, download, money, session } from '../api';
 import { Stat } from './Hr';
 
@@ -377,7 +378,7 @@ function Receivables(_: Ctx) {
   );
 }
 
-function PricesCustomers({ isAcc, isDir, run }: Ctx) {
+function PricesCustomers({ isAcc, isDir, run, role }: Ctx) {
   const [prices, setPrices] = useState<any[]>([]);
   const [customers, setCustomers] = useState<any[]>([]);
   const [p, setP] = useState({ vehicleType: 'ALS', name: '', baseFee: '', baseKm: '10', perKm: '', waitPerHour: '', nightSurchargePct: '20', vatRate: '0' });
@@ -385,6 +386,8 @@ function PricesCustomers({ isAcc, isDir, run }: Ctx) {
   const load = () => Promise.all([api<any[]>('GET', '/api/finance/price-lists').then(setPrices), api<any[]>('GET', '/api/finance/customers').then(setCustomers)]);
   useEffect(() => { load().catch(() => {}); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const can = isAcc || isDir;
+  // Bảng giá: admin cũng chỉnh được (khách hàng hợp đồng vẫn do kế toán, giám đốc)
+  const canPrice = can || role === 'admin';
   return (
     <div className="col">
       <div className="panel" style={{ overflowX: 'auto' }}>
@@ -397,7 +400,7 @@ function PricesCustomers({ isAcc, isDir, run }: Ctx) {
               <td className="small">{x.active ? `từ ${x.effective_from}` : 'đã thay'}</td></tr>
           ))}</tbody>
         </table>
-        {can && (
+        {canPrice && (
           <div className="grid4" style={{ marginTop: 8 }}>
             <label className="field">Loại xe<select value={p.vehicleType} onChange={(e) => setP({ ...p, vehicleType: e.target.value })}>{['ALS', 'BLS', 'MSU', 'ECMO', 'VC', 'DP'].map((v) => <option key={v}>{v}</option>)}</select></label>
             <label className="field">Tên bảng giá<input value={p.name} onChange={(e) => setP({ ...p, name: e.target.value })} placeholder="Theo QĐ số .../2026" /></label>
@@ -414,6 +417,7 @@ function PricesCustomers({ isAcc, isDir, run }: Ctx) {
           </div>
         )}
       </div>
+      <ServicePrices canEdit={canPrice} />
       <div className="panel" style={{ overflowX: 'auto' }}>
         <h3 style={{ marginTop: 0 }}>Khách hàng hợp đồng</h3>
         <div className="small muted">Điều phối chọn khách hàng hợp đồng trên ca; khoản thu áp chiết khấu và hạn thanh toán theo hợp đồng.</div>

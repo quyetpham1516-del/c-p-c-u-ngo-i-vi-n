@@ -19,7 +19,7 @@ const today = () => new Date(Date.now() + 7 * 3600_000).toISOString().slice(0, 1
 
 export async function receiveStock(tx: Tx, actor: Actor, b: {
   stationId: string; drugId?: number | null; drugName?: string | null; unit?: string | null;
-  lot: string; expiry: string; qty: number; supplier?: string | null;
+  lot: string; expiry: string; qty: number; supplier?: string | null; receiptId?: string | null;
 }) {
   const station = await one(tx, 'SELECT id, active FROM stations WHERE id = $1', [b.stationId]);
   if (!station) throw new HttpError(404, 'Không tìm thấy điểm');
@@ -44,8 +44,8 @@ export async function receiveStock(tx: Tx, actor: Actor, b: {
                          VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`,
     [b.stationId, drugId, lotCode, b.expiry, b.qty, b.supplier?.trim() || null, actor.id]);
   }
-  await tx.query(`INSERT INTO stock_moves(lot_id, delta, reason, note, user_id) VALUES ($1, $2, 'nhap_kho', $3, $4)`,
-    [lot.id, b.qty, b.supplier?.trim() || null, actor.id]);
+  await tx.query(`INSERT INTO stock_moves(lot_id, delta, reason, note, user_id, receipt_id) VALUES ($1, $2, 'nhap_kho', $3, $4, $5)`,
+    [lot.id, b.qty, b.supplier?.trim() || null, actor.id, b.receiptId ?? null]);
   await audit(tx, 'system', actor, 'stock.received', 'stock_lot', lot.id, { stationId: b.stationId, drugId, lot: lotCode, expiry: b.expiry, qty: b.qty });
   return lot;
 }
@@ -270,8 +270,8 @@ export async function consumeForTransfer(tx: Tx, actor: Actor, transferId: strin
       const cur = await one(tx, 'SELECT lot, qty FROM stock_lots WHERE id = $1', [m.lotId]);
       throw new HttpError(409, cur ? `Lô ${cur.lot} của ${m.name} chỉ còn ${cur.qty} trong kho, không đủ ${qty}` : `Không tìm thấy lô thuốc của ${m.name} trong kho`);
     }
-    await tx.query(`INSERT INTO stock_moves(lot_id, delta, reason, transfer_id, user_id) VALUES ($1, $2, 'dung_cho_nguoi_benh', $3, $4)`,
-      [m.lotId, -qty, transferId, actor.id]);
+    await tx.query(`INSERT INTO stock_moves(lot_id, delta, reason, transfer_id, user_id, witness) VALUES ($1, $2, 'dung_cho_nguoi_benh', $3, $4, $5)`,
+      [m.lotId, -qty, transferId, actor.id, m.witness?.trim() || null]);
   }
   if (medications.some((m) => m.lotId)) {
     await audit(tx, 'system', actor, 'stock.consumed', 'transfer', transferId, {

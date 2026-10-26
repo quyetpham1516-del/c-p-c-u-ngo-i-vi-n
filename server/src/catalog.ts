@@ -212,6 +212,9 @@ export async function seedCatalog(pool: pg.Pool, opts: { force?: boolean } = {})
     await pool.query('INSERT INTO drugs(name, unit, default_route, controlled) VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING',
       [name, unit, route, CONTROLLED.test(name)]);
   }
+  // Phân loại cho sổ thuốc kiểm soát đặc biệt; chỉ điền chỗ còn trống để không ghi đè dược sĩ đã chỉnh
+  await pool.query(`UPDATE drugs SET control_class = CASE WHEN name ~* '^(morphin|fentanyl|pethidin)' THEN 'gay_nghien' ELSE 'huong_than' END
+                     WHERE controlled AND control_class IS NULL AND name ~* '^(morphin|fentanyl|pethidin|midazolam|diazepam|ketamin)'`);
   for (const [name, m, i, c] of EQUIPMENT_TYPES) {
     await pool.query('INSERT INTO equipment_types(name, maintenance_days, inspection_days, calibration_days) VALUES ($1,$2,$3,$4) ON CONFLICT DO NOTHING', [name, m, i, c]);
   }

@@ -14,6 +14,7 @@ export default defineConfig({
   test: {
     fileParallelism: false,
     testTimeout: 30000,
+    hookTimeout: 60000,
     env: {
       DATABASE_URL: testDb,
       MEDONE_JWT_SECRET: key(),

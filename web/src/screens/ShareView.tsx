@@ -92,6 +92,12 @@ function Hospital({ d, token, onDone }: { d: any; token: string; onDone: (x: any
             {v.at && <div className="small muted" style={{ alignSelf: 'end' }}>đo lúc {hm(v.at)}</div>}
           </div>
         ) : <div className="muted">Kíp chưa ghi sinh hiệu.</div>}
+        {d.labs?.length > 0 && (
+          <div className="col" style={{ gap: 2 }}>
+            <b>Cận lâm sàng tại chỗ</b>
+            {d.labs.map((l: any, i: number) => <div key={i}>{l.name}: <b>{l.value}{l.unit ? ` ${l.unit}` : ''}</b> <span className="small muted">lúc {l.at ? hm(l.at) : '?'}</span></div>)}
+          </div>
+        )}
       </div>
       <div className="panel col">
         <h3 style={{ margin: 0 }}>Xác nhận tiếp nhận</h3>

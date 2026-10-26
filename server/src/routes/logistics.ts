@@ -99,7 +99,7 @@ export function registerLogistics(app: FastifyInstance, { pool }: Ctx) {
     const id = idParam(req.params);
     const b = z.object({
       invoiceNo: z.string().trim().max(60).nullish(), note: opt,
-      lines: z.array(z.object({ lineId: z.number().int(), lot: z.string().trim().min(1).max(60), expiry: date, qty: z.number().positive().max(100000) })).min(1).max(200),
+      lines: z.array(z.object({ lineId: z.number().int(), lot: z.string().trim().max(60).nullish(), expiry: date.nullish(), qty: z.number().positive().max(100000) })).min(1).max(200),
     }).parse(req.body);
     return withTx(pool, (tx) => receivePurchaseOrder(tx, actorOf(req), id, b));
   });

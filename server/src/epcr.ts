@@ -28,6 +28,8 @@ export const EpcrSchema = z.object({
   patient: z.object({
     fullName: str, nationality: str, birthYear: num, sex: z.enum(['M', 'F', 'U']).optional(),
     age: num, ageUnit: z.enum(['y', 'm', 'd']).optional(), weightKg: num,
+    /** Số điện thoại người bệnh (hoặc người nhà): dùng để dò bệnh án cũ khi lập bệnh án */
+    phone: z.string().max(20).optional(),
   }).partial().default({}),
   caller: z.object({ name: str, phone: str }).partial().default({}),
   /** "Lý do" gọi cấp cứu trên mẫu */
@@ -48,6 +50,8 @@ export const EpcrSchema = z.object({
     seizure: bool, pupils: str, glucose: num,
     temp: num, injHead: bool, injSpine: bool, injLimb: bool, injMulti: bool,
     bleeding: z.enum(['spurting', 'flowing', 'oozing']).optional(),
+    /** Ô "khác" của từng mục A, B, C, D, E */
+    otherA: str, otherB: str, otherC: str, otherD: str, otherE: str,
   }).partial().default({}),
   /** Cột "Can thiệp" cạnh từng mục ABCDE */
   care: z.object({
@@ -57,6 +61,7 @@ export const EpcrSchema = z.object({
     neuroCare: str,
     collar: bool, spine: bool, pelvis: bool, splintShoulder: bool, splintArm: bool, splintLeg: bool, splintNote: str,
     pressureBandage: bool, bandageNote: str,
+    otherA: str, otherB: str, otherC: str, otherD: str, otherE: str,
   }).partial().default({}),
   trauma: z.object({ present: bool, types: z.array(z.enum(TRAUMA_TYPES)).default([]), note: str }).partial().default({}),
   sample: z.object({
@@ -72,6 +77,21 @@ export const EpcrSchema = z.object({
     /** Lô trong kho trạm (tự điền khi chọn thuốc); số lượng đơn vị trừ kho khi ký phiếu */
     drugId: num, lotId: z.string().uuid().optional(), qty: num,
   })).max(500).default([]),
+  /**
+   * Bác sĩ đã trao đổi (y lệnh qua điện thoại, video hoặc trực tiếp) cho thuốc, can thiệp ngoài phạm vi chức danh
+   * của kíp. items là khóa mục giới hạn dạng "thuoc:<mã thuốc>" hoặc "can_thiep:<ô can thiệp>".
+   */
+  consults: z.array(z.object({
+    at: z.string().max(40), doctor: z.string().max(200), license: str,
+    mode: z.enum(['dien_thoai', 'video', 'truc_tiep']).optional(),
+    items: z.array(z.string().max(60)).max(50).default([]), note: str,
+  })).max(50).default([]),
+  /** Cận lâm sàng tại chỗ, mỗi kết quả một mốc giờ (đường huyết, điện tim, lactate, troponin...) */
+  labs: z.array(z.object({
+    at: z.string().max(40), type: z.string().max(40), name: str, value: z.string().max(500), unit: str, by: str, note: str,
+  })).max(500).default([]),
+  /** Vật tư, dụng cụ đã dùng (chọn theo tên từ cơ số trên xe): trừ cơ số khi ký phiếu, vào danh sách bù sau ca */
+  supplies: z.array(z.object({ at: str, name: z.string().max(200), drugId: num, unit: str, qty: num })).max(300).default([]),
   newborn: z.object({
     born: bool, at: str, sex: z.enum(['M', 'F', 'U']).optional(),
     heartRate: str, respiration: str, movement: str, reflex: str, color: str,
@@ -157,9 +177,12 @@ export function missingForSign(e: Epcr): string[] {
     miss.push('Cam kết từ chối có chữ ký (ký trên máy hoặc ký giấy)');
   if (e.trauma.present && !e.trauma.types?.length) miss.push('Loại chấn thương');
   for (const m of e.medications) {
+    if (!m.name?.trim()) { miss.push(`Tên thuốc (dòng ${m.route ?? 'thuốc'} lúc ${m.at})`); continue; }
     if (!m.lot) miss.push(`Số lô thuốc ${m.name}`);
   }
   if (!e.payer) miss.push('Đối tượng thu phí');
+  for (const c of e.consults) if (!c.doctor?.trim() || !c.at) miss.push('Bác sĩ trao đổi: ghi tên bác sĩ và giờ trao đổi');
+  for (const l of e.labs) if (!l.at || !l.value?.trim()) miss.push(`Cận lâm sàng ${l.name ?? l.type}: ghi giờ và kết quả`);
   const a = e.arrest;
   if ((e.care.cpr || e.care.defib) && a.present == null) miss.push('Có ngừng tuần hoàn không (đã ép tim hoặc sốc điện)');
   if (a.present) {

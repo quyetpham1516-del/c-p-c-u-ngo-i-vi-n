@@ -17,6 +17,8 @@ import { registerCatalog } from './routes/catalog.js';
 import { registerEquipment } from './routes/equipment.js';
 import { registerStock } from './routes/stock.js';
 import { registerLogistics } from './routes/logistics.js';
+import { registerScope } from './routes/scope.js';
+import { registerNotify } from './routes/notify.js';
 import { registerQuality } from './routes/quality.js';
 import { registerHr } from './routes/hr.js';
 import { registerFinance } from './routes/finance.js';
@@ -27,7 +29,7 @@ import { registerOps } from './routes/ops.js';
 import { registerCompliance } from './routes/compliance.js';
 import { registerSafety } from './routes/safety.js';
 import { registerReports } from './routes/reports.js';
-import { isSession, type Ctx, type TokenUser } from './http.js';
+import { isSession, redactUrl, type Ctx, type TokenUser } from './http.js';
 import { registerSecurity } from './routes/security.js';
 import { registerAttendance } from './routes/attendance.js';
 import { registerSharing } from './routes/sharing.js';
@@ -35,11 +37,15 @@ import { registerPayroll } from './routes/payroll.js';
 import { registerOrg } from './routes/org.js';
 import { registerCoverage } from './routes/coverage.js';
 import { registerTelephony } from './routes/telephony.js';
+import { registerRegistry } from './routes/registry.js';
 
 export * from './http.js';
 
 export async function buildApp(pool: pg.Pool, opts: { logger?: boolean } = {}) {
-  const app = Fastify({ logger: opts.logger ?? false, trustProxy: true });
+  const app = Fastify({
+    logger: opts.logger ? { serializers: { req: (r) => ({ method: r.method, url: redactUrl(r.url), remoteAddress: r.ip }) } } : false,
+    trustProxy: true,
+  });
   const hub = new Hub(pool);
   await hub.start();
   const ctx: Ctx = { pool, hub };
@@ -84,6 +90,8 @@ export async function buildApp(pool: pg.Pool, opts: { logger?: boolean } = {}) {
   registerCatalog(app, ctx);
   registerStock(app, ctx);
   registerLogistics(app, ctx);
+  registerScope(app, ctx);
+  registerNotify(app, ctx);
   registerEquipment(app, ctx);
   registerQuality(app, ctx);
   registerHr(app, ctx);
@@ -102,6 +110,7 @@ export async function buildApp(pool: pg.Pool, opts: { logger?: boolean } = {}) {
   registerOrg(app, ctx);
   registerCoverage(app, ctx);
   registerTelephony(app, ctx);
+  registerRegistry(app, ctx);
   registerAdmin(app, ctx);
 
   app.setNotFoundHandler((_req, reply) => reply.code(404).send({ error: 'Không tìm thấy' }));

@@ -7,7 +7,9 @@ import { ORG_NAME, transferBundle } from '../fhir.js';
 import { decryptId, encryptId, isValidCccd, lookupHash, maskLast4, normalizeId } from '../crypto.js';
 import { many, one, withTx, type Queryable } from '../db.js';
 import { HttpError, incidentScope, newBaNumber, newTransferNumber, patientScope, recordTime, TIME_LABEL } from '../domain.js';
-import { EpcrSchema, missingForSign } from '../epcr.js';
+import { activeRules, crewForScope, uncoveredScope } from '../scope.js';
+import { enrollOnSign } from '../registry.js';
+import { EpcrSchema, missingForSign, type Epcr } from '../epcr.js';
 import { actorOf, guard, REVIEW_ROLES, type Ctx, type Role } from '../http.js';
 import { contentHash, newVerifyCode, signatureHash } from '../safety.js';
 import { consumeForTransfer } from '../stock.js';
@@ -26,6 +28,34 @@ async function patientById(q: Queryable, id: string) {
   const p = await one(q, 'SELECT * FROM patients WHERE id = $1', [id]);
   if (!p) throw new HttpError(404, 'Không tìm thấy bệnh án');
   return p;
+}
+
+/**
+ * Ký phiếu thì đưa thông tin từ phiếu vào bệnh án: điền chỗ bệnh án còn trống (tên, năm sinh, giới, SĐT, quốc tịch),
+ * thêm dị ứng, tiền sử, thuốc đang dùng nếu bệnh án chưa ghi. Không ghi đè thông tin bệnh án đã có.
+ */
+async function patientFromEpcr(tx: Queryable, actor: ReturnType<typeof actorOf>, patientId: string, e: Epcr) {
+  const p = await patientById(tx, patientId);
+  const shared = { ...(p.shared ?? {}) } as Record<string, string>;
+  const addText = (key: string, v?: string) => {
+    const text = v?.trim();
+    if (!text) return;
+    if (!shared[key]) shared[key] = text;
+    else if (!shared[key].toLowerCase().includes(text.toLowerCase())) shared[key] = `${shared[key]}; ${text}`;
+  };
+  if (e.sample.allergy) addText('allergies', e.sample.allergies);
+  addText('history', e.sample.pastHistory);
+  addText('medications', e.sample.medications);
+  const pt = e.patient ?? {};
+  const birthYear = pt.birthYear ?? (pt.age != null && (pt.ageUnit ?? 'y') === 'y' ? new Date().getFullYear() - pt.age : null);
+  const row = await one(tx, `UPDATE patients SET full_name = CASE WHEN full_name IS NULL OR is_temporary THEN coalesce($2, full_name) ELSE full_name END,
+                                  birth_year = coalesce(birth_year, $3), sex = CASE WHEN sex = 'U' THEN coalesce($4, sex) ELSE sex END,
+                                  phone = coalesce(phone, $5), nationality = coalesce(nationality, $6), shared = $7, updated_at = now()
+                            WHERE id = $1 RETURNING full_name, birth_year, sex, phone, nationality, shared`,
+  [patientId, pt.fullName?.trim() || null, birthYear, pt.sex && pt.sex !== 'U' ? pt.sex : null, pt.phone?.trim() || null, pt.nationality?.trim() || null, shared]);
+  const changed = (['full_name', 'birth_year', 'sex', 'phone', 'nationality'] as const).filter((k) => row[k] !== p[k]);
+  if (changed.length || JSON.stringify(row.shared) !== JSON.stringify(p.shared ?? {}))
+    await audit(tx, patientScope(patientId), actor, 'patient.updated_from_transfer', 'patient', patientId, { fields: changed, shared: Object.keys(shared) });
 }
 
 const uuidParam = (req: FastifyRequest) => z.object({ id: z.string().uuid() }).parse(req.params).id;
@@ -48,6 +78,37 @@ export function registerRecords(app: FastifyInstance, { pool, hub }: Ctx) {
        ORDER BY p.updated_at DESC LIMIT 30`, [hashes, term]);
     await withTx(pool, (tx) => audit(tx, 'system', actorOf(req), 'patient.searched', 'patient', null, { results: rows.length }));
     return rows.map(publicPatient);
+  });
+
+  /**
+   * Dò bệnh án cũ khi lập bệnh án từ phiếu: trùng số định danh (chắc chắn cùng người), trùng số điện thoại,
+   * hoặc trùng họ tên và năm sinh. Kíp chọn gắn phiếu vào bệnh án cũ hay tạo mới.
+   */
+  app.post('/api/patients/match', clinical, async (req) => {
+    const b = z.object({
+      idType: ID_TYPE.optional(), idNumber: z.string().max(30).optional(), nationality: z.string().max(60).optional(),
+      phone: z.string().max(20).optional(), fullName: z.string().max(120).optional(), birthYear: z.number().int().optional(),
+    }).parse(req.body);
+    const found = new Map<string, any>();
+    const add = (rows: any[], reason: string) => {
+      for (const r of rows) {
+        const cur = found.get(r.id) ?? { ...publicPatient(r), reasons: [] as string[] };
+        if (!cur.reasons.includes(reason)) cur.reasons.push(reason);
+        found.set(r.id, cur);
+      }
+    };
+    const SELECT = `SELECT p.*, (SELECT count(*)::int FROM transfers t WHERE t.patient_id = p.id) AS transfer_count FROM patients p WHERE p.merged_into IS NULL`;
+    if (b.idType && b.idType !== 'UNKNOWN' && b.idNumber) {
+      const idNorm = normalizeId(b.idNumber);
+      const hashType = b.idType === 'DDCN' ? 'CCCD' : b.idType;
+      add(await many(pool, `${SELECT} AND p.id_hash = $1`, [lookupHash(hashType, idNorm, b.idType === 'PASSPORT' ? b.nationality : '')]), 'cccd');
+    }
+    const phone = (b.phone ?? '').replace(/\D/g, '').replace(/^84/, '0');
+    if (phone.length >= 9) add(await many(pool, `${SELECT} AND regexp_replace(regexp_replace(coalesce(p.phone, ''), '\\D', '', 'g'), '^84', '0') = $1 ORDER BY p.updated_at DESC LIMIT 10`, [phone]), 'phone');
+    if (b.fullName?.trim() && b.birthYear) add(await many(pool, `${SELECT} AND lower(p.full_name) = lower($1) AND p.birth_year = $2 LIMIT 10`, [b.fullName.trim(), b.birthYear]), 'name');
+    const matches = [...found.values()].sort((x, y) => Number(y.reasons.includes('cccd')) - Number(x.reasons.includes('cccd')) || y.reasons.length - x.reasons.length);
+    await withTx(pool, (tx) => audit(tx, 'system', actorOf(req), 'patient.matched', 'patient', null, { results: matches.length }));
+    return { matches };
   });
 
   app.post('/api/patients', clinical, async (req, reply) => {
@@ -231,8 +292,17 @@ export function registerRecords(app: FastifyInstance, { pool, hub }: Ctx) {
     return res.row;
   });
 
-  app.get('/api/transfers/:id', clinical, async (req) => {
+  /** Tài khoản bệnh viện chỉ xem phiếu đã ký chuyển tới bệnh viện của mình */
+  async function assertHospitalAccess(req: FastifyRequest, transferId: string) {
+    if (req.user.role !== 'hospital') return;
+    const ok = await one(pool, `SELECT 1 FROM transfers t JOIN users u ON u.id = $2 WHERE t.id = $1 AND t.status = 'signed' AND t.hospital_id = u.hospital_id`, [transferId, req.user.id]);
+    if (!ok) throw new HttpError(403, 'Phiếu này không chuyển tới bệnh viện của bạn');
+  }
+  const clinicalOrHospital = { preHandler: guard(...CLINICAL, 'hospital') };
+
+  app.get('/api/transfers/:id', clinicalOrHospital, async (req) => {
     const id = uuidParam(req);
+    await assertHospitalAccess(req, id);
     const t = await one(pool, `
       SELECT t.*, i.code AS incident_code, i.final_priority, i.source, i.source_ref, i.address AS incident_address,
              i.caller_name, i.callback_phone, i.caller_phone,
@@ -253,12 +323,14 @@ export function registerRecords(app: FastifyInstance, { pool, hub }: Ctx) {
     [t.vehicle_id, t.signed_at, t.created_at]) : [];
     await withTx(pool, (tx) => audit(tx, t.incident_id ? incidentScope(t.incident_id) : 'system', actorOf(req), 'transfer.viewed', 'transfer', id));
     const digitalSignature = t.status === 'signed' ? await verifyDocument(pool, 'transfer', t.id, t.content_hash, t.version) : null;
-    return { ...t, times: times.map((x) => ({ ...x, label: TIME_LABEL[x.code] })), amendments, crew, digitalSignature };
+    const registries = await many(pool, 'SELECT id, registry, status FROM registry_cases WHERE transfer_id = $1 ORDER BY registry', [id]);
+    return { ...t, times: times.map((x) => ({ ...x, label: TIME_LABEL[x.code] })), amendments, crew, digitalSignature, registries };
   });
 
   /** Xuất phiếu theo chuẩn HL7 FHIR R4 (Bundle "document") để gửi bệnh viện nhận; số định danh đầy đủ chỉ khi người có quyền chọn */
-  app.get('/api/transfers/:id/fhir', clinical, async (req, reply) => {
+  app.get('/api/transfers/:id/fhir', clinicalOrHospital, async (req, reply) => {
     const id = uuidParam(req);
+    await assertHospitalAccess(req, id);
     const full = z.object({ nationalId: z.enum(['0', '1']).default('0') }).parse(req.query).nationalId === '1';
     if (full && !REVIEW_ROLES.includes(req.user.role)) throw new HttpError(403, 'Chỉ Ban Giám đốc, trưởng ca, QLCL được xuất kèm số định danh đầy đủ');
     const t = await one(pool, `
@@ -295,7 +367,12 @@ export function registerRecords(app: FastifyInstance, { pool, hub }: Ctx) {
       const epcr = EpcrSchema.parse(t.epcr);
       const miss = missingForSign(epcr);
       if (miss.length) throw new HttpError(422, 'Còn thiếu thông tin bắt buộc', miss);
-      await consumeForTransfer(tx, actor, id, epcr.medications);
+      // Phạm vi thực hiện: thuốc, can thiệp ngoài phạm vi chức danh của kíp phải ghi bác sĩ đã trao đổi
+      const outOfScope = uncoveredScope(epcr, await activeRules(tx), await crewForScope(tx, t.vehicle_id, actor.id!));
+      if (outOfScope.length) throw new HttpError(422, 'Có thuốc, can thiệp ngoài phạm vi chức danh của kíp: ghi bác sĩ đã trao đổi',
+        outOfScope.map((r) => `Bác sĩ trao đổi cho: ${r.label}`));
+      const { shortages } = await consumeForTransfer(tx, actor, id, [...epcr.medications, ...epcr.supplies]);
+      await patientFromEpcr(tx, actor, t.patient_id, epcr);
       // Chữ ký điện tử: băm từng chữ ký để phát hiện sửa về sau; phiếu nhận mã xác thực in kèm QR cho bệnh viện tra cứu
       const signed = { ...epcr, signatures: epcr.signatures?.map((s) => ({ ...s, hash: signatureHash(s) })) };
       const hash = contentHash(signed);
@@ -304,6 +381,8 @@ export function registerRecords(app: FastifyInstance, { pool, hub }: Ctx) {
       // Chữ ký số của người ký phiếu (CA nội bộ Medone ở giai đoạn 1)
       await signDocument(tx, actor.id!, { type: 'transfer', id, version: t.version, contentHash: hash, purpose: 'ky_phieu' });
       await createChargeForTransfer(tx, actor, id);
+      // Bệnh viện nhận được báo có ca chuyển tới; ca đúng tiêu chí vào các biểu mẫu nghiên cứu đang bật
+      await enrollOnSign(tx, actor, id, signed);
       const scope = t.incident_id ? incidentScope(t.incident_id) : 'system';
       await audit(tx, scope, actor, 'transfer.signed', 'transfer', id, { number: t.transfer_number, version: t.version });
       await audit(tx, patientScope(t.patient_id), actor, 'transfer.signed', 'transfer', id, { number: t.transfer_number });
@@ -315,11 +394,20 @@ export function registerRecords(app: FastifyInstance, { pool, hub }: Ctx) {
       // Can thiệp người ký chưa được phân quyền kỹ thuật (QLCL-14): không chặn cấp cứu, ghi vết để quản lý chất lượng rà soát
       const gaps = await privilegeGaps(tx, actor.id!, epcr.care as Record<string, unknown>);
       if (gaps.length) await audit(tx, scope, actor, 'training.privilege_gap', 'transfer', id, { procedures: gaps.map((g) => g.code) });
-      return gaps.map((g) => `Bạn chưa được phân quyền kỹ thuật "${g.title}" (${g.code}); quản lý chất lượng sẽ rà soát ca này`);
+      return [...shortages, ...gaps.map((g) => `Bạn chưa được phân quyền kỹ thuật "${g.title}" (${g.code}); quản lý chất lượng sẽ rà soát ca này`)];
     });
     const t = await one(pool, 'SELECT incident_id FROM transfers WHERE id = $1', [id]);
     if (t?.incident_id) await hub.publish({ type: 'incident', id: t.incident_id, refetch: true });
     return { ok: true, warnings };
+  });
+
+  /** Số tiền tự tính sau khi ký phiếu (km, dịch vụ, thuốc vật tư tính riêng) để kíp báo người nhà */
+  app.get('/api/transfers/:id/charge', clinical, async (req) => {
+    const id = uuidParam(req);
+    const c = await one(pool, `SELECT c.code, c.km, c.km_source, c.night, c.lines, c.subtotal::float, c.discount::float, c.vat::float, c.total::float,
+                                      c.paid::float, c.status, c.payer_kind, p.name AS price_list_name
+                                 FROM charges c LEFT JOIN price_lists p ON p.id = c.price_list_id WHERE c.transfer_id = $1`, [id]);
+    return c ?? null;
   });
 
   app.post('/api/transfers/:id/amend', clinical, async (req) => {

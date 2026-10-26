@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { api, ROLE_LABEL, session, type Role } from '../api';
 import { Brand } from '../Logo';
 import { SosBanner } from './Sos';
+import { Bell } from './Bell';
 
 const LINKS: { to: string; label: string; roles: Role[] }[] = [
   { to: '/eoc', label: 'Điều phối', roles: ['calltaker', 'dispatcher', 'supervisor', 'admin'] },
@@ -12,6 +13,8 @@ const LINKS: { to: string; label: string; roles: Role[] }[] = [
   { to: '/vung-phu', label: 'Vùng phủ', roles: ['dispatcher', 'supervisor', 'qa', 'admin', 'director'] },
   { to: '/kip', label: 'Ứng dụng kíp', roles: ['crew'] },
   { to: '/benh-an', label: 'Bệnh án', roles: ['crew', 'calltaker', 'dispatcher', 'supervisor', 'qa', 'admin'] },
+  { to: '/benh-vien', label: 'Ca chuyển tới', roles: ['hospital'] },
+  { to: '/nghien-cuu', label: 'Nghiên cứu', roles: ['crew', 'dispatcher', 'supervisor', 'qa', 'admin', 'director'] },
   { to: '/kho', label: 'Kho thuốc', roles: ['dispatcher', 'supervisor', 'qa', 'admin', 'pharmacist', 'director'] },
   { to: '/hau-can', label: 'Hậu cần', roles: ['crew', 'dispatcher', 'supervisor', 'qa', 'admin', 'pharmacist', 'technician', 'ipc', 'hr', 'accountant', 'director'] },
   { to: '/thiet-bi', label: 'Thiết bị', roles: ['dispatcher', 'supervisor', 'qa', 'admin', 'technician', 'ipc', 'director'] },
@@ -28,7 +31,7 @@ const LINKS: { to: string; label: string; roles: Role[] }[] = [
   { to: '/bao-cao', label: 'Báo cáo', roles: ['director', 'admin', 'supervisor', 'qa', 'accountant'] },
   { to: '/bao-cao', label: 'Tài liệu', roles: ['calltaker', 'dispatcher', 'crew', 'pharmacist', 'technician', 'ipc', 'hr'] },
   { to: '/ca-nhan', label: 'Cá nhân', roles: ['calltaker', 'dispatcher', 'supervisor', 'crew', 'qa', 'admin', 'pharmacist', 'technician', 'ipc', 'hr', 'accountant', 'director'] },
-  { to: '/bao-mat', label: 'Bảo mật', roles: ['calltaker', 'dispatcher', 'supervisor', 'crew', 'qa', 'admin', 'pharmacist', 'technician', 'ipc', 'hr', 'accountant', 'director'] },
+  { to: '/bao-mat', label: 'Bảo mật', roles: ['calltaker', 'dispatcher', 'supervisor', 'crew', 'qa', 'admin', 'pharmacist', 'technician', 'ipc', 'hr', 'accountant', 'director', 'hospital'] },
   { to: '/quan-tri', label: 'Quản trị', roles: ['admin'] },
 ];
 const REVIEW_DECIDE: Role[] = ['supervisor', 'director', 'admin'];
@@ -69,6 +72,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             </Link>
           ))}
         </nav>
+        {user && !setupOnly && <Bell path={path} />}
         <button className="ghost" onClick={toggleTheme} title="Đổi nền sáng/tối">Sáng/Tối</button>
         <div className="who">
           <div><b>{user?.name}</b></div>

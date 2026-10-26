@@ -8,6 +8,7 @@ import { HospitalPicker } from '../components/HospitalPicker';
 import { MapView } from '../components/MapView';
 import { SharePanel } from '../components/SharePanel';
 import { DialButton, IncidentCalls, useTelephony } from '../components/Telephony';
+import { MciReport } from '../components/MciReport';
 import { FLAG_LABEL, TriageQuestions, type Protocol, type TriageResult } from '../components/Triage';
 
 interface Call { id: string; phone: string; line: string; state: string; ringing_at: string; incident_id: string | null }
@@ -410,6 +411,7 @@ function SuggestionCard({ result, inc }: { result: TriageResult | null; inc: any
       {result.flags.length > 0 && (
         <div className="row" style={{ marginTop: 8 }}>{result.flags.map((f) => <span key={f} className="badge">{FLAG_LABEL[f] ?? f}</span>)}</div>
       )}
+      {result.flags.includes('NHIEU_NAN_NHAN') && inc?.id && <div style={{ marginTop: 8 }}><MciReport incidentId={inc.id} /></div>}
       {result.reasons.length > 0 && (
         <details style={{ marginTop: 8 }}>
           <summary className="small">Vì sao ra mã này ({result.reasons.length})</summary>

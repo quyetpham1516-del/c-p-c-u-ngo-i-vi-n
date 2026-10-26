@@ -52,7 +52,8 @@ export async function seed(pool: import('pg').Pool, password: string) {
   // Kho mẫu: mỗi trạm có sẵn một lô cho mỗi loại thuốc (số lô, hạn dùng minh họa)
   await pool.query(`
     INSERT INTO stock_lots(station_id, drug_id, lot, expiry, qty, supplier)
-    SELECT s.id, d.id, 'MAU-' || s.id || '-' || lpad(d.id::text, 3, '0'), (current_date + interval '1 year')::date, 50, 'Kho trung tâm (mẫu)'
+    SELECT s.id, d.id, CASE WHEN d.track_lot THEN 'MAU-' || s.id || '-' || lpad(d.id::text, 3, '0') ELSE 'KHONG-LO' END,
+           CASE WHEN d.track_lot THEN (current_date + interval '1 year')::date ELSE DATE '9999-12-31' END, 50, 'Kho trung tâm (mẫu)'
       FROM stations s CROSS JOIN drugs d`);
   // Thiết bị, cơ số xe, bộ dụng cụ và tài khoản các phân hệ quản trị
   await seedDemoOps(pool, password);

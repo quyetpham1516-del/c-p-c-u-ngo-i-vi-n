@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { api, ROLE_LABEL, type Role } from '../api';
-import { STATION_KIND, useStations, type Station } from '../catalog';
+import { STATION_KIND, useHospitals, useStations, type Station } from '../catalog';
 import { MapView } from '../components/MapView';
 import { TelephonyAdmin } from '../components/Telephony';
 import { PkiAdmin } from '../components/Pki';
+import { ScopeAdmin } from '../components/ScopeAdmin';
+import { ServicePrices } from '../components/ServicePrices';
 
-interface UserRow { id: string; username: string; full_name: string; title: string | null; role: Role; active: boolean; station_id: string | null; sso_linked_at?: string | null }
+interface UserRow { id: string; username: string; full_name: string; title: string | null; role: Role; active: boolean; station_id: string | null; sso_linked_at?: string | null; hospital_id?: number | null; hospital_name?: string | null }
 interface VehicleRow { id: string; type: string; status: string; station_id: string; station_name: string }
 
 const EMPTY = { id: '', name: '', kind: 'tram', address: '', phone: '', lat: '', lng: '' };
@@ -110,7 +112,7 @@ export function Admin() {
         <div className="panel" style={{ overflowX: 'auto' }}>
           <h3>Nhân viên làm ở điểm nào</h3>
           <table><tbody>
-            {users.filter((u) => u.active).map((u) => (
+            {users.filter((u) => u.active && u.role !== 'hospital').map((u) => (
               <tr key={u.id}><td>{u.full_name} <span className="small muted">{u.username} · {ROLE_LABEL[u.role]}</span></td>
                 <td className="right">
                   <select value={u.station_id ?? ''} onChange={(e) => run(() => api('PATCH', `/api/users/${u.id}/station`, { stationId: e.target.value || null }))}>
@@ -124,20 +126,23 @@ export function Admin() {
         </div>
       </div>
       <Accounts users={users} run={run} />
+      <ScopeAdmin />
+      <ServicePrices canEdit />
       <TelephonyAdmin />
       <PkiAdmin />
     </div>
   );
 }
 
-const NEW_USER = { username: '', fullName: '', role: 'crew' as Role, title: '', licenseNo: '', password: '' };
+const NEW_USER = { username: '', fullName: '', role: 'crew' as Role, title: '', licenseNo: '', password: '', hospitalId: '' };
 
 /** Tài khoản: tạo, đổi vai trò, khóa/mở, đặt lại mật khẩu. Mật khẩu do admin đặt, chỉ lưu bản băm ở máy chủ */
 function Accounts({ users, run }: { users: UserRow[]; run: (fn: () => Promise<unknown>) => Promise<void> }) {
   const [f, setF] = useState(NEW_USER);
   const [q, setQ] = useState('');
+  const hospitals = useHospitals();
   const shown = users.filter((u) => !q || `${u.username} ${u.full_name}`.toLowerCase().includes(q.toLowerCase()));
-  const valid = /^[a-z0-9._-]{3,40}$/.test(f.username) && f.fullName.trim().length >= 2 && f.password.length >= 10;
+  const valid = /^[a-z0-9._-]{3,40}$/.test(f.username) && f.fullName.trim().length >= 2 && f.password.length >= 10 && (f.role !== 'hospital' || !!f.hospitalId);
   return (
     <div className="panel" style={{ overflowX: 'auto' }}>
       <h3>Tài khoản</h3>
@@ -146,13 +151,16 @@ function Accounts({ users, run }: { users: UserRow[]; run: (fn: () => Promise<un
         <label className="field">Họ tên<input value={f.fullName} onChange={(e) => setF({ ...f, fullName: e.target.value })} /></label>
         <label className="field">Vai trò<select value={f.role} onChange={(e) => setF({ ...f, role: e.target.value as Role })}>
           {(Object.keys(ROLE_LABEL) as Role[]).map((r) => <option key={r} value={r}>{ROLE_LABEL[r]}</option>)}</select></label>
+        {f.role === 'hospital' && <label className="field">Bệnh viện (tài khoản chỉ thấy ca chuyển tới bệnh viện này)<select value={f.hospitalId} onChange={(e) => setF({ ...f, hospitalId: e.target.value })}>
+          <option value="">Chọn bệnh viện</option>
+          {hospitals.map((h) => <option key={h.id} value={h.id}>{h.name}</option>)}</select></label>}
         <label className="field">Chức danh<input value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} /></label>
         <label className="field">Số chứng chỉ hành nghề<input value={f.licenseNo} onChange={(e) => setF({ ...f, licenseNo: e.target.value })} /></label>
         <label className="field">Mật khẩu ban đầu (≥ 10 ký tự)<input type="password" autoComplete="new-password" value={f.password} onChange={(e) => setF({ ...f, password: e.target.value })} /></label>
       </div>
       <div className="row" style={{ margin: '8px 0' }}>
         <button className="primary" disabled={!valid} onClick={() => run(async () => {
-          await api('POST', '/api/users', { ...f, title: f.title || null, licenseNo: f.licenseNo || null }); setF(NEW_USER);
+          await api('POST', '/api/users', { ...f, title: f.title || null, licenseNo: f.licenseNo || null, hospitalId: f.role === 'hospital' ? Number(f.hospitalId) : null }); setF(NEW_USER);
         })}>Tạo tài khoản</button>
         <input placeholder="Tìm tài khoản" value={q} onChange={(e) => setQ(e.target.value)} />
       </div>
@@ -161,8 +169,15 @@ function Accounts({ users, run }: { users: UserRow[]; run: (fn: () => Promise<un
         <tbody>{shown.map((u) => (
           <tr key={u.id} style={u.active ? undefined : { opacity: 0.55 }}>
             <td>{u.full_name} <span className="small muted">{u.username}{u.title ? ` · ${u.title}` : ''}</span></td>
-            <td><select value={u.role} onChange={(e) => run(() => api('PATCH', `/api/users/${u.id}`, { role: e.target.value }))}>
-              {(Object.keys(ROLE_LABEL) as Role[]).map((r) => <option key={r} value={r}>{ROLE_LABEL[r]}</option>)}</select></td>
+            <td><select value={u.role} onChange={(e) => {
+                if (e.target.value !== 'hospital') return run(() => api('PATCH', `/api/users/${u.id}`, { role: e.target.value }));
+                const name = prompt('Tài khoản bệnh viện: gõ tên bệnh viện (đúng như trong danh mục)');
+                const h = name ? hospitals.find((x) => x.name.toLowerCase() === name.trim().toLowerCase()) : null;
+                if (!h) { if (name) alert('Không thấy bệnh viện này trong danh mục'); return; }
+                run(() => api('PATCH', `/api/users/${u.id}`, { role: 'hospital', hospitalId: h.id }));
+              }}>
+              {(Object.keys(ROLE_LABEL) as Role[]).map((r) => <option key={r} value={r}>{ROLE_LABEL[r]}</option>)}</select>
+              {u.role === 'hospital' && <div className="small muted">{u.hospital_name}</div>}</td>
             <td>{u.active ? 'Đang dùng' : 'Đã khóa'}{u.sso_linked_at && <span className="badge" title="Đã nối tài khoản đăng nhập một lần"> SSO</span>}</td>
             <td className="right">
               <button className="ghost small" onClick={() => run(() => api('PATCH', `/api/users/${u.id}`, { active: !u.active }))}>{u.active ? 'Khóa' : 'Mở khóa'}</button>{' '}

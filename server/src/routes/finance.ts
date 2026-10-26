@@ -1,5 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
+import { CARE_LABELS } from '../scope.js';
 import { audit } from '../audit.js';
 import { many, one, withTx } from '../db.js';
 import { HttpError } from '../domain.js';
@@ -49,8 +50,8 @@ export function registerFinance(app: FastifyInstance, { pool }: Ctx) {
   app.get('/api/finance/price-lists', { preHandler: guard(...FIN_VIEW) }, async () =>
     many(pool, 'SELECT * FROM price_lists ORDER BY active DESC, vehicle_type, effective_from DESC'));
 
-  /** Bảng giá mới cho một loại xe thay thế bảng đang dùng (bảng cũ giữ lại để tra cứu khoản thu cũ) */
-  app.post('/api/finance/price-lists', { preHandler: guard(...FIN) }, async (req) => {
+  /** Bảng giá mới cho một loại xe thay thế bảng đang dùng (bảng cũ giữ lại để tra cứu khoản thu cũ); admin cũng chỉnh được */
+  app.post('/api/finance/price-lists', { preHandler: guard(...FIN, 'admin') }, async (req) => {
     const b = z.object({
       name: z.string().trim().min(2).max(120), vehicleType: z.string().min(1).max(10), baseFee: money, baseKm: z.number().min(0).max(1000),
       perKm: money, waitPerHour: money, nightSurchargePct: z.number().min(0).max(200), vatRate: z.number().min(0).max(20), effectiveFrom: date.optional(),
@@ -62,6 +63,47 @@ export function registerFinance(app: FastifyInstance, { pool }: Ctx) {
         [b.name, b.vehicleType, b.baseFee, b.baseKm, b.perKm, b.waitPerHour, b.nightSurchargePct, b.vatRate, b.effectiveFrom ?? null]);
       await audit(tx, 'system', actorOf(req), 'finance.price_list', 'price_list', String(p.id), b);
       return p;
+    });
+  });
+
+  /* Bảng giá dịch vụ kỹ thuật: tự cộng vào khoản thu theo can thiệp, cận lâm sàng trên phiếu */
+  app.get('/api/finance/service-prices', { preHandler: guard(...FIN_VIEW) }, async () => ({
+    rows: await many(pool, `SELECT s.*, s.price::float AS price, u.full_name AS updated_by_name FROM service_prices s LEFT JOIN users u ON u.id = s.updated_by ORDER BY s.active DESC, s.sort, s.name`),
+    care: CARE_LABELS,
+    labs: await many(pool, 'SELECT code, name FROM lab_types WHERE active ORDER BY sort, name'),
+  }));
+
+  const serviceBody = {
+    name: z.string().trim().min(2).max(160), unit: z.string().trim().min(1).max(30), price: money,
+    careKey: z.string().max(40).nullish(), labType: z.string().max(40).nullish(), sort: z.number().int().optional(), note: opt(),
+  };
+  app.post('/api/finance/service-prices', { preHandler: guard(...FIN, 'admin') }, async (req) => {
+    const b = z.object({ code: z.string().trim().toUpperCase().regex(/^[A-Z0-9_]{2,30}$/), ...serviceBody }).parse(req.body);
+    if (b.careKey && !CARE_LABELS[b.careKey]) throw new HttpError(400, 'Không có ô can thiệp này trên phiếu');
+    return withTx(pool, async (tx) => {
+      if (await one(tx, 'SELECT 1 FROM service_prices WHERE code = $1', [b.code])) throw new HttpError(409, `Mã ${b.code} đã có`);
+      const r = await one(tx, `INSERT INTO service_prices(code, name, unit, price, care_key, lab_type, sort, note, updated_by) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
+        [b.code, b.name, b.unit, b.price, b.careKey ?? null, b.labType ?? null, b.sort ?? 50, b.note ?? null, req.user.id]);
+      await audit(tx, 'system', actorOf(req), 'finance.service_price_added', 'service_price', b.code, b);
+      return r;
+    });
+  });
+
+  app.patch('/api/finance/service-prices/:id', { preHandler: guard(...FIN, 'admin') }, async (req) => {
+    const id = z.object({ id: z.coerce.number().int() }).parse(req.params).id;
+    const b = z.object({ ...serviceBody, name: serviceBody.name.optional(), unit: serviceBody.unit.optional(), price: money.optional(), active: z.boolean().optional() }).parse(req.body);
+    if (b.careKey && !CARE_LABELS[b.careKey]) throw new HttpError(400, 'Không có ô can thiệp này trên phiếu');
+    return withTx(pool, async (tx) => {
+      const before = await one(tx, 'SELECT price FROM service_prices WHERE id = $1', [id]);
+      if (!before) throw new HttpError(404, 'Không tìm thấy dịch vụ');
+      const r = await one(tx, `UPDATE service_prices SET name = coalesce($2, name), unit = coalesce($3, unit), price = coalesce($4, price),
+                                      care_key = CASE WHEN $9 THEN $5 ELSE care_key END, lab_type = CASE WHEN $10 THEN $6 ELSE lab_type END,
+                                      active = coalesce($7, active), note = CASE WHEN $11 THEN $8 ELSE note END, updated_by = $12, updated_at = now()
+                                WHERE id = $1 RETURNING *`,
+      [id, b.name ?? null, b.unit ?? null, b.price ?? null, b.careKey ?? null, b.labType ?? null, b.active ?? null, b.note ?? null,
+        'careKey' in b, 'labType' in b, 'note' in b, req.user.id]);
+      await audit(tx, 'system', actorOf(req), 'finance.service_price_changed', 'service_price', String(id), { ...b, oldPrice: Number(before.price) });
+      return r;
     });
   });
 

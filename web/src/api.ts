@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 
 export type Role = 'calltaker' | 'dispatcher' | 'supervisor' | 'crew' | 'qa' | 'admin'
-  | 'pharmacist' | 'technician' | 'ipc' | 'hr' | 'accountant' | 'director';
+  | 'pharmacist' | 'technician' | 'ipc' | 'hr' | 'accountant' | 'director'
+  /** Nhân viên bệnh viện nhận bệnh: chỉ vào cổng bệnh viện */
+  | 'hospital';
 export interface User { id: string; username: string; name: string; role: Role; mfaSetup?: boolean }
 
 /**
@@ -163,7 +165,7 @@ export const TIME_LABEL: Record<string, string> = {
 export const ROLE_LABEL: Record<Role, string> = {
   calltaker: 'Tiếp nhận cuộc gọi', dispatcher: 'Điều phối viên', supervisor: 'Trưởng ca', crew: 'Kíp cấp cứu', qa: 'QLCL', admin: 'Quản trị',
   pharmacist: 'Kho – dược', technician: 'Kỹ thuật thiết bị', ipc: 'Kiểm soát nhiễm khuẩn', hr: 'Hành chính – nhân sự',
-  accountant: 'Kế toán – thu ngân', director: 'Ban Giám đốc',
+  accountant: 'Kế toán – thu ngân', director: 'Ban Giám đốc', hospital: 'Bệnh viện nhận bệnh',
 };
 
 export function homeFor(role: Role | undefined): string {
@@ -175,6 +177,7 @@ export function homeFor(role: Role | undefined): string {
   if (role === 'hr') return '/nhan-su';
   if (role === 'accountant') return '/tai-chinh';
   if (role === 'director') return '/bao-cao';
+  if (role === 'hospital') return '/benh-vien';
   return '/eoc';
 }
 

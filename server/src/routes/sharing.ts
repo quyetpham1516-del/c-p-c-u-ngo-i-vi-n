@@ -43,6 +43,13 @@ export function registerSharing(app: FastifyInstance, { pool, hub }: Ctx) {
       if (['closed', 'cancelled', 'transferred_115', 'advice_only'].includes(inc.status)) throw new HttpError(409, 'Ca đã kết thúc');
       const hospital = b.kind === 'benh_vien' ? (b.hospital ?? inc.destination) : null;
       if (b.kind === 'benh_vien' && !hospital) throw new HttpError(422, 'Chọn bệnh viện nhận (báo trước bệnh viện) trước khi gửi đường dẫn');
+      // Gửi thông tin cho bệnh viện khi xe đã rời hiện trường (S6, S7); ca P1 được báo sớm để bệnh viện chuẩn bị
+      if (b.kind === 'benh_vien') {
+        const ok = await one(tx, `SELECT 1 FROM incidents i WHERE i.id = $1 AND (i.final_priority = 'P1' OR EXISTS (
+                                    SELECT 1 FROM assignments a JOIN vehicles v ON v.id = a.vehicle_id
+                                     WHERE a.incident_id = i.id AND a.ended_at IS NULL AND v.status IN ('S6', 'S7')))`, [id]);
+        if (!ok) throw new HttpError(409, 'Gửi báo trước cho bệnh viện khi xe đã rời hiện trường (ca P1 được gửi sớm)');
+      }
       const department = b.kind === 'benh_vien' ? (b.department ?? inc.destination_department ?? null) : null;
       const link = await one(tx, `INSERT INTO share_links(kind, incident_id, token_hash, hospital, department, phone, expires_at, created_by)
                                   VALUES ($1,$2,$3,$4,$5,$6, now() + make_interval(hours => $7), $8) RETURNING id, expires_at`,

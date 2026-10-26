@@ -28,6 +28,21 @@ function VerifyBox({ code }: { code: string }) {
   );
 }
 
+/** QR cho bác sĩ bệnh viện nhận: đăng nhập tài khoản bệnh viện để điền phần trong viện (Utstein, chấn thương, đột quỵ) */
+function HospitalEntryBox({ id, forms }: { id: string; forms: string }) {
+  const url = `${verifyBase()}/benh-vien?phieu=${id}`;
+  const q = qrcode(0, 'M');
+  q.addData(url);
+  q.make();
+  return (
+    <div className="verify" title={url}>
+      <span dangerouslySetInnerHTML={{ __html: q.createSvgTag({ cellSize: 2, margin: 0, scalable: true }) }} />
+      <span>Bệnh viện điền<br />phần trong viện<br /><b>{forms}</b></span>
+    </div>
+  );
+}
+const REGISTRY_SHORT: Record<string, string> = { utstein: 'Utstein', patos: 'Chấn thương', stroke: 'Đột quỵ' };
+
 /** Ô đánh dấu như trên mẫu giấy */
 function Cb({ on, label }: { on: any; label?: string }) {
   return <span style={{ whiteSpace: 'nowrap' }}>{label ? `${label} ` : ''}<span className="cb">{on ? '☑' : '☐'}</span></span>;
@@ -90,6 +105,9 @@ export function TransferPrint() {
   while (vit.length < 4) vit.push(null);
   const careRows: string[] = [
     ...(e.interventions ?? []).map((i: any) => `${hhmm(i.at)} ${i.name}${i.by ? ` (${i.by})` : ''}${i.note ? ` – ${i.note}` : ''}`),
+    ...(['A', 'B', 'C', 'D', 'E'] as const).flatMap((k) => [a[`other${k}`] && `${k} – khác: ${a[`other${k}`]}`, c[`other${k}`] && `${k} – can thiệp khác: ${c[`other${k}`]}`]).filter(Boolean) as string[],
+    ...(e.labs ?? []).filter((l: any) => l.value).map((l: any) => `${hhmm(l.at)} CLS ${l.name ?? l.type}: ${l.value}${l.unit ? ` ${l.unit}` : ''}${l.by ? ` (${l.by})` : ''}`),
+    ...(e.consults ?? []).map((c: any) => `${hhmm(c.at)} Y lệnh qua ${({ dien_thoai: 'điện thoại', video: 'video', truc_tiep: 'trực tiếp' } as Record<string, string>)[c.mode] ?? 'trao đổi'}: BS ${c.doctor}${c.license ? ` (CCHN ${c.license})` : ''}${c.note ? ` – ${c.note}` : ''}`),
     ...(e.medications ?? []).map((m: any) => `${hhmm(m.at)} ${m.name} ${m.dose ?? ''} ${m.route ?? ''}${m.qty ? ` ×${m.qty}` : ''} – lô ${m.lot ?? '—'}${m.expiry ? ` (HD ${m.expiry})` : ''}${m.by ? `, ${m.by}` : ''}${m.witness ? `, chứng kiến ${m.witness}` : ''}`),
   ];
   while (careRows.length < 4) careRows.push('');
@@ -111,7 +129,10 @@ export function TransferPrint() {
           <div className="l"><StarOfLife size={34} /><div><b>MEDONE</b><div>DỊCH VỤ CHUYỂN VIỆN –<br />CẤP CỨU NGOẠI VIỆN</div></div></div>
           <div>Cộng Hòa Xã Hội Chủ Nghĩa Việt Nam<br />Độc Lập – Tự Do – Hạnh Phúc</div>
           <div className="r">Số BA: <b>{t.ba_number ?? '……'}</b><br />Số chuyển viện: <b>{t.transfer_number}</b><br /><span style={{ fontSize: 9 }}>Mã ca: {t.incident_code ?? '—'}</span>
-            {t.verify_code && <VerifyBox code={t.verify_code} />}</div>
+            {t.verify_code && <VerifyBox code={t.verify_code} />}
+            {t.status === 'signed' && (t.registries?.length > 0 || e.arrest?.present) && (
+              <HospitalEntryBox id={t.id} forms={t.registries?.length ? t.registries.map((r: any) => REGISTRY_SHORT[r.registry] ?? r.registry).join(', ') : 'Utstein'} />
+            )}</div>
         </div>
         <h1>BỆNH ÁN CẤP CỨU NGOẠI VIỆN</h1>
         {t.status !== 'signed' && <div className="draft">BẢN NHÁP – CHƯA KÝ</div>}

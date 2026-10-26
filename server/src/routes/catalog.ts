@@ -82,5 +82,5 @@ export function registerCatalog(app: FastifyInstance, { pool }: Ctx) {
   app.get('/api/icd10-stats', { preHandler: guard() }, async () => one(pool, 'SELECT count(*)::int AS total FROM icd10 WHERE active'));
 
   /* ---------- Thuốc và kho theo số lô ---------- */
-  app.get('/api/drugs', { preHandler: guard() }, async () => many(pool, 'SELECT * FROM drugs WHERE active ORDER BY name'));
+  app.get('/api/drugs', { preHandler: guard() }, async () => many(pool, 'SELECT d.*, g.name AS group_name FROM drugs d JOIN item_groups g ON g.code = d.group_code WHERE d.active ORDER BY g.sort, d.name'));
 }

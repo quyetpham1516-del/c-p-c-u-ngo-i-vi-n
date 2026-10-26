@@ -161,6 +161,90 @@ export const REQUIRED_EQUIPMENT: Record<string, [string, number][]> = {
   VC: [['Bình oxy và van giảm áp', 1], ['Máy đo SpO2 cầm tay', 1], ['Cáng chính', 1]],
 };
 
+/**
+ * Vật tư tiêu hao, dụng cụ, văn phòng phẩm trên xe (bản nháp, điều dưỡng trưởng và dược sửa ở Kho → Cơ số xe).
+ * [tên, đơn vị, nhóm, loại, quản lý lô/hạn, cơ số ALS, cơ số BLS]
+ */
+export const SUPPLIES: [string, string, string, 'vat_tu' | 'dung_cu' | 'van_phong_pham', boolean, number, number][] = [
+  // Đường thở – Oxy
+  ['Mask oxy người lớn', 'cái', 'duong_tho', 'vat_tu', false, 3, 2],
+  ['Mask oxy trẻ em', 'cái', 'duong_tho', 'vat_tu', false, 2, 2],
+  ['Mask có túi dự trữ người lớn', 'cái', 'duong_tho', 'vat_tu', false, 3, 2],
+  ['Gọng mũi oxy (cannula)', 'cái', 'duong_tho', 'vat_tu', false, 4, 3],
+  ['Dây nối oxy', 'sợi', 'duong_tho', 'vat_tu', false, 3, 2],
+  ['Canuyn miệng hầu các cỡ (bộ)', 'bộ', 'duong_tho', 'dung_cu', false, 1, 1],
+  ['Ống nội khí quản 6.5', 'cái', 'duong_tho', 'vat_tu', true, 2, 0],
+  ['Ống nội khí quản 7.0', 'cái', 'duong_tho', 'vat_tu', true, 2, 0],
+  ['Ống nội khí quản 7.5', 'cái', 'duong_tho', 'vat_tu', true, 2, 0],
+  ['Mask thanh quản (LMA) số 4', 'cái', 'duong_tho', 'vat_tu', true, 1, 1],
+  ['Dây cố định ống nội khí quản', 'cái', 'duong_tho', 'vat_tu', false, 2, 0],
+  ['Sonde hút đàm số 12', 'cái', 'duong_tho', 'vat_tu', true, 5, 3],
+  ['Sonde hút đàm số 14', 'cái', 'duong_tho', 'vat_tu', true, 5, 3],
+  ['Bộ khí dung (mask + bầu)', 'bộ', 'duong_tho', 'vat_tu', false, 2, 2],
+  ['Lọc khuẩn bóng bóp/máy thở', 'cái', 'duong_tho', 'vat_tu', true, 3, 2],
+  // Tuần hoàn – Truyền dịch
+  ['Bơm tiêm 1 ml', 'cái', 'tuan_hoan', 'vat_tu', true, 10, 5],
+  ['Bơm tiêm 3 ml', 'cái', 'tuan_hoan', 'vat_tu', true, 10, 5],
+  ['Bơm tiêm 5 ml', 'cái', 'tuan_hoan', 'vat_tu', true, 10, 5],
+  ['Bơm tiêm 10 ml', 'cái', 'tuan_hoan', 'vat_tu', true, 10, 5],
+  ['Bơm tiêm 20 ml', 'cái', 'tuan_hoan', 'vat_tu', true, 5, 2],
+  ['Bơm tiêm 50 ml (bơm tiêm điện)', 'cái', 'tuan_hoan', 'vat_tu', true, 3, 0],
+  ['Kim tiêm 18G', 'cái', 'tuan_hoan', 'vat_tu', true, 10, 5],
+  ['Kim luồn 18G', 'cái', 'tuan_hoan', 'vat_tu', true, 4, 2],
+  ['Kim luồn 20G', 'cái', 'tuan_hoan', 'vat_tu', true, 4, 2],
+  ['Kim luồn 22G', 'cái', 'tuan_hoan', 'vat_tu', true, 4, 2],
+  ['Kim luồn 24G', 'cái', 'tuan_hoan', 'vat_tu', true, 2, 1],
+  ['Dây truyền dịch', 'bộ', 'tuan_hoan', 'vat_tu', true, 4, 2],
+  ['Dây nối bơm tiêm điện', 'sợi', 'tuan_hoan', 'vat_tu', true, 2, 0],
+  ['Khóa ba chạc', 'cái', 'tuan_hoan', 'vat_tu', true, 4, 2],
+  ['Băng dán cố định kim luồn', 'miếng', 'tuan_hoan', 'vat_tu', false, 6, 4],
+  ['Garo tĩnh mạch', 'sợi', 'tuan_hoan', 'dung_cu', false, 2, 1],
+  ['Kim truyền tủy xương (IO)', 'cái', 'tuan_hoan', 'vat_tu', true, 1, 0],
+  ['Điện cực dán monitor', 'miếng', 'tuan_hoan', 'vat_tu', true, 20, 10],
+  ['Miếng dán sốc điện người lớn', 'cặp', 'tuan_hoan', 'vat_tu', true, 2, 2],
+  ['Que thử đường huyết', 'que', 'tuan_hoan', 'vat_tu', true, 10, 10],
+  ['Kim chích máu', 'cái', 'tuan_hoan', 'vat_tu', true, 10, 10],
+  // Băng bó – Cố định – Vết thương
+  ['Băng cá nhân', 'miếng', 'bang_bo', 'vat_tu', false, 20, 20],
+  ['Gạc vô khuẩn 10x10', 'gói', 'bang_bo', 'vat_tu', true, 10, 10],
+  ['Bông cồn (gạc tẩm cồn)', 'miếng', 'bang_bo', 'vat_tu', false, 20, 20],
+  ['Băng cuộn 10 cm', 'cuộn', 'bang_bo', 'vat_tu', false, 6, 6],
+  ['Băng thun 10 cm', 'cuộn', 'bang_bo', 'vat_tu', false, 4, 4],
+  ['Băng dính lụa', 'cuộn', 'bang_bo', 'vat_tu', false, 2, 2],
+  ['Băng ép cầm máu (Israeli)', 'cái', 'bang_bo', 'vat_tu', false, 2, 2],
+  ['Garo cầm máu chi (CAT)', 'cái', 'bang_bo', 'dung_cu', false, 2, 2],
+  ['Băng tam giác', 'cái', 'bang_bo', 'vat_tu', false, 2, 2],
+  ['Nẹp cổ cứng người lớn', 'cái', 'bang_bo', 'dung_cu', false, 2, 2],
+  ['Nẹp chi các cỡ (bộ)', 'bộ', 'bang_bo', 'dung_cu', false, 1, 1],
+  ['Chăn giữ nhiệt (bạc)', 'tấm', 'bang_bo', 'vat_tu', false, 2, 2],
+  ['Nước muối sinh lý rửa vết thương 500 ml', 'chai', 'bang_bo', 'vat_tu', true, 2, 2],
+  // Sản – Nhi
+  ['Bộ đỡ đẻ vô khuẩn', 'bộ', 'san_nhi', 'vat_tu', true, 1, 1],
+  ['Kẹp rốn', 'cái', 'san_nhi', 'vat_tu', true, 2, 2],
+  ['Bóng bóp sơ sinh (mask số 0, 1)', 'bộ', 'san_nhi', 'dung_cu', false, 1, 1],
+  // Bảo hộ – Khử khuẩn
+  ['Găng tay khám (đôi)', 'đôi', 'bao_ho', 'vat_tu', false, 30, 30],
+  ['Găng tay vô khuẩn (đôi)', 'đôi', 'bao_ho', 'vat_tu', true, 5, 3],
+  ['Khẩu trang y tế', 'cái', 'bao_ho', 'vat_tu', false, 20, 20],
+  ['Khẩu trang N95', 'cái', 'bao_ho', 'vat_tu', false, 4, 4],
+  ['Áo choàng phòng hộ', 'bộ', 'bao_ho', 'vat_tu', false, 2, 2],
+  ['Kính chắn giọt bắn', 'cái', 'bao_ho', 'vat_tu', false, 2, 2],
+  ['Dung dịch sát khuẩn tay nhanh 500 ml', 'chai', 'bao_ho', 'vat_tu', true, 1, 1],
+  ['Túi đựng chất thải lây nhiễm (vàng)', 'cái', 'bao_ho', 'vat_tu', false, 5, 5],
+  ['Hộp đựng vật sắc nhọn', 'hộp', 'bao_ho', 'vat_tu', false, 1, 1],
+  ['Khăn lau khử khuẩn bề mặt', 'gói', 'bao_ho', 'vat_tu', true, 1, 1],
+  // Văn phòng phẩm – Giấy tờ
+  ['Phiếu chuyển viện in sẵn (dự phòng mất mạng)', 'tờ', 'van_phong_pham', 'van_phong_pham', false, 10, 10],
+  ['Biên bản từ chối vận chuyển in sẵn', 'tờ', 'van_phong_pham', 'van_phong_pham', false, 5, 5],
+  ['Bút bi', 'cây', 'van_phong_pham', 'van_phong_pham', false, 3, 3],
+  ['Bút lông dầu', 'cây', 'van_phong_pham', 'van_phong_pham', false, 1, 1],
+  ['Sổ ghi chép kíp', 'quyển', 'van_phong_pham', 'van_phong_pham', false, 1, 1],
+  ['Giấy in điện tim (cuộn)', 'cuộn', 'van_phong_pham', 'van_phong_pham', false, 2, 0],
+  ['Pin AA', 'viên', 'van_phong_pham', 'van_phong_pham', false, 4, 4],
+  ['Bìa kẹp hồ sơ', 'cái', 'van_phong_pham', 'van_phong_pham', false, 2, 2],
+  ['Thẻ phân loại nạn nhân (thảm họa)', 'thẻ', 'van_phong_pham', 'van_phong_pham', false, 20, 20],
+];
+
 /** Cơ số thuốc chuẩn trên mỗi loại xe đầu ca (bản nháp, Hội đồng Chuyên môn duyệt) */
 const ALS_PAR: [string, number][] = [
   ['Adrenalin 1 mg/1 ml', 10], ['Amiodaron 150 mg/3 ml', 3], ['Atropin sulfat 0,25 mg/1 ml', 6], ['Diazepam 10 mg/2 ml', 2],
@@ -188,6 +272,28 @@ export const SAMPLE_PRICES: [string, number, number, number, number][] = [
   ['ECMO', 10_000_000, 10, 60_000, 1_000_000], ['VC', 500_000, 10, 15_000, 100_000], ['DP', 800_000, 10, 20_000, 200_000],
 ];
 
+/**
+ * Phạm vi thực hiện mẫu (bản nháp để quản trị sửa theo quy định của trung tâm): thuốc và can thiệp chỉ bác sĩ tự làm;
+ * chức danh khác làm được khi ghi bác sĩ đã trao đổi. Chỉ nạp khi chưa có dòng nào.
+ */
+const SCOPE_DRUGS = ['amiodaron', 'midazolam', 'diazepam', 'morphin', 'fentanyl', 'ketamin', 'pethidin', 'nitroglycerin', 'furosemid', 'magnesi', 'oxytocin', 'tranexamic'];
+const SCOPE_CARE: [string, string, string[]][] = [
+  ['ett', 'Đặt nội khí quản', ['bac_si']],
+  ['lma', 'Đặt mask thanh quản', ['bac_si', 'cap_cuu_vien']],
+  ['defib', 'Sốc điện bằng tay', ['bac_si', 'cap_cuu_vien']],
+];
+
+async function seedScopeRules(pool: pg.Pool) {
+  if ((await pool.query('SELECT 1 FROM scope_rules LIMIT 1')).rowCount) return;
+  for (const d of SCOPE_DRUGS) {
+    await pool.query(`INSERT INTO scope_rules(kind, ref, label, allowed, note)
+                      SELECT 'thuoc', id::text, name, '{bac_si}', 'Bản nháp' FROM drugs WHERE name ~* $1 AND kind = 'thuoc' ON CONFLICT DO NOTHING`, [`^${d}`]);
+  }
+  for (const [ref, label, allowed] of SCOPE_CARE) {
+    await pool.query(`INSERT INTO scope_rules(kind, ref, label, allowed, note) VALUES ('can_thiep', $1, $2, $3, 'Bản nháp') ON CONFLICT DO NOTHING`, [ref, label, allowed]);
+  }
+}
+
 export async function seedCatalog(pool: pg.Pool, opts: { force?: boolean } = {}) {
   const hosp = await importHospitals(pool, BUNDLED_HOSPITALS);
   for (const h of HOSPITALS) {
@@ -212,9 +318,16 @@ export async function seedCatalog(pool: pg.Pool, opts: { force?: boolean } = {})
     await pool.query('INSERT INTO drugs(name, unit, default_route, controlled) VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING',
       [name, unit, route, CONTROLLED.test(name)]);
   }
+  await pool.query(`UPDATE drugs SET kind = 'dich_truyen', group_code = 'tuan_hoan' WHERE kind = 'thuoc' AND name ~* '^(natri clorid 0,9% 500|ringer)'`);
+  await pool.query(`UPDATE drugs SET group_code = 'thuoc_kiem_soat' WHERE controlled AND group_code = 'thuoc_cap_cuu'`);
+  await pool.query(`UPDATE drugs SET group_code = 'san_nhi' WHERE group_code = 'thuoc_cap_cuu' AND name ~* '^oxytocin'`);
+  for (const [name, unit, group, kind, lot] of SUPPLIES) {
+    await pool.query(`INSERT INTO drugs(name, unit, kind, group_code, track_lot) VALUES ($1,$2,$3,$4,$5) ON CONFLICT DO NOTHING`, [name, unit, kind, group, lot]);
+  }
   // Phân loại cho sổ thuốc kiểm soát đặc biệt; chỉ điền chỗ còn trống để không ghi đè dược sĩ đã chỉnh
   await pool.query(`UPDATE drugs SET control_class = CASE WHEN name ~* '^(morphin|fentanyl|pethidin)' THEN 'gay_nghien' ELSE 'huong_than' END
                      WHERE controlled AND control_class IS NULL AND name ~* '^(morphin|fentanyl|pethidin|midazolam|diazepam|ketamin)'`);
+  await seedScopeRules(pool);
   for (const [name, m, i, c] of EQUIPMENT_TYPES) {
     await pool.query('INSERT INTO equipment_types(name, maintenance_days, inspection_days, calibration_days) VALUES ($1,$2,$3,$4) ON CONFLICT DO NOTHING', [name, m, i, c]);
   }
@@ -230,6 +343,16 @@ export async function seedCatalog(pool: pg.Pool, opts: { force?: boolean } = {})
     if ((await pool.query('SELECT 1 FROM par_levels WHERE vehicle_type = $1 LIMIT 1', [vt])).rowCount) continue;
     for (const [name, qty] of items) {
       await pool.query('INSERT INTO par_levels(vehicle_type, drug_id, qty) SELECT $1, id, $3 FROM drugs WHERE name = $2', [vt, name, qty]);
+    }
+  }
+  // Cơ số vật tư, văn phòng phẩm mẫu: chỉ nạp cho loại xe chưa có dòng vật tư nào (không ghi đè chỗ đã sửa)
+  const SUPPLY_PAR_TYPES: Record<string, 5 | 6> = { ALS: 5, DP: 5, ECMO: 5, MSU: 5, BLS: 6, VC: 6 };
+  for (const [vt, col] of Object.entries(SUPPLY_PAR_TYPES)) {
+    const has = await pool.query(`SELECT 1 FROM par_levels p JOIN drugs d ON d.id = p.drug_id WHERE p.vehicle_type = $1 AND d.kind NOT IN ('thuoc', 'dich_truyen') LIMIT 1`, [vt]);
+    if (has.rowCount) continue;
+    for (const row of SUPPLIES) {
+      const qty = vt === 'VC' ? Math.min(row[col], 2) : row[col];
+      if (qty > 0) await pool.query('INSERT INTO par_levels(vehicle_type, drug_id, qty) SELECT $1, id, $3 FROM drugs WHERE name = $2 ON CONFLICT DO NOTHING', [vt, row[0], qty]);
     }
   }
   // Bảng giá mẫu cho loại xe chưa có bảng giá; kế toán thay bằng giá theo quyết định của công ty ở trang Tài chính

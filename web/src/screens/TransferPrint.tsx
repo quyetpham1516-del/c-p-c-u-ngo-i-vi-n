@@ -90,6 +90,7 @@ export function TransferPrint() {
   while (vit.length < 4) vit.push(null);
   const careRows: string[] = [
     ...(e.interventions ?? []).map((i: any) => `${hhmm(i.at)} ${i.name}${i.by ? ` (${i.by})` : ''}${i.note ? ` – ${i.note}` : ''}`),
+    ...(['A', 'B', 'C', 'D', 'E'] as const).flatMap((k) => [a[`other${k}`] && `${k} – khác: ${a[`other${k}`]}`, c[`other${k}`] && `${k} – can thiệp khác: ${c[`other${k}`]}`]).filter(Boolean) as string[],
     ...(e.labs ?? []).filter((l: any) => l.value).map((l: any) => `${hhmm(l.at)} CLS ${l.name ?? l.type}: ${l.value}${l.unit ? ` ${l.unit}` : ''}${l.by ? ` (${l.by})` : ''}`),
     ...(e.consults ?? []).map((c: any) => `${hhmm(c.at)} Y lệnh qua ${({ dien_thoai: 'điện thoại', video: 'video', truc_tiep: 'trực tiếp' } as Record<string, string>)[c.mode] ?? 'trao đổi'}: BS ${c.doctor}${c.license ? ` (CCHN ${c.license})` : ''}${c.note ? ` – ${c.note}` : ''}`),
     ...(e.medications ?? []).map((m: any) => `${hhmm(m.at)} ${m.name} ${m.dose ?? ''} ${m.route ?? ''}${m.qty ? ` ×${m.qty}` : ''} – lô ${m.lot ?? '—'}${m.expiry ? ` (HD ${m.expiry})` : ''}${m.by ? `, ${m.by}` : ''}${m.witness ? `, chứng kiến ${m.witness}` : ''}`),

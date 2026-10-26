@@ -88,6 +88,52 @@ function TimeAt({ label, value, onChange, locked }: { label: string; value?: str
 }
 
 /** Mẫu Utstein 2014 (cập nhật 2024) cho ngừng tuần hoàn ngoài viện: sự kiện, hồi sức của người dân, can thiệp, kết cục tại hiện trường */
+const CIRC_ROUTES = ['Uống', 'Tiêm tĩnh mạch', 'Truyền tĩnh mạch', 'Tiêm bắp', 'Tiêm dưới da', 'Ngậm dưới lưỡi', 'Xịt dưới lưỡi', 'Đặt hậu môn', 'Qua xương'];
+
+/** Ô "Khác" ở cuối mỗi mục */
+function Other({ value, onChange }: { value?: string; onChange: (v: string | undefined) => void }) {
+  return <input className="grow" placeholder="Khác (ghi rõ)" value={value ?? ''} onChange={(ev) => onChange(ev.target.value || undefined)} />;
+}
+
+/**
+ * Liều thuốc theo đường dùng ngay trong mục ABCDE (lần 1, 2, 3 khí dung; uống, tiêm TM, ngậm dưới lưỡi...):
+ * mỗi liều là một dòng của bảng thuốc nên vẫn có số lô, trừ cơ số, tính tiền như mọi thuốc khác.
+ */
+function RouteDoses({ title, routes, numbered, meds, drugs, onAdd, setMed, removeMed }: {
+  title: string; routes: string[]; numbered?: boolean; meds: any[]; drugs: StockLot[];
+  onAdd: (route: string, drugId?: number) => void; setMed: (i: number, p: Record<string, any>) => void; removeMed: (i: number) => void;
+}) {
+  const rows = meds.map((m, i) => ({ m, i })).filter(({ m }) => routes.includes(m.route));
+  return (
+    <div className="col" style={{ gap: 4, marginTop: 6 }}>
+      <span className="small muted">{title}</span>
+      {rows.map(({ m, i }, k) => (
+        <div key={i} className="row" style={{ gap: 4, flexWrap: 'wrap' }}>
+          {numbered ? <b className="small">Lần {k + 1}</b> : (
+            <select value={m.route} onChange={(ev) => setMed(i, { route: ev.target.value })}>{routes.map((r) => <option key={r}>{r}</option>)}</select>
+          )}
+          <input type="time" style={{ width: 96 }} value={m.at ? new Date(new Date(m.at).getTime() - new Date().getTimezoneOffset() * 60_000).toISOString().slice(11, 16) : ''}
+            onChange={(ev) => { if (!ev.target.value) return; const t = new Date(m.at ?? Date.now()); const [hh, mm] = ev.target.value.split(':').map(Number); t.setHours(hh, mm, 0, 0); setMed(i, { at: t.toISOString() }); }} />
+          {drugs.length ? (
+            <select value={m.drugId ?? ''} onChange={(ev) => setMed(i, { drugId: Number(ev.target.value) })}>
+              <option value="">{m.name && !m.drugId ? `${m.name} (ngoài kho)` : '— Thuốc —'}</option>
+              {drugs.map((l) => <option key={l.drug_id} value={l.drug_id}>{l.drug_name}</option>)}
+            </select>
+          ) : <input placeholder="Thuốc" value={m.name ?? ''} onChange={(ev) => setMed(i, { name: ev.target.value })} />}
+          <input style={{ width: 90 }} placeholder="Liều" value={m.dose ?? ''} onChange={(ev) => setMed(i, { dose: ev.target.value })} />
+          <input style={{ width: 60 }} placeholder="SL" inputMode="decimal" value={m.qty ?? ''} onChange={(ev) => setMed(i, { qty: ev.target.value === '' ? undefined : Number(ev.target.value) })} />
+          <button className="ghost small" onClick={() => removeMed(i)}>✕</button>
+        </div>
+      ))}
+      <div className="row" style={{ gap: 4 }}>
+        {numbered
+          ? <button className="small" onClick={() => onAdd(routes[0])}>+ Lần {rows.length + 1}</button>
+          : routes.slice(0, 6).map((r) => <button key={r} className="small" onClick={() => onAdd(r)}>+ {r}</button>)}
+      </div>
+    </div>
+  );
+}
+
 /** Số tiền tự tính khi ký phiếu: giá vận chuyển theo km (khai hoặc GPS), dịch vụ kỹ thuật, thuốc vật tư tính riêng */
 function ChargeView({ transferId }: { transferId: string }) {
   const [c, setC] = useState<any>(undefined);
@@ -409,6 +455,28 @@ export function EpcrForm({ draft: initial, onChange, initialTab }: { draft: Draf
   });
   const stock = useVehicleStock(d.vehicleId);
   const allItems = useVehicleItems(d.vehicleId);
+  const meds: any[] = e.medications ?? [];
+  /** Thêm một liều theo đường dùng (khí dung, uống, tiêm TM, ngậm dưới lưỡi...): là một dòng trong bảng thuốc, trừ kho khi ký */
+  const addRouteDose = (route: string, drugId?: number) => update((x) => {
+    const lot = drugId ? stock.find((l) => l.drug_id === drugId) : undefined;
+    const row = applyLot({ at: nowIso(), name: '', route }, lot);
+    row.route = route;
+    (x.medications ??= []).push(row);
+    return x;
+  });
+  const setMed = (i: number, patch: Record<string, any>) => update((x) => {
+    const row = x.medications[i];
+    if ('drugId' in patch) {
+      delete row.lotId; delete row.lot; delete row.expiry; delete row.drugId;
+      const route = row.route;
+      applyLot(row, stock.find((l) => l.drug_id === patch.drugId));
+      row.route = route;
+      delete patch.drugId;
+    }
+    Object.assign(row, patch);
+    return x;
+  });
+  const removeMed = (i: number) => update((x) => { x.medications.splice(i, 1); return x; });
   /** Chọn từ ô gõ tên: thuốc, dịch truyền vào bảng thuốc (gắn lô hết hạn sớm nhất); vật tư, dụng cụ vào bảng vật tư */
   const pickItem = (it: PickItem, qty: number) => update((x) => {
     if (it.kind === 'thuoc' || it.kind === 'dich_truyen') {
@@ -560,6 +628,7 @@ export function EpcrForm({ draft: initial, onChange, initialTab }: { draft: Draf
               left={<>
                 <Pick value={a.airway} options={[['patent', 'Thông thoáng'], ['obstructed', 'Tắc']]} onChange={(v) => set('abcde.airway', v)} />
                 {a.airway === 'obstructed' && <input placeholder="Mô tả tắc" value={a.airwayNote ?? ''} onChange={(ev) => set('abcde.airwayNote', ev.target.value)} />}
+                <Other value={a.otherA} onChange={(v) => set('abcde.otherA', v)} />
               </>}
               right={<div className="row">
                 <Chk label="Heimlich" value={c.heimlich} onChange={(v) => set('care.heimlich', v)} />
@@ -568,6 +637,7 @@ export function EpcrForm({ draft: initial, onChange, initialTab }: { draft: Draf
                 <Chk label="Nội khí quản" value={c.ett} onChange={(v) => set('care.ett', v)} />
                 {c.ett && <input style={{ width: 90 }} placeholder="Cỡ ống" value={c.ettNote ?? ''} onChange={(ev) => set('care.ettNote', ev.target.value)} />}
                 <Chk label="Hút đàm" value={c.suction} onChange={(v) => set('care.suction', v)} />
+                <Other value={c.otherA} onChange={(v) => set('care.otherA', v)} />
               </div>} />
             <AbcdeRow title="Kiểu thở (B)"
               left={<>
@@ -577,16 +647,21 @@ export function EpcrForm({ draft: initial, onChange, initialTab }: { draft: Draf
                   <Chk label="Co kéo cơ hô hấp" value={a.retractions} onChange={(v) => set('abcde.retractions', v)} />
                 </div>
                 <input placeholder="Ghi chú" value={a.breathingNote ?? ''} onChange={(ev) => set('abcde.breathingNote', ev.target.value)} />
+                <Other value={a.otherB} onChange={(v) => set('abcde.otherB', v)} />
               </>}
-              right={<div className="row">
+              right={<><div className="row">
                 <Chk label="Thở oxy canula" value={c.o2Cannula} onChange={(v) => set('care.o2Cannula', v)} />
                 {c.o2Cannula && <input style={{ width: 80 }} placeholder="l/p" value={c.o2CannulaFlow ?? ''} onChange={(ev) => set('care.o2CannulaFlow', ev.target.value)} />}
                 <Chk label="Mask có túi khí" value={c.nrbMask} onChange={(v) => set('care.nrbMask', v)} />
                 {c.nrbMask && <input style={{ width: 80 }} placeholder="l/p" value={c.nrbFlow ?? ''} onChange={(ev) => set('care.nrbFlow', ev.target.value)} />}
                 <Chk label="Bóp mask" value={c.bagMask} onChange={(v) => set('care.bagMask', v)} />
                 <Chk label="Bóp bóng NKQ" value={c.bagEtt} onChange={(v) => set('care.bagEtt', v)} />
-                <Chk label="PKD" value={c.nebulizer} onChange={(v) => set('care.nebulizer', v)} />
-              </div>} />
+                <Chk label="Phun khí dung" value={c.nebulizer} onChange={(v) => set('care.nebulizer', v)} />
+                <Other value={c.otherB} onChange={(v) => set('care.otherB', v)} />
+              </div>
+              {(c.nebulizer || meds.some((m) => m.route === 'Khí dung')) && (
+                <RouteDoses title="Khí dung từng lần" routes={['Khí dung']} numbered meds={meds} drugs={stockDrugs} onAdd={addRouteDose} setMed={setMed} removeMed={removeMed} />
+              )}</>} />
             <AbcdeRow title="Tuần hoàn (C)"
               left={<>
                 <div className="row">
@@ -596,6 +671,7 @@ export function EpcrForm({ draft: initial, onChange, initialTab }: { draft: Draf
                   <Txt label="HA tâm trương" type="number" width={100} value={a.dbp} onChange={(v) => set('abcde.dbp', v)} />
                 </div>
                 <Txt label="ECG" value={a.ecg} onChange={(v) => set('abcde.ecg', v)} />
+                <Other value={a.otherC} onChange={(v) => set('abcde.otherC', v)} />
               </>}
               right={<>
                 <div className="row">
@@ -606,6 +682,8 @@ export function EpcrForm({ draft: initial, onChange, initialTab }: { draft: Draf
                   <Chk label="TTM" value={c.iv} onChange={(v) => set('care.iv', v)} />
                 </div>
                 {c.iv && <input placeholder="Dịch truyền, đường truyền" value={c.ivNote ?? ''} onChange={(ev) => set('care.ivNote', ev.target.value)} />}
+                <RouteDoses title="Thuốc theo đường dùng" routes={CIRC_ROUTES} meds={meds} drugs={stockDrugs} onAdd={addRouteDose} setMed={setMed} removeMed={removeMed} />
+                <Other value={c.otherC} onChange={(v) => set('care.otherC', v)} />
               </>} />
             <AbcdeRow title="Thần kinh (D)"
               left={<>
@@ -622,8 +700,9 @@ export function EpcrForm({ draft: initial, onChange, initialTab }: { draft: Draf
                   <Txt label="Đồng tử (mm)" width={110} value={a.pupils} onChange={(v) => set('abcde.pupils', v)} />
                   <Txt label="ĐH (mg%)" type="number" width={90} value={a.glucose} onChange={(v) => set('abcde.glucose', v)} />
                 </div>
+                <Other value={a.otherD} onChange={(v) => set('abcde.otherD', v)} />
               </>}
-              right={<Txt label="Can thiệp thần kinh" area value={c.neuroCare} onChange={(v) => set('care.neuroCare', v)} />} />
+              right={<><Txt label="Can thiệp thần kinh" area value={c.neuroCare} onChange={(v) => set('care.neuroCare', v)} /><Other value={c.otherD} onChange={(v) => set('care.otherD', v)} /></>} />
             <AbcdeRow title="Toàn diện (E)"
               left={<>
                 <Txt label="Nhiệt độ (°C)" type="number" width={110} value={a.temp} onChange={(v) => set('abcde.temp', v)} />
@@ -635,6 +714,7 @@ export function EpcrForm({ draft: initial, onChange, initialTab }: { draft: Draf
                   <Chk label="Đa chấn thương" value={a.injMulti} onChange={(v) => set('abcde.injMulti', v)} />
                 </div>
                 <Pick label="Chảy máu" value={a.bleeding} options={[['spurting', 'Thành tia'], ['flowing', 'Dòng'], ['oozing', 'Rỉ']]} onChange={(v) => set('abcde.bleeding', v)} />
+                <Other value={a.otherE} onChange={(v) => set('abcde.otherE', v)} />
               </>}
               right={<>
                 <div className="row">
@@ -651,6 +731,7 @@ export function EpcrForm({ draft: initial, onChange, initialTab }: { draft: Draf
                   <Chk label="Băng ép cầm máu" value={c.pressureBandage} onChange={(v) => set('care.pressureBandage', v)} />
                   {c.pressureBandage && <input className="grow" placeholder="Vị trí" value={c.bandageNote ?? ''} onChange={(ev) => set('care.bandageNote', ev.target.value)} />}
                 </div>
+                <Other value={c.otherE} onChange={(v) => set('care.otherE', v)} />
               </>} />
             <div className="panel" style={{ background: 'var(--panel-2)' }}>
               <div className="row">

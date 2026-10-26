@@ -50,6 +50,8 @@ export const EpcrSchema = z.object({
     seizure: bool, pupils: str, glucose: num,
     temp: num, injHead: bool, injSpine: bool, injLimb: bool, injMulti: bool,
     bleeding: z.enum(['spurting', 'flowing', 'oozing']).optional(),
+    /** Ô "khác" của từng mục A, B, C, D, E */
+    otherA: str, otherB: str, otherC: str, otherD: str, otherE: str,
   }).partial().default({}),
   /** Cột "Can thiệp" cạnh từng mục ABCDE */
   care: z.object({
@@ -59,6 +61,7 @@ export const EpcrSchema = z.object({
     neuroCare: str,
     collar: bool, spine: bool, pelvis: bool, splintShoulder: bool, splintArm: bool, splintLeg: bool, splintNote: str,
     pressureBandage: bool, bandageNote: str,
+    otherA: str, otherB: str, otherC: str, otherD: str, otherE: str,
   }).partial().default({}),
   trauma: z.object({ present: bool, types: z.array(z.enum(TRAUMA_TYPES)).default([]), note: str }).partial().default({}),
   sample: z.object({
@@ -174,6 +177,7 @@ export function missingForSign(e: Epcr): string[] {
     miss.push('Cam kết từ chối có chữ ký (ký trên máy hoặc ký giấy)');
   if (e.trauma.present && !e.trauma.types?.length) miss.push('Loại chấn thương');
   for (const m of e.medications) {
+    if (!m.name?.trim()) { miss.push(`Tên thuốc (dòng ${m.route ?? 'thuốc'} lúc ${m.at})`); continue; }
     if (!m.lot) miss.push(`Số lô thuốc ${m.name}`);
   }
   if (!e.payer) miss.push('Đối tượng thu phí');

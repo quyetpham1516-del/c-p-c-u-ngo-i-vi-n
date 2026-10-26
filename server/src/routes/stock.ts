@@ -4,6 +4,7 @@ import { audit } from '../audit.js';
 import { many, one, withTx } from '../db.js';
 import { HttpError } from '../domain.js';
 import { actorOf, guard, type Ctx, type Role } from '../http.js';
+import { importParWorkbook, ITEM_KIND, parWorkbook } from '../items.js';
 import {
   createDisposal, createStocktake, decideVoucher, lotsForVehicle, orderSuggestion, receiveStock, restockVehicle, returnFromVehicle,
   STOCK_APPROVERS, stockAlerts, transferBetweenStations, vehicleParStatus,
@@ -64,7 +65,7 @@ export function registerStock(app: FastifyInstance, { pool }: Ctx) {
   app.post('/api/stock/receive', { preHandler: guard(...STOCK_MANAGE) }, async (req) => {
     const b = z.object({
       stationId: z.string().min(1), drugId: z.number().int().nullish(), drugName: z.string().max(200).nullish(), unit: z.string().max(30).nullish(),
-      lot: z.string().trim().min(1).max(60), expiry: date, qty: z.number().positive().max(100000), supplier: z.string().max(200).nullish(),
+      lot: z.string().trim().max(60).nullish(), expiry: date.nullish(), qty: z.number().positive().max(100000), supplier: z.string().max(200).nullish(),
     }).parse(req.body);
     return withTx(pool, (tx) => receiveStock(tx, actorOf(req), b));
   });
@@ -176,5 +177,73 @@ export function registerStock(app: FastifyInstance, { pool }: Ctx) {
       return r;
     });
     return d;
+  });
+
+  /* ---------- Danh mục hàng hóa chia nhóm, cơ số chuẩn dạng Excel ---------- */
+
+  app.get('/api/item-groups', { preHandler: guard() }, async () => many(pool, 'SELECT * FROM item_groups ORDER BY sort, name'));
+
+  app.post('/api/item-groups', { preHandler: guard('pharmacist', 'admin') }, async (req) => {
+    const b = z.object({ name: z.string().trim().min(2).max(80), sort: z.number().int().min(0).max(1000).default(90) }).parse(req.body);
+    const code = b.name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/gi, 'd').toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '').slice(0, 40);
+    return withTx(pool, async (tx) => {
+      const g = await one(tx, 'INSERT INTO item_groups(code, name, sort) VALUES ($1,$2,$3) ON CONFLICT DO NOTHING RETURNING *', [code || `nhom_${Date.now()}`, b.name, b.sort]);
+      if (!g) throw new HttpError(409, 'Nhóm này đã có');
+      await audit(tx, 'system', actorOf(req), 'item_group.created', 'item_group', g.code, b);
+      return g;
+    });
+  });
+
+  app.get('/api/items', { preHandler: guard(...STOCK_VIEW, 'accountant') }, async (req) => {
+    const q = z.object({ all: z.coerce.boolean().optional() }).parse(req.query);
+    return many(pool, `SELECT d.*, d.sell_price::float AS sell_price, g.name AS group_name FROM drugs d JOIN item_groups g ON g.code = d.group_code
+                        WHERE ($1 OR d.active) ORDER BY g.sort, d.name`, [q.all ?? false]);
+  });
+
+  const ItemBody = z.object({
+    name: z.string().trim().min(2).max(200), unit: z.string().trim().min(1).max(30), kind: z.enum(Object.keys(ITEM_KIND) as [string, ...string[]]),
+    groupCode: z.string().min(1).max(40), code: z.string().trim().max(40).nullish(), trackLot: z.boolean().optional(),
+    billable: z.boolean().optional(), sellPrice: z.number().int().min(0).max(1e9).nullish(), controlled: z.boolean().optional(), active: z.boolean().optional(),
+  });
+
+  app.post('/api/items', { preHandler: guard('pharmacist', 'admin') }, async (req) => {
+    const b = ItemBody.parse(req.body);
+    return withTx(pool, async (tx) => {
+      if (await one(tx, 'SELECT 1 FROM drugs WHERE lower(name) = lower($1)', [b.name])) throw new HttpError(409, 'Tên hàng đã có trong danh mục');
+      const d = await one(tx, `INSERT INTO drugs(name, unit, kind, group_code, code, track_lot, billable, sell_price, controlled)
+                               VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
+      [b.name, b.unit, b.kind, b.groupCode, b.code || null, b.trackLot ?? ['thuoc', 'dich_truyen'].includes(b.kind), b.billable ?? false, b.sellPrice ?? null, b.controlled ?? false]);
+      await audit(tx, 'system', actorOf(req), 'item.created', 'drug', String(d.id), b);
+      return d;
+    });
+  });
+
+  app.patch('/api/items/:id', { preHandler: guard('pharmacist', 'admin') }, async (req) => {
+    const id = z.object({ id: z.coerce.number().int() }).parse(req.params).id;
+    const b = ItemBody.partial().parse(req.body);
+    const map: Record<string, string> = { name: 'name', unit: 'unit', kind: 'kind', groupCode: 'group_code', code: 'code', trackLot: 'track_lot', billable: 'billable', sellPrice: 'sell_price', controlled: 'controlled', active: 'active' };
+    const keys = Object.keys(b).filter((k) => map[k]) as (keyof typeof b)[];
+    if (!keys.length) throw new HttpError(400, 'Không có gì để sửa');
+    return withTx(pool, async (tx) => {
+      const d = await one(tx, `UPDATE drugs SET ${keys.map((k, i) => `${map[k]} = $${i + 2}`).join(', ')} WHERE id = $1 RETURNING *`,
+        [id, ...keys.map((k) => (k === 'code' ? (b.code || null) : b[k]))]);
+      if (!d) throw new HttpError(404, 'Không tìm thấy mặt hàng');
+      await audit(tx, 'system', actorOf(req), 'item.updated', 'drug', String(id), b);
+      return d;
+    });
+  });
+
+  app.get('/api/par-levels/excel', { preHandler: guard(...STOCK_VIEW) }, async (req, reply) => {
+    const q = z.object({ types: z.string().max(200).optional() }).parse(req.query);
+    const all = (await many(pool, 'SELECT DISTINCT type FROM vehicles ORDER BY type')).map((r) => r.type as string);
+    const types = q.types ? q.types.split(',').map((t) => t.trim().toUpperCase()).filter((t) => all.includes(t)) : all;
+    reply.header('content-type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+      .header('content-disposition', `attachment; filename="co-so-xe-${types.join('-')}.xlsx"`);
+    return reply.send(await parWorkbook(pool, types));
+  });
+
+  app.post('/api/par-levels/import', { preHandler: guard('pharmacist', 'admin'), bodyLimit: 8 * 1024 * 1024 }, async (req) => {
+    const b = z.object({ file: z.string().min(10).max(8_000_000) }).parse(req.body);
+    return withTx(pool, (tx) => importParWorkbook(tx, actorOf(req), Buffer.from(b.file, 'base64')));
   });
 }

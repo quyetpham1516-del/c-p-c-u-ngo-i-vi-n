@@ -1,13 +1,13 @@
 import { Fragment, useEffect, useMemo, useState } from 'react';
-import { api, session } from '../api';
+import { api, download, session } from '../api';
 import { useStations } from '../catalog';
+import { ParSheet, type ParItem } from '../components/ParSheet';
 
 interface Lot {
   id: string; station_id: string; station_name: string; vehicle_id: string | null; lot: string; expiry: string; qty: number;
   supplier: string | null; received_at: string; drug_id: number; drug_name: string; unit: string; controlled: boolean; days_left: number;
 }
-interface Drug { id: number; name: string; unit: string; controlled: boolean }
-interface ParItem { drug_id: number; drug_name: string; unit: string; controlled: boolean; par: number; on_vehicle: number; in_station: number; missing: number }
+interface Drug { id: number; name: string; unit: string; controlled: boolean; track_lot?: boolean; group_name?: string }
 interface Voucher {
   id: string; code: string; kind: string; status: string; station_id: string; vehicle_id: string | null; to_station_id: string | null;
   note: string | null; witness: string | null; created_by: string; created_by_name: string; created_at: string;
@@ -45,7 +45,7 @@ export function Stock() {
   return (
     <div className="col">
       <div className="row" style={{ justifyContent: 'space-between' }}>
-        <h2 style={{ margin: 0 }}>Kho thuốc <span className="small muted">QL-13, QLCL-16</span></h2>
+        <h2 style={{ margin: 0 }}>Kho thuốc, vật tư <span className="small muted">QL-13, QLCL-16</span></h2>
         <label className="row small">Điểm
           <select value={stationId} onChange={(e) => setStationId(e.target.value)}>
             {stations.map((s) => <option key={s.id} value={s.id}>{s.id} – {s.name}</option>)}
@@ -80,14 +80,15 @@ function LotsTab({ stationId, stations, drugs, canManage, run }: Ctx) {
   useEffect(() => { load().catch(() => {}); }, [stationId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const shown = useMemo(() => lots.filter((l) => !q || `${l.drug_name} ${l.lot}`.toLowerCase().includes(q.toLowerCase())), [lots, q]);
-  const valid = (form.drugId || form.drugName.trim().length > 2) && form.lot.trim() && /^\d{4}-\d{2}-\d{2}$/.test(form.expiry) && Number(form.qty) > 0;
+  const noLot = !!form.drugId && drugs.find((d) => String(d.id) === form.drugId)?.track_lot === false;
+  const valid = (form.drugId || form.drugName.trim().length > 2) && (noLot || (form.lot.trim() && /^\d{4}-\d{2}-\d{2}$/.test(form.expiry))) && Number(form.qty) > 0;
   const picked = Object.entries(pick).filter(([, v]) => Number(v) > 0).map(([lotId, v]) => ({ lotId, qty: Number(v) }));
   const pickedControlled = picked.some((p) => lots.find((l) => l.id === p.lotId)?.controlled);
 
   const receive = () => run(async () => {
     await api('POST', '/api/stock/receive', {
       stationId, drugId: form.drugId ? Number(form.drugId) : null, drugName: form.drugId ? null : form.drugName, unit: form.unit,
-      lot: form.lot, expiry: form.expiry, qty: Number(form.qty), supplier: form.supplier || null,
+      lot: form.lot || null, expiry: form.expiry || null, qty: Number(form.qty), supplier: form.supplier || null,
     });
     setForm({ ...form, lot: '', expiry: '', qty: '' });
     await load();
@@ -122,13 +123,13 @@ function LotsTab({ stationId, stations, drugs, canManage, run }: Ctx) {
             <label className="field">Thuốc
               <select value={form.drugId} onChange={(e) => setForm({ ...form, drugId: e.target.value })}>
                 <option value="">— Thuốc mới (gõ tên bên cạnh) —</option>
-                {drugs.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
+                {drugs.map((d) => <option key={d.id} value={d.id}>{d.group_name ? `${d.group_name} · ` : ''}{d.name}</option>)}
               </select>
             </label>
             {!form.drugId && <label className="field">Tên thuốc mới<input value={form.drugName} onChange={(e) => setForm({ ...form, drugName: e.target.value })} placeholder="Tên, hàm lượng, dạng" /></label>}
             {!form.drugId && <label className="field">Đơn vị<input value={form.unit} onChange={(e) => setForm({ ...form, unit: e.target.value })} /></label>}
-            <label className="field">Số lô<input value={form.lot} onChange={(e) => setForm({ ...form, lot: e.target.value })} /></label>
-            <label className="field">Hạn dùng<input type="date" min={today()} value={form.expiry} onChange={(e) => setForm({ ...form, expiry: e.target.value })} /></label>
+            <label className="field">Số lô{noLot ? ' (không bắt buộc)' : ''}<input value={form.lot} onChange={(e) => setForm({ ...form, lot: e.target.value })} /></label>
+            <label className="field">Hạn dùng{noLot ? ' (không bắt buộc)' : ''}<input type="date" min={today()} value={form.expiry} onChange={(e) => setForm({ ...form, expiry: e.target.value })} /></label>
             <label className="field">Số lượng<input inputMode="decimal" value={form.qty} onChange={(e) => setForm({ ...form, qty: e.target.value })} /></label>
             <label className="field">Nhà cung cấp / số phiếu<input value={form.supplier} onChange={(e) => setForm({ ...form, supplier: e.target.value })} /></label>
           </div>
@@ -150,9 +151,9 @@ function LotsTab({ stationId, stations, drugs, canManage, run }: Ctx) {
             {shown.map((l) => (
               <tr key={l.id}>
                 <td>{l.drug_name}{l.controlled && <span className="badge far" style={{ marginLeft: 6 }}>Kiểm soát đặc biệt</span>}</td>
-                <td className="mono">{l.lot}</td>
+                <td className="mono">{l.lot === 'KHONG-LO' ? '—' : l.lot}</td>
                 <td className="mono" style={l.days_left < 90 ? { color: 'var(--p1)', fontWeight: 600 } : undefined}>
-                  {l.expiry}{l.days_left < 0 ? ' (đã hết hạn)' : l.days_left < 90 ? ` (còn ${l.days_left} ngày)` : ''}</td>
+                  {l.expiry.startsWith('9999') ? 'Không hạn' : l.expiry}{l.days_left < 0 ? ' (đã hết hạn)' : l.days_left < 90 ? ` (còn ${l.days_left} ngày)` : ''}</td>
                 <td className="right mono">{fmt(l.qty)} {l.unit}</td>
                 <td className="small muted">{l.supplier ?? '—'}</td>
                 {counting && <td className="right"><input inputMode="decimal" style={{ width: 90 }} value={counting[l.id] ?? ''}
@@ -221,19 +222,7 @@ function VehiclesTab({ stationId, run }: Ctx) {
               {par[v.id] && (par[v.id].short ? <span className="badge far">Thiếu {par[v.id].short} loại</span> : <span className="badge">Đủ cơ số</span>)}</h3>
             <button className="primary" disabled={!par[v.id]?.short} onClick={() => restock(v.id)}>Bù cơ số từ kho điểm</button>
           </div>
-          <table>
-            <thead><tr><th>Thuốc</th><th className="right">Chuẩn</th><th className="right">Trên xe</th><th className="right">Thiếu</th><th className="right">Kho điểm còn</th></tr></thead>
-            <tbody>
-              {(par[v.id]?.items ?? []).map((i) => (
-                <tr key={i.drug_id}>
-                  <td>{i.drug_name}</td><td className="right mono">{fmt(i.par)}</td><td className="right mono">{fmt(i.on_vehicle)}</td>
-                  <td className="right mono" style={i.missing ? { color: 'var(--p1)', fontWeight: 700 } : undefined}>{i.missing ? fmt(i.missing) : '—'}</td>
-                  <td className="right mono">{fmt(i.in_station)} {i.unit}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          {par[v.id] && !par[v.id].items.length && <div className="small muted">Loại xe {v.type} chưa có cơ số chuẩn (đặt ở thẻ Định mức, cơ số chuẩn).</div>}
+          <ParSheet items={par[v.id]?.items ?? []} />
         </div>
       ))}
     </>
@@ -377,6 +366,24 @@ function SettingsTab({ stationId, drugs, canManage, run }: Ctx) {
       <div className="panel" style={{ overflowX: 'auto' }}>
         <h3 style={{ marginTop: 0 }}>Cơ số chuẩn theo loại xe</h3>
         <div className="small muted">Bản nháp; Hội đồng Chuyên môn duyệt danh mục cơ số trước khi dùng thật.</div>
+        <div className="row" style={{ margin: '8px 0' }}>
+          <button onClick={() => run(() => download('/api/par-levels/excel', 'co-so-xe.xlsx'), 'Đã tải bảng cơ số Excel (mỗi loại xe một trang).')}>Tải Excel cơ số</button>
+          {canPar && <label className="btn">Nạp từ Excel
+            <input type="file" accept=".xlsx" style={{ display: 'none' }} onChange={(e) => {
+              const f = e.target.files?.[0]; e.target.value = '';
+              if (!f) return;
+              run(async () => {
+                const buf = new Uint8Array(await f.arrayBuffer());
+                let bin = ''; for (let i = 0; i < buf.length; i += 0x8000) bin += String.fromCharCode(...buf.subarray(i, i + 0x8000));
+                const r = await api<any>('POST', '/api/par-levels/import', { file: btoa(bin) });
+                await load();
+                const msg = `Đã nạp ${r.sheets.join(', ')}: đổi ${r.set}, bỏ ${r.removed}, mặt hàng mới ${r.created.length}.`;
+                if (r.errors.length) throw new Error(`${msg} Có ${r.errors.length} dòng lỗi: ${r.errors.slice(0, 5).join('; ')}`);
+                alert(msg);
+              });
+            }} /></label>}
+          <span className="small muted">Mở trong Excel, sửa cột "Cơ số chuẩn" (0 là bỏ), thêm dòng hàng mới, rồi nạp lại.</span>
+        </div>
         <div className="grid2">
           {types.map((t) => (
             <div key={t}><b>{t}</b>
@@ -399,16 +406,58 @@ function SettingsTab({ stationId, drugs, canManage, run }: Ctx) {
           </div>
         )}
       </div>
-      <div className="panel" style={{ overflowX: 'auto' }}>
-        <h3 style={{ marginTop: 0 }}>Thuốc kiểm soát đặc biệt</h3>
-        <div className="small muted">Dùng cho người bệnh, chuyển kho, hủy đều phải ghi người chứng kiến.</div>
-        <table><tbody>{drugList.map((d) => (
-          <tr key={d.id}><td>{d.name}</td><td className="right">
-            {canPar ? <label className="row small" style={{ justifyContent: 'flex-end' }}><input type="checkbox" checked={d.controlled}
-              onChange={(e) => run(async () => { await api('PATCH', `/api/drugs/${d.id}`, { controlled: e.target.checked }); await load(); })} /> Kiểm soát đặc biệt</label>
-              : d.controlled ? 'Kiểm soát đặc biệt' : ''}
-          </td></tr>))}</tbody></table>
-      </div>
+      <ItemCatalog canEdit={canPar} run={run} onChange={load} />
     </>
+  );
+}
+
+const KIND_LABEL: Record<string, string> = { thuoc: 'Thuốc', dich_truyen: 'Dịch truyền', vat_tu: 'Vật tư tiêu hao', dung_cu: 'Dụng cụ dùng lại', van_phong_pham: 'Văn phòng phẩm' };
+
+/** Danh mục hàng hóa chia nhóm: thuốc, dịch truyền, vật tư, dụng cụ, văn phòng phẩm */
+function ItemCatalog({ canEdit, run, onChange }: { canEdit: boolean; run: Ctx['run']; onChange: () => Promise<unknown> }) {
+  const [items, setItems] = useState<any[]>([]);
+  const [groups, setGroups] = useState<{ code: string; name: string }[]>([]);
+  const [group, setGroup] = useState('');
+  const [form, setForm] = useState({ name: '', unit: 'cái', kind: 'vat_tu', groupCode: '' });
+  const load = () => Promise.all([api<any[]>('GET', '/api/items?all=1').then(setItems), api<any[]>('GET', '/api/item-groups').then(setGroups)]);
+  useEffect(() => { load().catch(() => {}); }, []);
+  const patch = (id: number, body: object) => run(async () => { await api('PATCH', `/api/items/${id}`, body); await load(); await onChange(); });
+  const shown = items.filter((i) => !group || i.group_code === group);
+  return (
+    <div className="panel" style={{ overflowX: 'auto' }}>
+      <div className="row" style={{ justifyContent: 'space-between' }}>
+        <h3 style={{ margin: 0 }}>Danh mục hàng hóa</h3>
+        <select value={group} onChange={(e) => setGroup(e.target.value)}><option value="">Tất cả nhóm</option>{groups.map((g) => <option key={g.code} value={g.code}>{g.name}</option>)}</select>
+      </div>
+      <div className="small muted">Thuốc, dịch truyền quản lý theo số lô và hạn dùng. Vật tư không có hạn, văn phòng phẩm thì nhập kho không cần lô. Thuốc kiểm soát đặc biệt phải ghi người chứng kiến.</div>
+      <table className="sheet">
+        <thead><tr><th>Tên</th><th>Nhóm</th><th>Loại</th><th>ĐVT</th><th>Theo lô</th><th>KSĐB</th><th>Tính tiền</th><th className="right">Giá bán</th><th>Đang dùng</th></tr></thead>
+        <tbody>{shown.map((i) => (
+          <tr key={i.id} className={i.active ? '' : 'muted'}>
+            <td>{i.name}</td>
+            <td>{canEdit ? <select value={i.group_code} onChange={(e) => patch(i.id, { groupCode: e.target.value })}>{groups.map((g) => <option key={g.code} value={g.code}>{g.name}</option>)}</select> : i.group_name}</td>
+            <td className="small">{KIND_LABEL[i.kind]}</td><td className="small">{i.unit}</td>
+            <td><input type="checkbox" disabled={!canEdit} checked={i.track_lot} onChange={(e) => patch(i.id, { trackLot: e.target.checked })} /></td>
+            <td><input type="checkbox" disabled={!canEdit} checked={i.controlled} onChange={(e) => patch(i.id, { controlled: e.target.checked })} /></td>
+            <td><input type="checkbox" disabled={!canEdit} checked={i.billable} onChange={(e) => patch(i.id, { billable: e.target.checked })} /></td>
+            <td className="right">{canEdit ? <input inputMode="numeric" style={{ width: 90 }} defaultValue={i.sell_price ?? ''} onBlur={(e) => {
+              const v = e.target.value.trim(); if (v === String(i.sell_price ?? '')) return; patch(i.id, { sellPrice: v === '' ? null : Number(v) });
+            }} /> : (i.sell_price != null ? fmt(i.sell_price) : '—')}</td>
+            <td><input type="checkbox" disabled={!canEdit} checked={i.active} onChange={(e) => patch(i.id, { active: e.target.checked })} /></td>
+          </tr>))}</tbody>
+      </table>
+      {canEdit && (
+        <div className="row" style={{ marginTop: 8, flexWrap: 'wrap' }}>
+          <input placeholder="Tên hàng mới (vd. Bơm tiêm 3 ml, Bút bi)" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+          <input placeholder="ĐVT" style={{ width: 80 }} value={form.unit} onChange={(e) => setForm({ ...form, unit: e.target.value })} />
+          <select value={form.kind} onChange={(e) => setForm({ ...form, kind: e.target.value })}>{Object.entries(KIND_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>
+          <select value={form.groupCode} onChange={(e) => setForm({ ...form, groupCode: e.target.value })}><option value="">— Nhóm —</option>{groups.map((g) => <option key={g.code} value={g.code}>{g.name}</option>)}</select>
+          <button disabled={form.name.trim().length < 2 || !form.groupCode} onClick={() => run(async () => {
+            await api('POST', '/api/items', form); setForm({ ...form, name: '' }); await load(); await onChange();
+          }, 'Đã thêm mặt hàng.')}>Thêm</button>
+          <button className="ghost" onClick={() => { const name = prompt('Tên nhóm mới'); if (name?.trim()) run(async () => { await api('POST', '/api/item-groups', { name }); await load(); }, 'Đã thêm nhóm.'); }}>Thêm nhóm</button>
+        </div>
+      )}
+    </div>
   );
 }

@@ -16,15 +16,17 @@ export const VOUCHER_LABEL: Record<string, string> = {
 export const STOCK_APPROVERS = ['supervisor', 'admin', 'director'];
 
 const today = () => new Date(Date.now() + 7 * 3600_000).toISOString().slice(0, 10);
+/** Hàng không quản lý lô, hạn dùng */
+export const NO_LOT = 'KHONG-LO';
+export const NO_EXPIRY = '9999-12-31';
 
 export async function receiveStock(tx: Tx, actor: Actor, b: {
   stationId: string; drugId?: number | null; drugName?: string | null; unit?: string | null;
-  lot: string; expiry: string; qty: number; supplier?: string | null; receiptId?: string | null;
+  lot?: string | null; expiry?: string | null; qty: number; supplier?: string | null; receiptId?: string | null;
 }) {
   const station = await one(tx, 'SELECT id, active FROM stations WHERE id = $1', [b.stationId]);
   if (!station) throw new HttpError(404, 'Không tìm thấy điểm');
   if (!station.active) throw new HttpError(409, `Điểm ${b.stationId} đang tạm ngưng, không nhập kho được`);
-  if (b.expiry < today()) throw new HttpError(409, `Lô ${b.lot} đã hết hạn (${b.expiry}), không nhập kho`);
   let drugId = b.drugId ?? null;
   if (!drugId) {
     const name = b.drugName?.trim();
@@ -33,7 +35,14 @@ export async function receiveStock(tx: Tx, actor: Actor, b: {
                              ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name RETURNING id`, [name, b.unit?.trim() || 'ống']);
     drugId = d.id;
   }
-  const lotCode = b.lot.trim();
+  // Vật tư không hạn, văn phòng phẩm: không bắt số lô, hạn dùng; gộp vào một "lô" KHONG-LO mỗi nơi
+  const item = await one(tx, 'SELECT name, track_lot FROM drugs WHERE id = $1', [drugId]);
+  if (!item) throw new HttpError(404, 'Không tìm thấy mặt hàng');
+  const lotCode = b.lot?.trim() || (item.track_lot ? '' : NO_LOT);
+  const expiry = b.expiry || (item.track_lot ? '' : NO_EXPIRY);
+  if (!lotCode || !expiry) throw new HttpError(400, `${item.name} quản lý theo lô: nhập số lô và hạn dùng`);
+  if (expiry < today()) throw new HttpError(409, `Lô ${lotCode} đã hết hạn (${expiry}), không nhập kho`);
+  b = { ...b, expiry };
   const existing = await one(tx, 'SELECT * FROM stock_lots WHERE station_id = $1 AND vehicle_id IS NULL AND drug_id = $2 AND lot = $3 FOR UPDATE', [b.stationId, drugId, lotCode]);
   let lot;
   if (existing) {
@@ -95,16 +104,18 @@ function requireWitness(lots: { controlled: boolean; drug_name: string }[], witn
 
 /* ---------- Cơ số xe ---------- */
 
-/** Thuốc trên xe so với cơ số chuẩn theo loại xe; lô hết hạn không tính */
+/** Thuốc, vật tư trên xe so với cơ số chuẩn theo loại xe, kèm nhóm hàng; lô hết hạn không tính */
 export async function vehicleParStatus(q: Queryable, vehicleId: string) {
   const v = await one(q, 'SELECT id, type, station_id FROM vehicles WHERE id = $1', [vehicleId]);
   if (!v) throw new HttpError(404, 'Không tìm thấy xe');
   const rows = await many(q, `
-    SELECT d.id AS drug_id, d.name AS drug_name, d.unit, d.controlled, p.qty::float AS par,
+    SELECT d.id AS drug_id, d.name AS drug_name, d.unit, d.controlled, d.kind, d.code, d.track_lot, g.code AS group_code, g.name AS group_name,
+           p.qty::float AS par,
            coalesce((SELECT sum(l.qty) FROM stock_lots l WHERE l.vehicle_id = $1 AND l.drug_id = d.id AND l.expiry >= vn_today()), 0)::float AS on_vehicle,
-           coalesce((SELECT sum(l.qty) FROM stock_lots l WHERE l.station_id = $3 AND l.vehicle_id IS NULL AND l.drug_id = d.id AND l.expiry >= vn_today()), 0)::float AS in_station
-      FROM par_levels p JOIN drugs d ON d.id = p.drug_id
-     WHERE p.vehicle_type = $2 ORDER BY d.name`, [vehicleId, v.type, v.station_id]);
+           coalesce((SELECT sum(l.qty) FROM stock_lots l WHERE l.station_id = $3 AND l.vehicle_id IS NULL AND l.drug_id = d.id AND l.expiry >= vn_today()), 0)::float AS in_station,
+           (SELECT min(l.expiry) FROM stock_lots l WHERE l.vehicle_id = $1 AND l.drug_id = d.id AND l.qty > 0 AND l.expiry < '9999-12-31') AS nearest_expiry
+      FROM par_levels p JOIN drugs d ON d.id = p.drug_id JOIN item_groups g ON g.code = d.group_code
+     WHERE p.vehicle_type = $2 ORDER BY g.sort, d.name`, [vehicleId, v.type, v.station_id]);
   const items = rows.map((r) => ({ ...r, missing: Math.max(0, r.par - r.on_vehicle) }));
   return { vehicleId, type: v.type, stationId: v.station_id, items, short: items.filter((i) => i.missing > 0).length };
 }
@@ -250,7 +261,7 @@ export async function lotsForVehicle(q: Queryable, vehicleId: string) {
            CASE WHEN l.vehicle_id IS NULL THEN 'kho' ELSE 'xe' END AS place
       FROM stock_lots l JOIN drugs d ON d.id = l.drug_id JOIN vehicles v ON v.id = $1
      WHERE (l.vehicle_id = v.id OR (l.vehicle_id IS NULL AND l.station_id = v.station_id))
-       AND l.qty > 0 AND l.expiry >= vn_today() AND d.active
+       AND l.qty > 0 AND l.expiry >= vn_today() AND d.active AND d.kind IN ('thuoc', 'dich_truyen')
      ORDER BY d.name, (l.vehicle_id IS NULL), l.expiry, l.received_at`, [vehicleId]);
 }
 

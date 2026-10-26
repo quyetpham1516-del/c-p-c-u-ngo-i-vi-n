@@ -349,3 +349,8 @@ td.cell-khong_dat { color: var(--p1); background: color-mix(in srgb, var(--p1) 1
 .share-vitals > div { display: flex; flex-direction: column; min-width: 84px; padding: 8px 10px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel-2); }
 .share-vitals span { font-size: 12px; color: var(--muted); }
 .share-vitals b { font-size: 22px; }
+
+/* Bảng cơ số dạng bảng tính */
+table.sheet td, table.sheet th { border-bottom: 1px solid var(--line); padding: 4px 6px; }
+table.sheet tr.group-row td { background: var(--panel-2); padding-top: 6px; padding-bottom: 6px; }
+@media print { table.sheet td, table.sheet th { border: 1px solid #999; color: #000; } table.sheet tr.group-row td { background: #eee; } }

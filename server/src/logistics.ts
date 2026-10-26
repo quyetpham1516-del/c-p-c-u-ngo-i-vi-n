@@ -81,7 +81,7 @@ export async function cancelPurchaseOrder(tx: Tx, actor: Actor, role: string, id
  * Không nhận quá số lượng đặt; nhận đủ mọi dòng thì đơn chuyển "Đã nhận đủ".
  */
 export async function receivePurchaseOrder(tx: Tx, actor: Actor, id: string, b: {
-  invoiceNo?: string | null; note?: string | null; lines: { lineId: number; lot: string; expiry: string; qty: number }[];
+  invoiceNo?: string | null; note?: string | null; lines: { lineId: number; lot?: string | null; expiry?: string | null; qty: number }[];
 }) {
   const po = await one(tx, `SELECT o.*, s.name AS supplier_name FROM purchase_orders o JOIN qm_suppliers s ON s.id = o.supplier_id
                              WHERE o.id = $1 FOR UPDATE OF o`, [id]);

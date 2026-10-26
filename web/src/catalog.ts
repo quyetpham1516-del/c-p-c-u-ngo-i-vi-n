@@ -56,3 +56,28 @@ export async function searchIcd(q: string): Promise<{ code: string; name: string
   if (q.trim().length < 2) return [];
   try { return await api('GET', `/api/icd10?q=${encodeURIComponent(q.trim())}`); } catch { return []; }
 }
+
+/** Phạm vi thực hiện theo chức danh: danh sách giới hạn, kíp trên xe, bác sĩ để chọn khi ghi y lệnh trao đổi */
+export interface ScopeRule { id: number; kind: 'thuoc' | 'can_thiep'; ref: string; label: string; allowed: string[] }
+export interface ScopeCrew { id: string; full_name: string; title: string | null; category: string; crew_role: string | null; grants: number[] }
+export interface ScopeContext { vehicleId: string | null; rules: ScopeRule[]; crew: ScopeCrew[]; doctors: { full_name: string; license_no: string | null }[]; categories: Record<string, string> }
+export const useScope = (transferId: string) =>
+  useCached<ScopeContext | null>('cat:scope', `/api/scope/context?transferId=${encodeURIComponent(transferId)}`, null)[0];
+
+export interface LabType { code: string; name: string; unit: string | null; normal_low: number | null; normal_high: number | null }
+export const useLabTypes = () => useCached<LabType[]>('cat:lab-types', '/api/lab-types', [])[0];
+
+export const ruleKey = (r: Pick<ScopeRule, 'kind' | 'ref'>) => `${r.kind}:${r.ref}`;
+
+/** Cùng cách tính với máy chủ khi ký: mục giới hạn đã dùng mà kíp không ai đủ phạm vi, chưa ghi bác sĩ trao đổi */
+export function scopeCheck(e: any, ctx: ScopeContext | null) {
+  if (!ctx) return { used: [] as ScopeRule[], uncovered: [] as ScopeRule[] };
+  const care = e.care ?? {};
+  const meds: any[] = e.medications ?? [];
+  const used = ctx.rules.filter((r) => r.kind === 'can_thiep'
+    ? care[r.ref] === true
+    : meds.some((m) => (m.drugId != null && String(m.drugId) === r.ref) || (m.name && m.name.trim().toLowerCase() === r.label.toLowerCase())));
+  const consulted = new Set((e.consults ?? []).filter((c: any) => c.doctor?.trim()).flatMap((c: any) => c.items ?? []));
+  const uncovered = used.filter((r) => !ctx.crew.some((m) => r.allowed.includes(m.category) || m.grants.includes(r.id)) && !consulted.has(ruleKey(r)));
+  return { used, uncovered };
+}

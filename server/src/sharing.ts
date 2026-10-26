@@ -84,6 +84,9 @@ export async function shareView(q: Queryable, link: any) {
     diagnosis: e.diagnosis?.text ?? null,
     vitals: last ? { at: last.at ?? null, ...pick(last, ['hr', 'sbp', 'dbp', 'spo2', 'rr', 'temp', 'gcs', 'glucose']) } : null,
     arrest: e.arrest?.present === true,
+    // Cận lâm sàng tại chỗ, mỗi kết quả kèm giờ (mới nhất trước)
+    labs: (Array.isArray(e.labs) ? e.labs : []).filter((l: any) => l && l.value).slice(-12).reverse()
+      .map((l: any) => ({ at: l.at ?? null, name: String(l.name ?? l.type ?? ''), value: String(l.value), unit: l.unit ?? null })),
     vehicle,
     leftSceneAt: times.T10 ?? null,
     arrivedAt: times.T12 ?? null,

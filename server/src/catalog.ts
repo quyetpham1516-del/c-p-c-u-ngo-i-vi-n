@@ -272,6 +272,28 @@ export const SAMPLE_PRICES: [string, number, number, number, number][] = [
   ['ECMO', 10_000_000, 10, 60_000, 1_000_000], ['VC', 500_000, 10, 15_000, 100_000], ['DP', 800_000, 10, 20_000, 200_000],
 ];
 
+/**
+ * Phạm vi thực hiện mẫu (bản nháp để quản trị sửa theo quy định của trung tâm): thuốc và can thiệp chỉ bác sĩ tự làm;
+ * chức danh khác làm được khi ghi bác sĩ đã trao đổi. Chỉ nạp khi chưa có dòng nào.
+ */
+const SCOPE_DRUGS = ['amiodaron', 'midazolam', 'diazepam', 'morphin', 'fentanyl', 'ketamin', 'pethidin', 'nitroglycerin', 'furosemid', 'magnesi', 'oxytocin', 'tranexamic'];
+const SCOPE_CARE: [string, string, string[]][] = [
+  ['ett', 'Đặt nội khí quản', ['bac_si']],
+  ['lma', 'Đặt mask thanh quản', ['bac_si', 'cap_cuu_vien']],
+  ['defib', 'Sốc điện bằng tay', ['bac_si', 'cap_cuu_vien']],
+];
+
+async function seedScopeRules(pool: pg.Pool) {
+  if ((await pool.query('SELECT 1 FROM scope_rules LIMIT 1')).rowCount) return;
+  for (const d of SCOPE_DRUGS) {
+    await pool.query(`INSERT INTO scope_rules(kind, ref, label, allowed, note)
+                      SELECT 'thuoc', id::text, name, '{bac_si}', 'Bản nháp' FROM drugs WHERE name ~* $1 AND kind = 'thuoc' ON CONFLICT DO NOTHING`, [`^${d}`]);
+  }
+  for (const [ref, label, allowed] of SCOPE_CARE) {
+    await pool.query(`INSERT INTO scope_rules(kind, ref, label, allowed, note) VALUES ('can_thiep', $1, $2, $3, 'Bản nháp') ON CONFLICT DO NOTHING`, [ref, label, allowed]);
+  }
+}
+
 export async function seedCatalog(pool: pg.Pool, opts: { force?: boolean } = {}) {
   const hosp = await importHospitals(pool, BUNDLED_HOSPITALS);
   for (const h of HOSPITALS) {
@@ -305,6 +327,7 @@ export async function seedCatalog(pool: pg.Pool, opts: { force?: boolean } = {})
   // Phân loại cho sổ thuốc kiểm soát đặc biệt; chỉ điền chỗ còn trống để không ghi đè dược sĩ đã chỉnh
   await pool.query(`UPDATE drugs SET control_class = CASE WHEN name ~* '^(morphin|fentanyl|pethidin)' THEN 'gay_nghien' ELSE 'huong_than' END
                      WHERE controlled AND control_class IS NULL AND name ~* '^(morphin|fentanyl|pethidin|midazolam|diazepam|ketamin)'`);
+  await seedScopeRules(pool);
   for (const [name, m, i, c] of EQUIPMENT_TYPES) {
     await pool.query('INSERT INTO equipment_types(name, maintenance_days, inspection_days, calibration_days) VALUES ($1,$2,$3,$4) ON CONFLICT DO NOTHING', [name, m, i, c]);
   }

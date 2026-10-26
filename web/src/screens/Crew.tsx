@@ -7,8 +7,6 @@ import { FLAG_LABEL } from '../components/Triage';
 import { startAlarm, unlockAudio } from '../alarm';
 import { allDrafts, loadDraft, saveDraft, startBackgroundSync, type Draft } from '../offline';
 
-const CREW_ROLES = ['Trưởng kíp', 'Bác sĩ', 'Điều dưỡng', 'Y sĩ', 'Cấp cứu viên', 'Kỹ thuật viên', 'Lái xe'];
-
 /** Các bước trên máy tính bảng; mỗi nút ghi một mốc thời gian (mục 5.2) */
 const STEPS: { key: string; label: string; status?: string; milestone?: string; from: string[] }[] = [
   { key: 'S4', label: 'Xuất phát', status: 'S4', from: ['S3'] },
@@ -25,7 +23,16 @@ const STEPS: { key: string; label: string; status?: string; milestone?: string; 
 export function Crew() {
   const [cur, setCur] = useState<any>(null);
   const [vehicles, setVehicles] = useState<any[]>([]);
-  const [shiftForm, setShiftForm] = useState({ vehicleId: '', crewRole: 'Trưởng kíp' });
+  const [shiftForm, setShiftForm] = useState({ vehicleId: '', crewRole: '' });
+  /** Vai trò trong kíp theo danh mục quản trị; người được quy định vai trò chỉ thấy các vai trò đó */
+  const [crewRoles, setCrewRoles] = useState<string[]>([]);
+  useEffect(() => {
+    api<{ name: string }[]>('GET', '/api/crew-roles?mine=1').then((r) => {
+      const names = r.map((x) => x.name);
+      setCrewRoles(names);
+      setShiftForm((f) => (names.includes(f.crewRole) ? f : { ...f, crewRole: names[0] ?? '' }));
+    }).catch(() => {});
+  }, []);
   const [error, setError] = useState('');
   const [draft, setDraft] = useState<Draft | null>(null);
   const [drafts, setDrafts] = useState<Draft[]>([]);
@@ -161,11 +168,11 @@ export function Crew() {
           </label>
           <label className="field">Vai trò trên xe
             <select value={shiftForm.crewRole} onChange={(e) => setShiftForm({ ...shiftForm, crewRole: e.target.value })}>
-              {CREW_ROLES.map((r) => <option key={r}>{r}</option>)}
+              {crewRoles.map((r) => <option key={r}>{r}</option>)}
             </select>
           </label>
           {error && <div className="error">{error}</div>}
-          <button className="primary big" disabled={!shiftForm.vehicleId} onClick={() => { unlockAudio(); act(async () => {
+          <button className="primary big" disabled={!shiftForm.vehicleId || !shiftForm.crewRole} onClick={() => { unlockAudio(); act(async () => {
             const r = await api<{ warnings?: string[] }>('POST', '/api/crew/shift', shiftForm);
             if (r.warnings?.length) alert(`Đã nhận ca. Lưu ý hồ sơ: ${r.warnings.join('; ')}`);
           }); }}>Bắt đầu ca</button>

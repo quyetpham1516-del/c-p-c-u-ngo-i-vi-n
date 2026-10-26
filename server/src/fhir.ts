@@ -199,6 +199,19 @@ export function transferBundle(t: TransferInput) {
   // context chỉ dùng cho R4; bỏ trường encounter (không có trong MedicationAdministration R4)
   for (const en of entries) if (en.resource.resourceType === 'MedicationAdministration') delete en.resource.encounter;
 
+  // Cận lâm sàng tại chỗ: mỗi kết quả một Observation có giờ riêng (category laboratory)
+  const labRefs = (Array.isArray(e.labs) ? e.labs : []).filter((l: any) => l.value).map((l: any, k: number) => {
+    const n = Number(String(l.value).replace(',', '.'));
+    return add({
+      resourceType: 'Observation', status: 'final',
+      category: [{ coding: [{ system: 'http://terminology.hl7.org/CodeSystem/observation-category', code: 'laboratory' }] }],
+      code: { text: l.name ?? l.type }, ...ctx,
+      effectiveDateTime: toInstant(l.at, base) ?? start,
+      ...(Number.isFinite(n) && l.unit ? { valueQuantity: { value: n, unit: l.unit } } : { valueString: `${l.value}${l.unit ? ` ${l.unit}` : ''}` }),
+      ...(l.note ? { note: [{ text: l.note }] } : {}),
+    }, 'lab', String(k));
+  });
+
   const allergyRefs: string[] = [];
   if (e.sample?.allergy && e.sample?.allergies) {
     allergyRefs.push(add({
@@ -226,6 +239,8 @@ export function transferBundle(t: TransferInput) {
       section('Tiền sử (SAMPLE)', [e.sample?.symptoms, e.sample?.allergy ? `Dị ứng: ${e.sample.allergies ?? 'có'}` : null, e.sample?.medications && `Thuốc đang dùng: ${e.sample.medications}`, e.sample?.pastHistory && `Tiền sử: ${e.sample.pastHistory}`, e.sample?.events], allergyRefs),
       section('Chẩn đoán', [e.diagnosis?.icd10 ? `${e.diagnosis.icd10} ${e.diagnosis.icdName ?? ''}` : null, e.diagnosis?.text], condRefs),
       section('Sinh hiệu', [lastVital && `Lần đo cuối ${lastVital.at}: mạch ${lastVital.hr ?? '—'}, HA ${lastVital.sbp ?? '—'}/${lastVital.dbp ?? '—'}, SpO2 ${lastVital.spo2 ?? '—'}%, nhịp thở ${lastVital.rr ?? '—'}, GCS ${lastVital.gcs ?? '—'}`, `${vitals.length} lần đo`], obsRefs),
+      section('Cận lâm sàng tại chỗ', (e.labs ?? []).filter((l: any) => l.value).map((l: any) => `${l.at ?? ''} ${l.name ?? l.type}: ${l.value}${l.unit ? ` ${l.unit}` : ''}`), labRefs),
+      section('Y lệnh qua bác sĩ trao đổi', (e.consults ?? []).map((c: any) => `${c.at ?? ''} ${c.doctor}${c.mode ? ` (${({ dien_thoai: 'điện thoại', video: 'video', truc_tiep: 'trực tiếp' } as Record<string, string>)[c.mode] ?? c.mode})` : ''}${c.note ? `: ${c.note}` : ''}`)),
       section('Can thiệp', (e.interventions ?? []).map((p: any) => `${p.at ?? ''} ${p.name}`), procRefs),
       section('Thuốc đã dùng', (e.medications ?? []).map((m: any) => `${m.at ?? ''} ${m.name} ${m.dose ?? ''} ${m.route ?? ''}${m.lot ? ` (lô ${m.lot})` : ''}`), medRefs),
       section('Bàn giao', [e.disposition?.type && DISPO[e.disposition.type], hospitalName && `Nơi nhận: ${[e.disposition?.department, hospitalName].filter(Boolean).join(' – ')}`,

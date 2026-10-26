@@ -151,7 +151,12 @@ export function registerFleet(app: FastifyInstance, { pool, hub }: Ctx) {
       await tx.query('UPDATE crew_shifts SET ended_at = now() WHERE user_id = $1 AND ended_at IS NULL', [actor.id]);
       const v = await one(tx, 'SELECT status, station_id FROM vehicles WHERE id = $1', [b.vehicleId]);
       if (!v) throw new HttpError(404, 'Không tìm thấy xe');
-      const home = await one(tx, 'SELECT station_id FROM users WHERE id = $1', [actor.id]);
+      const home = await one(tx, 'SELECT station_id, crew_roles FROM users WHERE id = $1', [actor.id]);
+      // Vai trò trong kíp theo danh mục admin; người được admin quy định vai trò thì chỉ nhận các vai trò đó
+      const role = await one(tx, 'SELECT active FROM crew_roles WHERE name = $1', [b.crewRole]);
+      if (!role?.active) throw new HttpError(400, `Vai trò "${b.crewRole}" không có trong danh mục vai trò trong kíp`);
+      if (home?.crew_roles?.length && !home.crew_roles.includes(b.crewRole))
+        throw new HttpError(403, `Bạn được quản trị phân vai trò: ${home.crew_roles.join(', ')}`);
       if (home?.station_id && home.station_id !== v.station_id) throw new HttpError(403, `Bạn được phân ở điểm ${home.station_id}, xe ${b.vehicleId} thuộc điểm ${v.station_id}`);
       await tx.query('INSERT INTO crew_shifts(vehicle_id, user_id, crew_role) VALUES ($1,$2,$3)', [b.vehicleId, actor.id, b.crewRole]);
       if (v.status === 'S9') await setVehicleStatus(tx, actor, b.vehicleId, 'S1');

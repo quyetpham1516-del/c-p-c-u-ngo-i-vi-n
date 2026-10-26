@@ -18,6 +18,7 @@ import { registerEquipment } from './routes/equipment.js';
 import { registerStock } from './routes/stock.js';
 import { registerLogistics } from './routes/logistics.js';
 import { registerScope } from './routes/scope.js';
+import { registerNotify } from './routes/notify.js';
 import { registerQuality } from './routes/quality.js';
 import { registerHr } from './routes/hr.js';
 import { registerFinance } from './routes/finance.js';
@@ -86,6 +87,7 @@ export async function buildApp(pool: pg.Pool, opts: { logger?: boolean } = {}) {
   registerStock(app, ctx);
   registerLogistics(app, ctx);
   registerScope(app, ctx);
+  registerNotify(app, ctx);
   registerEquipment(app, ctx);
   registerQuality(app, ctx);
   registerHr(app, ctx);

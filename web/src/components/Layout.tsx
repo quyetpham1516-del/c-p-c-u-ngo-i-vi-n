@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { api, ROLE_LABEL, session, type Role } from '../api';
 import { Brand } from '../Logo';
 import { SosBanner } from './Sos';
+import { Bell } from './Bell';
 
 const LINKS: { to: string; label: string; roles: Role[] }[] = [
   { to: '/eoc', label: 'Điều phối', roles: ['calltaker', 'dispatcher', 'supervisor', 'admin'] },
@@ -69,6 +70,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             </Link>
           ))}
         </nav>
+        {user && !setupOnly && <Bell path={path} />}
         <button className="ghost" onClick={toggleTheme} title="Đổi nền sáng/tối">Sáng/Tối</button>
         <div className="who">
           <div><b>{user?.name}</b></div>

@@ -9,7 +9,7 @@ import { HttpError, incidentSummary } from '../domain.js';
 import { actorOf, EOC_ROLES, guard, type Ctx, type Role } from '../http.js';
 import {
   ackCaseFeedback, addMaintenance, addVehicleDoc, arrestRegistry, BLOCKING_DOCS, caseCrew, declareMci, DOC_WARN_DAYS, endMci, fleetCompliance, ICS_ROLES,
-  incidentTrack, MAINTENANCE_KIND, MCI_LEVEL, MCI_SUPPORT_THRESHOLD, mciBoard, myCaseFeedback, recordOdometer, REVIEW_CRITERIA, REVIEW_REASONS, REVIEW_SCORE,
+  incidentTrack, MAINTENANCE_KIND, MCI_LEVEL, MCI_SUPPORT_THRESHOLD, mciBoard, saveSceneReport, myCaseFeedback, recordOdometer, REVIEW_CRITERIA, REVIEW_REASONS, REVIEW_SCORE,
   reviewQueue, saveArrestOutcome, saveCaseReview, saveVictim, startCaseReview, TRIAGE, UTSTEIN_LABELS, utsteinReport, VEHICLE_DOC_KIND, VICTIM_STATUS,
 } from '../ops.js';
 
@@ -157,6 +157,27 @@ export function registerOps(app: FastifyInstance, { pool, hub }: Ctx) {
     await withTx(pool, (tx) => endMci(tx, actorOf(req), id, b.note));
     await pushIncident(id);
     return mciBoard(pool, id);
+  });
+
+  /** Báo nhanh hiện trường đông nạn nhân: kíp được giao ca, tổng đài viên, điều phối */
+  const sceneBody = z.object({
+    red: z.number().int().min(0).max(5000), yellow: z.number().int().min(0).max(5000), green: z.number().int().min(0).max(5000), black: z.number().int().min(0).max(5000),
+    commanderPresent: z.boolean(), commanderName: opt(120), commanderUnit: opt(120), commanderPhone: opt(30),
+    hazards: opt(500), access: opt(500), resourcesNeeded: opt(500), note: opt(1000),
+  });
+  app.post('/api/ops/mci/:id/scene-report', { preHandler: guard('crew', 'calltaker', 'dispatcher', 'supervisor', 'admin') }, async (req) => {
+    const id = idParam(req.params);
+    await assertVictimAccess(req, id);
+    const b = sceneBody.parse(req.body);
+    const vehicle = req.user.role === 'crew' ? (await one(pool, 'SELECT vehicle_id FROM crew_shifts WHERE user_id = $1 AND ended_at IS NULL', [req.user.id]))?.vehicle_id ?? null : null;
+    const r = await withTx(pool, (tx) => saveSceneReport(tx, actorOf(req), id, vehicle, b));
+    await pushIncident(id);
+    return r;
+  });
+  app.get('/api/ops/mci/:id/scene-report', { preHandler: guard('crew', 'calltaker', 'dispatcher', 'supervisor', 'qa', 'admin', 'director') }, async (req) => {
+    const id = idParam(req.params);
+    await assertVictimAccess(req, id);
+    return one(pool, 'SELECT * FROM mci_scene_reports WHERE incident_id = $1 ORDER BY created_at DESC LIMIT 1', [id]);
   });
 
   const victimBody = z.object({

@@ -2,6 +2,7 @@ import { audit, type Actor } from './audit.js';
 import { many, nextCounter, one, type Queryable, type Tx } from './db.js';
 import { HttpError, incidentScope } from './domain.js';
 import { haversineKm } from './fleet.js';
+import { notifyRoles } from './notify.js';
 import { RESPONSE_TARGET_MIN } from './reports.js';
 
 /**
@@ -409,6 +410,47 @@ export async function saveVictim(tx: Tx, actor: Actor, incidentId: string, id: s
   }
 }
 
+export interface SceneReport {
+  red: number; yellow: number; green: number; black: number;
+  commanderPresent: boolean; commanderName?: string | null; commanderUnit?: string | null; commanderPhone?: string | null;
+  hazards?: string | null; access?: string | null; resourcesNeeded?: string | null; note?: string | null;
+}
+
+/**
+ * Báo nhanh từ hiện trường đông nạn nhân. Lần đầu thì kích hoạt quy trình đông nạn nhân (mức theo số ca nặng);
+ * báo sau có nhiều ca nặng hơn thì nâng mức. Có chỉ huy hiện trường thì ghi vào vai trò chỉ huy nếu còn trống.
+ */
+export async function saveSceneReport(tx: Tx, actor: Actor, incidentId: string, vehicleId: string | null, b: SceneReport) {
+  const inc = await one(tx, 'SELECT id, mci_declared_at, mci_level, mci_note, mci_roles FROM incidents WHERE id = $1', [incidentId]);
+  if (!inc) throw new HttpError(404, 'Không tìm thấy ca');
+  if (b.commanderPresent && !b.commanderName?.trim()) throw new HttpError(400, 'Có chỉ huy hiện trường: ghi họ tên chỉ huy');
+  const row = await one(tx, `
+    INSERT INTO mci_scene_reports(incident_id, red, yellow, green, black, commander_present, commander_name, commander_unit, commander_phone,
+                                  hazards, access, resources_needed, note, vehicle_id, reported_by)
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15) RETURNING *`,
+  [incidentId, b.red, b.yellow, b.green, b.black, b.commanderPresent, b.commanderName?.trim() || null, b.commanderUnit?.trim() || null,
+    b.commanderPhone?.trim() || null, b.hazards || null, b.access || null, b.resourcesNeeded || null, b.note || null, vehicleId, actor.id]);
+  const severe = b.red + b.yellow;
+  const level = Math.max(inc.mci_level ?? 1, severe >= MCI_SUPPORT_THRESHOLD ? 2 : 1);
+  const roles = { ...(inc.mci_roles ?? {}) } as Record<string, string>;
+  if (b.commanderPresent && b.commanderName && !roles.chi_huy) {
+    roles.chi_huy = [b.commanderName.trim(), b.commanderUnit?.trim(), b.commanderPhone?.trim()].filter(Boolean).join(' · ');
+  }
+  const summary = `Hiện trường báo: đỏ ${b.red}, vàng ${b.yellow}, xanh ${b.green}, đen ${b.black}`;
+  const activated = !inc.mci_declared_at;
+  if (activated || level !== inc.mci_level || JSON.stringify(roles) !== JSON.stringify(inc.mci_roles ?? {})) {
+    await declareMci(tx, actor, incidentId, { level, note: inc.mci_note ?? summary, roles });
+  }
+  const code = (await one(tx, 'SELECT code FROM incidents WHERE id = $1', [incidentId]))?.code;
+  await notifyRoles(tx, ['dispatcher', 'supervisor', 'director'], {
+    kind: 'mci_scene_report', incidentId, link: '/van-hanh',
+    title: `${activated ? 'Kích hoạt đông nạn nhân' : 'Cập nhật hiện trường đông nạn nhân'}: ca ${code}`,
+    body: `${summary}. ${b.commanderPresent ? `Chỉ huy hiện trường: ${roles.chi_huy ?? b.commanderName}` : 'Chưa có chỉ huy hiện trường'}${b.resourcesNeeded ? `. Cần thêm: ${b.resourcesNeeded}` : ''}`,
+  });
+  await audit(tx, incidentScope(incidentId), actor, 'mci.scene_report', 'incident', incidentId, { red: b.red, yellow: b.yellow, green: b.green, black: b.black, commander: b.commanderPresent });
+  return { report: row, activated, level };
+}
+
 export async function mciBoard(q: Queryable, incidentId: string) {
   const inc = await one(q, `SELECT i.id, i.code, i.address, i.mci_declared_at, i.mci_level, i.mci_note, i.mci_ended_at, i.mci_roles, u.full_name AS declared_by
                               FROM incidents i LEFT JOIN users u ON u.id = i.mci_declared_by WHERE i.id = $1`, [incidentId]);
@@ -432,7 +474,9 @@ export async function mciBoard(q: Queryable, incidentId: string) {
   const waitingRed = victims.filter((v) => v.triage === 'do' && v.status === 'hien_truong').length;
   if (waitingRed) advice.push(`${waitingRed} nạn nhân đỏ còn ở hiện trường: ưu tiên chuyển trước.`);
   for (const [h, c] of Object.entries(byHospital)) if (c.do >= 3) advice.push(`${h} đã nhận ${c.do} ca đỏ: cân nhắc phân sang bệnh viện khác.`);
-  return { incident: inc, victims, vehicles, byTriage, byHospital, advice, activeVehicles: vehicles.filter((v) => !v.ended_at).length };
+  const reports = await many(q, `SELECT r.*, u.full_name AS reported_by_name FROM mci_scene_reports r LEFT JOIN users u ON u.id = r.reported_by
+                                   WHERE r.incident_id = $1 ORDER BY r.created_at DESC LIMIT 20`, [incidentId]);
+  return { incident: inc, victims, vehicles, byTriage, byHospital, advice, reports, activeVehicles: vehicles.filter((v) => !v.ended_at).length };
 }
 
 /* ================= Xe: hồ sơ, bảo dưỡng ================= */

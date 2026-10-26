@@ -340,6 +340,19 @@ export function MciBoard({ id, meta, run, onBack }: Ctx & { id: string; onBack?:
         </div>}
       </div>
       {cmd && <MciCommand meta={meta} value={cmd} onCancel={() => setCmd(null)} onSave={(v) => run(async () => { await api('POST', `/api/ops/mci/${id}/declare`, v); setCmd(null); await load(); }, 'Đã cập nhật')} />}
+      {b.reports?.length > 0 && (
+        <div className="panel col">
+          <b>Hiện trường báo về</b>
+          {b.reports.slice(0, 5).map((r: any) => (
+            <div key={r.id} className="small">
+              <b>{at(r.created_at)}</b> · đỏ {r.red}, vàng {r.yellow}, xanh {r.green}, đen {r.black}
+              {' · '}{r.commander_present ? `Chỉ huy: ${[r.commander_name, r.commander_unit, r.commander_phone].filter(Boolean).join(' · ')}` : 'Chưa có chỉ huy hiện trường'}
+              {r.hazards ? ` · Nguy hiểm: ${r.hazards}` : ''}{r.access ? ` · Đường vào: ${r.access}` : ''}{r.resources_needed ? ` · Cần thêm: ${r.resources_needed}` : ''}{r.note ? ` · ${r.note}` : ''}
+              <span className="muted"> ({r.reported_by_name ?? '—'}{r.vehicle_id ? `, xe ${r.vehicle_id}` : ''})</span>
+            </div>
+          ))}
+        </div>
+      )}
       {b.advice.map((a: string) => <div key={a} className="alert amber">{a}</div>)}
       <div className="grid4">
         {Object.entries(meta.triage).map(([k, l]) => <div key={k} className={`panel ${TRIAGE_TONE[k]}`}><div className="small">{l}</div><div style={{ fontSize: 28, fontWeight: 700 }}>{b.byTriage[k]}</div></div>)}

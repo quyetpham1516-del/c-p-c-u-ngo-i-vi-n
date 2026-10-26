@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { api, fmtDuration, INFECTION_RISK, fmtTime, PRIORITY_LABEL, STATUS_LABEL, useLive, useNow } from '../api';
 import { ParSheet } from '../components/ParSheet';
+import { MciReport } from '../components/MciReport';
 import { EpcrForm } from '../components/EpcrForm';
 import { CrewSos } from '../components/Sos';
 import { FLAG_LABEL } from '../components/Triage';
@@ -291,6 +292,7 @@ export function Crew() {
         }}>Cập nhật cơ số</button>
       </div>
       {v.equipment_gaps && <div className="alert red">Xe đang thiếu thiết bị bắt buộc nên EOC không giao được: {v.equipment_gaps}. Báo kỹ thuật hoặc trưởng ca.</div>}
+      {inc && ['S4', 'S5', 'S6', 'S7', 'S8'].includes(v.status) && <MciReport incidentId={inc.id} />}
       <div className="panel">
         <div className="row" style={{ justifyContent: 'space-between' }}>
           <h2 style={{ margin: 0 }}>Phiếu chuyển viện (ePCR)</h2>

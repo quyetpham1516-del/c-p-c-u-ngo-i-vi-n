@@ -13,14 +13,27 @@ if [ ! -x "$T/venv/bin/cmake" ]; then
 fi
 
 if [ ! -x "$D/src/build/bin/whisper-server" ]; then
-  TAG=$(curl -fs https://api.github.com/repos/ggml-org/whisper.cpp/releases/latest | grep -m1 '"tag_name"' | cut -d'"' -f4)
+  # grep -m1 đóng ống sớm làm curl báo lỗi: không để pipefail dừng cả bộ cài
+  TAG=$(curl -fs https://api.github.com/repos/ggml-org/whisper.cpp/releases/latest | grep -m1 '"tag_name"' | cut -d'"' -f4 || true)
   [ -n "$TAG" ] || TAG=v1.8.2
   echo "Tải whisper.cpp $TAG…"
   curl -fL --progress-bar -o src.tar.gz "https://github.com/ggml-org/whisper.cpp/archive/refs/tags/$TAG.tar.gz"
   rm -rf src && mkdir src && tar -xzf src.tar.gz -C src --strip-components=1 && rm -f src.tar.gz
   echo "Dựng whisper-server (vài phút)…"
-  "$T/venv/bin/cmake" -S src -B src/build -DCMAKE_BUILD_TYPE=Release -DWHISPER_BUILD_TESTS=OFF >/dev/null
-  "$T/venv/bin/cmake" --build src/build --config Release -j 4 --target whisper-server >/dev/null
+  build() {
+    "$T/venv/bin/cmake" -S src -B src/build -DCMAKE_BUILD_TYPE=Release -DWHISPER_BUILD_TESTS=OFF >/dev/null &&
+    "$T/venv/bin/cmake" --build src/build --config Release -j 4 --target whisper-server >/dev/null
+  }
+  if ! build; then
+    # Command Line Tools cũ hơn SDK mặc định (lỗi "tapi error: malformed file"): dựng lại với SDK mới nhất cùng đời Command Line Tools
+    SDKS=/Library/Developer/CommandLineTools/SDKs
+    CLT_MAJOR=$(pkgutil --pkg-info=com.apple.pkg.CLTools_Executables 2>/dev/null | awk '/version:/ {split($2,a,"."); print a[1]}' || true)
+    SDK=$(ls -d "$SDKS"/MacOSX"${CLT_MAJOR}".*.sdk 2>/dev/null | grep -v 'MacOSX.sdk' | sort -V | tail -1 || true)
+    [ -n "$SDK" ] || { echo "Dựng whisper.cpp lỗi; cập nhật Command Line Tools (softwareupdate --list) rồi chạy lại"; exit 1; }
+    echo "Dựng lại với $(basename "$SDK") cho khớp Command Line Tools…"
+    rm -rf src/build
+    SDKROOT="$SDK" build || { echo "Dựng whisper.cpp lỗi; cập nhật Command Line Tools rồi chạy lại"; exit 1; }
+  fi
 fi
 
 if [ ! -s "models/ggml-$MODEL.bin" ]; then

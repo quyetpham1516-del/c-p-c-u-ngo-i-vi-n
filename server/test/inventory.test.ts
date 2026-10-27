@@ -38,7 +38,7 @@ describe('kho tổng phát cho kho điểm', () => {
     expect((await ddBls('POST', '/api/requisitions', { stationId: 'TR-02', lines: [{ drugId: drugA, qty: 20 }] })).http).toBe(403);
     const r = await ddBls('POST', '/api/requisitions', { stationId: 'TR-01', lines: [{ drugId: drugA, qty: 20 }, { drugId: drugB, qty: 5 }], note: 'Dùng nhiều tuần này' });
     expect(r.http).toBe(200);
-    expect(r.code).toMatch(/^PL-\d{4}-00001$/);
+    expect(r.code).toMatch(/^PDX-\d{4}-00001$/);
     expect((await ddVc('GET', '/api/requisitions')).data).toHaveLength(0);
     expect((await ddBls('POST', `/api/requisitions/${r.id}/decide`, { approve: true })).http).toBe(403);
     const detail = await duoc('GET', `/api/requisitions/${r.id}`);

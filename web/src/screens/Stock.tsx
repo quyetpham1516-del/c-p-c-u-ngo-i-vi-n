@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useMemo, useState } from 'react';
 import { api, download, session } from '../api';
 import { useHash } from '../hashNav';
+import { StockHistory } from '../components/StockHistory';
 import { useStations } from '../catalog';
 import { ParSheet, type ParItem } from '../components/ParSheet';
 import { Requisitions } from '../components/Requisitions';
@@ -21,7 +22,7 @@ interface Voucher {
 
 const KIND: Record<string, string> = { cap_xe: 'Cấp cơ số xe', tra_kho: 'Xe trả kho', dieu_chuyen: 'Điều chuyển', kiem_ke: 'Kiểm kê', huy: 'Hủy thuốc' };
 const VSTATUS: Record<string, string> = { cho_duyet: 'Chờ duyệt', da_duyet: 'Đã duyệt', tu_choi: 'Từ chối' };
-const TABS = ['Tồn kho điểm', 'Cơ số xe', 'Phiếu lĩnh kho tổng', 'Kiểm kê theo lịch', 'Báo cáo kho', 'Phiếu kho', 'Cảnh báo, đặt hàng', 'Định mức, cơ số chuẩn'] as const;
+const TABS = ['Tồn kho điểm', 'Cơ số xe', 'Phiếu đề xuất, phiếu lĩnh', 'Kiểm kê theo lịch', 'Báo cáo kho', 'Lịch sử xuất nhập', 'Phiếu kho', 'Cảnh báo, đặt hàng', 'Định mức, cơ số chuẩn'] as const;
 const today = () => new Date().toISOString().slice(0, 10);
 const fmt = (n: number) => Number(n).toLocaleString('vi-VN');
 const at = (s: string) => new Date(s).toLocaleString('vi-VN', { dateStyle: 'short', timeStyle: 'short' });
@@ -41,7 +42,7 @@ export function Stock() {
   // Bấm thông báo (kể cả khi đang ở trang Kho): chuyển đúng thẻ theo phần "#..." của đường dẫn
   const { hash, tick } = useHash();
   useEffect(() => {
-    const t = hash.startsWith('phieu-linh') ? 'Phiếu lĩnh kho tổng' : hash.startsWith('kiem-ke') ? 'Kiểm kê theo lịch'
+    const t = hash.startsWith('phieu-linh') ? 'Phiếu đề xuất, phiếu lĩnh' : hash.startsWith('kiem-ke') ? 'Kiểm kê theo lịch'
       : hash.startsWith('phieu-kho') ? 'Phiếu kho' : hash.startsWith('bao-cao') ? 'Báo cáo kho' : null;
     if (t && (TABS as readonly string[]).includes(t)) setTab(t as (typeof TABS)[number]);
   }, [hash, tick]);
@@ -72,7 +73,8 @@ export function Stock() {
       {msg && <div className="alert green">{msg}</div>}
       {stationId && tab === 'Tồn kho điểm' && <LotsTab {...ctx} />}
       {stationId && tab === 'Cơ số xe' && <VehiclesTab {...ctx} />}
-      {stationId && tab === 'Phiếu lĩnh kho tổng' && <Requisitions stationId={stationId} drugs={drugs} />}
+      {stationId && tab === 'Phiếu đề xuất, phiếu lĩnh' && <Requisitions stationId={stationId} drugs={drugs} />}
+      {stationId && tab === 'Lịch sử xuất nhập' && <StockHistory stationId={stationId} drugs={drugs} />}
       {stationId && tab === 'Kiểm kê theo lịch' && <Stocktakes stationId={stationId} />}
       {stationId && tab === 'Báo cáo kho' && <InventoryReports stationId={stationId} />}
       {stationId && tab === 'Phiếu kho' && <VouchersTab {...ctx} />}

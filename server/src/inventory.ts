@@ -1,4 +1,6 @@
+import { createHash } from 'node:crypto';
 import { audit, type Actor } from './audit.js';
+import { signDocument } from './pki.js';
 import { many, nextCounter, one, type Queryable, type Tx } from './db.js';
 import { HttpError } from './domain.js';
 
@@ -28,11 +30,16 @@ async function requireCentral(q: Queryable) {
   return c;
 }
 
-async function newCode(tx: Tx) {
+/** Phiếu đề xuất (điểm xin khi thiếu): PDX-…; phiếu lĩnh (kho tổng phát định kỳ): PL-… */
+async function newCode(tx: Tx, source: string) {
   const year = new Date(Date.now() + 7 * 3600_000).toISOString().slice(0, 4);
-  const n = await nextCounter(tx, 'requisition', year);
-  return `PL-${year}-${String(n).padStart(5, '0')}`;
+  const periodic = source === 'tu_dong';
+  const n = await nextCounter(tx, periodic ? 'requisition' : 'proposal_slip', year);
+  return `${periodic ? 'PL' : 'PDX'}-${year}-${String(n).padStart(5, '0')}`;
 }
+
+/** Tên phiếu theo nguồn: điểm tự xin là phiếu đề xuất, kho tổng phát xuống là phiếu lĩnh */
+export const slipName = (source: string) => (source === 'tu_dong' ? 'Phiếu lĩnh' : 'Phiếu đề xuất');
 
 export async function notifyStation(tx: Tx, stationId: string, title: string, body: string | null, link = '/kho#phieu-linh', kind = 'requisition') {
   // Người làm ở điểm (kíp, dược), quản lý điểm và người thay, trưởng bộ phận cấp cứu nhận thông báo
@@ -64,30 +71,55 @@ export async function shortages(q: Queryable, stationId: string) {
     .then((rows) => rows.map((r) => ({ ...r, need: Math.max(0, Math.ceil(r.min_qty - r.on_hand - r.pending)) })).filter((r) => r.need > 0));
 }
 
-export async function createRequisition(tx: Tx, actor: Actor, b: { stationId: string; lines: { drugId: number; qty: number }[]; note?: string | null; source?: 'kho_diem' | 'tu_dong' }) {
+export async function createRequisition(tx: Tx, actor: Actor, b: { stationId: string; lines: { drugId: number; qty: number }[]; note?: string | null; source?: 'kho_diem' | 'tu_dong'; urgent?: boolean; shortageIds?: string[] }) {
   const central = await requireCentral(tx);
-  if (b.stationId === central) throw new HttpError(400, 'Kho tổng không lập phiếu lĩnh cho chính mình');
+  if (b.stationId === central) throw new HttpError(400, 'Kho tổng không lập phiếu cho chính mình');
   const st = await one(tx, 'SELECT active FROM stations WHERE id = $1', [b.stationId]);
   if (!st?.active) throw new HttpError(409, 'Điểm không có hoặc đang tạm ngưng');
   if (new Set(b.lines.map((l) => l.drugId)).size !== b.lines.length) throw new HttpError(400, 'Mỗi mặt hàng ghi một dòng');
   const auto = b.source === 'tu_dong';
-  const r = await one(tx, `INSERT INTO stock_requisitions(code, station_id, central_id, source, status, note, created_by, decided_by, decided_at)
-                           VALUES ($1,$2,$3,$4,$5,$6,$7, CASE WHEN $8 THEN $7::uuid END, CASE WHEN $8 THEN now() END) RETURNING *`,
-  [await newCode(tx), b.stationId, central, b.source ?? 'kho_diem', auto ? 'da_duyet' : 'cho_duyet', b.note ?? null, actor.id, auto]);
+  const r = await one(tx, `INSERT INTO stock_requisitions(code, station_id, central_id, source, status, note, created_by, decided_by, decided_at, urgent)
+                           VALUES ($1,$2,$3,$4,$5,$6,$7, CASE WHEN $8 THEN $7::uuid END, CASE WHEN $8 THEN now() END, $9) RETURNING *`,
+  [await newCode(tx, b.source ?? 'kho_diem'), b.stationId, central, b.source ?? 'kho_diem', auto ? 'da_duyet' : 'cho_duyet', b.note ?? null, actor.id, auto, !!b.urgent]);
   for (const l of b.lines) {
     if (!(await one(tx, 'SELECT 1 FROM drugs WHERE id = $1 AND active', [l.drugId]))) throw new HttpError(400, 'Mặt hàng không có hoặc đã ngưng dùng');
     await tx.query('INSERT INTO stock_requisition_lines(requisition_id, drug_id, requested_qty, approved_qty) VALUES ($1,$2,$3,$4)',
       [r.id, l.drugId, l.qty, auto ? l.qty : null]);
   }
+  await signSlip(tx, actor, r.id, 'lap_phieu');
   await audit(tx, 'system', actor, auto ? 'requisition.auto_created' : 'requisition.created', 'stock_requisition', r.id, { code: r.code, stationId: b.stationId, lines: b.lines.length });
-  if (auto) await notifyStation(tx, b.stationId, `Kho tổng sẽ phát bù định mức: ${r.code}`, `${b.lines.length} mặt hàng`, `/kho#phieu-linh-${r.id}`);
-  else await notifyCentral(tx, `Phiếu lĩnh ${r.code} của ${b.stationId} chờ duyệt`, `${b.lines.length} mặt hàng`, false, `/kho#phieu-linh-${r.id}`);
+  if (b.shortageIds?.length) {
+    await tx.query(`UPDATE station_shortages SET requisition_id = $1, closed_by = $2, closed_at = now(), close_note = $3
+                     WHERE id = ANY($4::uuid[]) AND station_id = $5 AND closed_at IS NULL`, [r.id, actor.id, `Đưa vào ${r.code}`, b.shortageIds, b.stationId]);
+  }
+  if (auto) await notifyStation(tx, b.stationId, `Kho tổng phát phiếu lĩnh ${r.code}`, `${b.lines.length} mặt hàng theo định mức`, `/kho#phieu-linh-${r.id}`);
+  else await notifyCentral(tx, `${b.urgent ? 'KHẨN · ' : ''}Phiếu đề xuất ${r.code} của ${b.stationId} chờ duyệt`, `${b.lines.length} mặt hàng`, false, `/kho#phieu-linh-${r.id}`);
+  if (b.urgent) {
+    await tx.query(`INSERT INTO notifications(user_id, kind, title, body, link)
+                    SELECT u, 'requisition', $2, $3, $4 FROM (SELECT manager_id AS u FROM stations WHERE id = $1 UNION SELECT deputy_id FROM stations WHERE id = $1) x WHERE u IS NOT NULL`,
+    [b.stationId, `Kíp lập phiếu đề xuất khẩn ${r.code}`, `${actor.name ?? ''}: ${b.note ?? ''}`.trim(), `/kho#phieu-linh-${r.id}`]);
+  }
   return r;
+}
+
+/**
+ * Ký số nội bộ từng bước của phiếu (lập, duyệt, xuất kho, ký nhận): chuỗi ký gồm mã băm nội dung phiếu lúc đó
+ * (dòng hàng, lô xuất, số nhận), nên sửa phiếu sau khi ký là chữ ký không còn khớp.
+ */
+export const SLIP_STEPS = { lap_phieu: 1, duyet: 2, xuat_kho: 3, nhan_hang: 4 } as const;
+async function signSlip(tx: Tx, actor: Actor, id: string, purpose: keyof typeof SLIP_STEPS) {
+  if (!actor.id) return;
+  const content = await many(tx, `SELECT rl.drug_id, rl.requested_qty::text, rl.approved_qty::text,
+                                         coalesce(json_agg(json_build_object('lot', i.lot, 'qty', i.qty::text, 'recv', i.received_qty::text) ORDER BY i.id) FILTER (WHERE i.id IS NOT NULL), '[]') AS issues
+                                    FROM stock_requisition_lines rl LEFT JOIN stock_requisition_issues i ON i.line_id = rl.id
+                                   WHERE rl.requisition_id = $1 GROUP BY rl.id ORDER BY rl.id`, [id]);
+  const hash = createHash('sha256').update(JSON.stringify(content)).digest('hex');
+  await signDocument(tx, actor.id, { type: 'stock_requisition', id, version: SLIP_STEPS[purpose], contentHash: hash, purpose });
 }
 
 async function lockReq(tx: Tx, id: string) {
   const r = await one(tx, 'SELECT * FROM stock_requisitions WHERE id = $1 FOR UPDATE', [id]);
-  if (!r) throw new HttpError(404, 'Không tìm thấy phiếu lĩnh');
+  if (!r) throw new HttpError(404, 'Không tìm thấy phiếu');
   return r;
 }
 
@@ -107,8 +139,9 @@ export async function decideRequisition(tx: Tx, actor: Actor, id: string, b: { a
   }
   await tx.query(`UPDATE stock_requisitions SET status = $2, decided_by = $3, decided_at = now(), decision_note = $4 WHERE id = $1`,
     [id, b.approve ? 'da_duyet' : 'tu_choi', actor.id, b.note ?? null]);
+  if (b.approve) await signSlip(tx, actor, id, 'duyet');
   await audit(tx, 'system', actor, b.approve ? 'requisition.approved' : 'requisition.rejected', 'stock_requisition', id, { code: r.code, note: b.note });
-  await notifyStation(tx, r.station_id, `Phiếu lĩnh ${r.code} ${b.approve ? 'đã duyệt, chờ xuất' : 'bị từ chối'}`, b.note ?? null, `/kho#phieu-linh-${r.id}`);
+  await notifyStation(tx, r.station_id, `${slipName(r.source)} ${r.code} ${b.approve ? 'đã duyệt, chờ xuất' : 'bị từ chối'}`, b.note ?? null, `/kho#phieu-linh-${r.id}`);
 }
 
 /** Xuất kho tổng: chọn lô còn hạn, hết hạn sớm nhất trước; thiếu hàng thì xuất phần có và ghi số thiếu. Trừ kho tổng ngay. */
@@ -141,8 +174,9 @@ export async function issueRequisition(tx: Tx, actor: Actor, id: string, witness
   await tx.query(`UPDATE stock_requisitions SET status = 'da_xuat', issued_by = $2, issued_at = now(), witness = $3,
                          decision_note = CASE WHEN $4::text IS NULL THEN decision_note ELSE concat_ws(' · ', decision_note, $4::text) END WHERE id = $1`,
   [id, actor.id, witness ?? null, short.length ? `Kho tổng thiếu: ${short.join(', ')}` : null]);
+  await signSlip(tx, actor, id, 'xuat_kho');
   await audit(tx, 'system', actor, 'requisition.issued', 'stock_requisition', id, { code: r.code, short });
-  await notifyStation(tx, r.station_id, `Kho tổng đã xuất ${r.code}: đếm và xác nhận khi nhận`, short.length ? `Thiếu: ${short.join(', ')}` : null, `/kho#phieu-linh-${r.id}`);
+  await notifyStation(tx, r.station_id, `Kho tổng đã xuất ${slipName(r.source).toLowerCase()} ${r.code}: quản lý điểm đếm và ký nhận`, short.length ? `Thiếu: ${short.join(', ')}` : null, `/kho#phieu-linh-${r.id}`);
   return { short };
 }
 
@@ -174,8 +208,9 @@ export async function receiveRequisition(tx: Tx, actor: Actor, id: string, b: { 
   if (diffs.length && !b.note?.trim()) throw new HttpError(400, 'Nhận khác số xuất: ghi lý do (vỡ, thiếu, nhầm lô...)');
   await tx.query(`UPDATE stock_requisitions SET status = 'da_nhan', received_by = $2, received_at = now(), receive_note = $3, discrepancy = $4 WHERE id = $1`,
     [id, actor.id, b.note ?? null, diffs.length > 0]);
+  await signSlip(tx, actor, id, 'nhan_hang');
   await audit(tx, 'system', actor, 'requisition.received', 'stock_requisition', id, { code: r.code, diffs });
-  if (diffs.length) await notifyCentral(tx, `Kho điểm ${r.station_id} nhận ${r.code} không đủ`, `${diffs.join('; ')}. Lý do: ${b.note}`, true, `/kho#phieu-linh-${r.id}`);
+  if (diffs.length) await notifyCentral(tx, `Kho điểm ${r.station_id} nhận ${slipName(r.source).toLowerCase()} ${r.code} không đủ`, `${diffs.join('; ')}. Lý do: ${b.note}`, true, `/kho#phieu-linh-${r.id}`);
   return { diffs };
 }
 

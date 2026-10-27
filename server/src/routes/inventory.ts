@@ -4,6 +4,7 @@ import { audit } from '../audit.js';
 import { many, one, withTx } from '../db.js';
 import { HttpError } from '../domain.js';
 import { actorOf, guard, type Ctx, type Role } from '../http.js';
+import { isStationManager, managedStations, stationOverview, stationSlipRights } from '../station-manager.js';
 import {
   autoIssue, cancelRequisition, centralStation, createRequisition, decideRequisition, issueRequisition, receiveRequisition, REQ_STATUS, shortages,
 } from '../inventory.js';
@@ -20,6 +21,7 @@ export function registerInventory(app: FastifyInstance, { pool }: Ctx) {
   /** Kíp chỉ làm cho điểm mình được phân, hoặc điểm của xe mình đang nhận ca */
   async function assertStation(req: FastifyRequest, stationId: string) {
     if (req.user.role !== 'crew') return;
+    if (await isStationManager(pool, req.user.id, stationId)) return;
     const ok = await one(pool, `SELECT 1 FROM users u WHERE u.id = $1 AND (u.station_id = $2 OR EXISTS (
                                   SELECT 1 FROM crew_shifts cs JOIN vehicles v ON v.id = cs.vehicle_id WHERE cs.user_id = u.id AND cs.ended_at IS NULL AND v.station_id = $2))`,
     [req.user.id, stationId]);
@@ -71,8 +73,11 @@ export function registerInventory(app: FastifyInstance, { pool }: Ctx) {
 
   app.get('/api/requisitions/:id', { preHandler: guard(...CENTRAL_VIEW, 'supervisor', 'crew') }, async (req) => {
     const id = idOf(req.params);
-    const r = await one(pool, `SELECT r.*, s.name AS station_name FROM stock_requisitions r JOIN stations s ON s.id = r.station_id WHERE r.id = $1`, [id]);
-    if (!r) throw new HttpError(404, 'Không tìm thấy phiếu lĩnh');
+    const r = await one(pool, `SELECT r.*, s.name AS station_name, c.name AS central_name,
+                                      (SELECT full_name FROM users WHERE id = r.created_by) AS created_by_name, (SELECT full_name FROM users WHERE id = r.decided_by) AS decided_by_name,
+                                      (SELECT full_name FROM users WHERE id = r.issued_by) AS issued_by_name, (SELECT full_name FROM users WHERE id = r.received_by) AS received_by_name
+                                 FROM stock_requisitions r JOIN stations s ON s.id = r.station_id JOIN stations c ON c.id = r.central_id WHERE r.id = $1`, [id]);
+    if (!r) throw new HttpError(404, 'Không tìm thấy phiếu');
     await assertStation(req, r.station_id);
     const lines = await many(pool, `
       SELECT l.id, l.drug_id, d.name AS drug_name, d.unit, l.requested_qty::float, l.approved_qty::float,
@@ -82,16 +87,104 @@ export function registerInventory(app: FastifyInstance, { pool }: Ctx) {
         FROM stock_requisition_lines l JOIN drugs d ON d.id = l.drug_id WHERE l.requisition_id = $1 ORDER BY d.name`, [id, r.central_id]);
     // Tồn kho tổng chỉ hiện cho người được xem kho tổng
     if (!CENTRAL_VIEW.includes(req.user.role)) for (const l of lines) delete (l as any).central_on_hand;
-    return { ...r, lines };
+    // Chữ ký số nội bộ từng bước: lập, duyệt, xuất kho, ký nhận
+    const signatures = await many(pool, `SELECT ds.purpose, ds.signed_at, u.full_name, u.title, c.serial
+                                           FROM document_signatures ds JOIN users u ON u.id = ds.user_id JOIN user_certs c ON c.id = ds.cert_id
+                                          WHERE ds.doc_type = 'stock_requisition' AND ds.doc_id = $1 ORDER BY ds.signed_at`, [id]);
+    return { ...r, lines, signatures };
   });
 
-  app.post('/api/requisitions', { preHandler: guard(...STATION_WORK) }, async (req) => {
+  /**
+   * Lịch sử xuất nhập của một kho: khi nào bù, ai xuất, ai nhận, lô nào, bao nhiêu; dùng cho người bệnh, cấp lên xe, kiểm kê, hủy.
+   * Lọc theo mặt hàng, số lô, khoảng ngày. Kíp chỉ xem điểm mình; kho tổng chỉ người được xem kho tổng.
+   */
+  app.get('/api/stock/history', { preHandler: guard(...CENTRAL_VIEW, 'supervisor', 'crew') }, async (req) => {
+    const q = z.object({ stationId: z.string().min(1), drugId: z.coerce.number().int().optional(), lot: z.string().trim().max(60).optional(),
+      from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(), to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional() }).parse(req.query);
+    await assertStation(req, q.stationId);
+    if (q.stationId === await centralStation(pool) && !CENTRAL_VIEW.includes(req.user.role)) throw new HttpError(403, 'Không xem kho tổng');
+    return many(pool, `
+      SELECT m.id, m.at, m.delta::float AS delta, m.reason, m.note, m.witness, d.name AS drug_name, d.unit, l.lot, l.expiry::text AS expiry, l.vehicle_id,
+             u.full_name AS user_name, r.id AS requisition_id, r.code AS requisition_code, r.source AS requisition_source,
+             (SELECT full_name FROM users WHERE id = r.issued_by) AS issued_by_name, t.transfer_number, v.code AS voucher_code
+        FROM stock_moves m JOIN stock_lots l ON l.id = m.lot_id JOIN drugs d ON d.id = l.drug_id
+        LEFT JOIN users u ON u.id = m.user_id LEFT JOIN stock_requisitions r ON r.id = m.requisition_id
+        LEFT JOIN transfers t ON t.id = m.transfer_id LEFT JOIN stock_vouchers v ON v.id = m.voucher_id
+       WHERE l.station_id = $1 AND ($2::int IS NULL OR l.drug_id = $2) AND ($3::text IS NULL OR l.lot ILIKE $3)
+         AND ($4::date IS NULL OR m.at >= ($4::date::timestamp AT TIME ZONE 'Asia/Ho_Chi_Minh'))
+         AND ($5::date IS NULL OR m.at < (($5::date + 1)::timestamp AT TIME ZONE 'Asia/Ho_Chi_Minh'))
+       ORDER BY m.at DESC, m.id DESC LIMIT 500`, [q.stationId, q.drugId ?? null, q.lot ? `%${q.lot}%` : null, q.from ?? null, q.to ?? null]);
+  });
+
+  /** Quyền của người đang xem với phiếu của một điểm (để màn hình hiện đúng nút) */
+  app.get('/api/requisitions/rights', { preHandler: guard() }, async (req) => {
+    const q = z.object({ stationId: z.string().min(1) }).parse(req.query);
+    const r = await stationSlipRights(pool, req.user, q.stationId);
+    return { ...r, canIssuePeriodic: CENTRAL_MANAGE.includes(req.user.role) };
+  });
+
+  /**
+   * Lập phiếu. Phiếu đề xuất (điểm xin khi thiếu): quản lý điểm hoặc người thay; kíp chỉ lập phiếu khẩn khi cả hai vắng.
+   * Điểm chưa gán quản lý thì kíp của điểm lập như cũ. Phiếu lĩnh (phát định kỳ theo định mức): kho tổng lập, duyệt sẵn.
+   */
+  app.post('/api/requisitions', { preHandler: guard() }, async (req) => {
     const b = z.object({
       stationId: z.string().min(1), note: z.string().trim().max(500).nullish(),
+      kind: z.enum(['de_xuat', 'linh']).default('de_xuat'), urgent: z.boolean().default(false),
+      shortageIds: z.array(z.string().uuid()).max(200).optional(),
       lines: z.array(z.object({ drugId: z.number().int().positive(), qty: z.number().positive().max(100000) })).min(1).max(200),
     }).parse(req.body);
-    await assertStation(req, b.stationId);
-    return withTx(pool, (tx) => createRequisition(tx, actorOf(req), b));
+    if (b.kind === 'linh') {
+      if (!CENTRAL_MANAGE.includes(req.user.role)) throw new HttpError(403, 'Phiếu lĩnh do kho tổng lập');
+      return withTx(pool, (tx) => createRequisition(tx, actorOf(req), { ...b, source: 'tu_dong', urgent: false }));
+    }
+    const rights = await stationSlipRights(pool, req.user, b.stationId);
+    if (b.urgent ? !rights.canUrgent : !rights.canPropose) {
+      throw new HttpError(403, rights.hasManager
+        ? `Phiếu đề xuất của điểm ${b.stationId} do quản lý điểm hoặc người thay lập. Kíp báo thiếu cho quản lý điểm; khi cả hai vắng thì lập phiếu khẩn.`
+        : `Bạn không làm ở điểm ${b.stationId}`);
+    }
+    if (b.urgent && !b.note?.trim()) throw new HttpError(400, 'Phiếu khẩn: ghi lý do (quản lý điểm và người thay vắng, cần gấp...)');
+    return withTx(pool, (tx) => createRequisition(tx, actorOf(req), { ...b, source: 'kho_diem' }));
+  });
+
+  /** Kíp báo thiếu thuốc, vật tư, dụng cụ ở kho điểm cho quản lý điểm */
+  app.post('/api/stations/:id/shortages', { preHandler: guard() }, async (req) => {
+    const stationId = z.object({ id: z.string() }).parse(req.params).id;
+    const b = z.object({ drugId: z.number().int().positive().nullish(), itemText: z.string().trim().max(200).nullish(), qty: z.number().positive().max(100000).nullish(), note: z.string().trim().max(500).nullish() })
+      .refine((x) => x.drugId || x.itemText, 'Chọn mặt hàng hoặc ghi tên').parse(req.body);
+    const rights = await stationSlipRights(pool, req.user, stationId);
+    if (!rights.canReport) throw new HttpError(403, `Bạn không làm ở điểm ${stationId}`);
+    return withTx(pool, async (tx) => {
+      const r = await one(tx, `INSERT INTO station_shortages(station_id, drug_id, item_text, qty, note, reported_by) VALUES ($1,$2,$3,$4,$5,$6) RETURNING id`,
+        [stationId, b.drugId ?? null, b.itemText ?? null, b.qty ?? null, b.note ?? null, req.user.id]);
+      const name = b.drugId ? (await one(tx, 'SELECT name FROM drugs WHERE id = $1', [b.drugId]))?.name : b.itemText;
+      await tx.query(`INSERT INTO notifications(user_id, kind, title, body, link)
+                      SELECT u, 'shortage', $2, $3, $4 FROM (SELECT manager_id AS u FROM stations WHERE id = $1 UNION SELECT deputy_id FROM stations WHERE id = $1) x WHERE u IS NOT NULL`,
+      [stationId, `Kíp báo thiếu ở ${stationId}: ${name}${b.qty ? ` (${b.qty})` : ''}`, `${req.user.name}${b.note ? `: ${b.note}` : ''}`, `/quan-ly-diem?diem=${encodeURIComponent(stationId)}#bao-thieu`]);
+      await audit(tx, 'system', actorOf(req), 'station.shortage_reported', 'station', stationId, b);
+      return r;
+    });
+  });
+
+  /** Quản lý điểm đóng một báo thiếu (đã có hàng, không cần...) */
+  app.post('/api/stations/:id/shortages/:sid/close', { preHandler: guard() }, async (req) => {
+    const p = z.object({ id: z.string(), sid: z.string().uuid() }).parse(req.params);
+    const b = z.object({ note: z.string().trim().min(2).max(300) }).parse(req.body);
+    if (!(await isStationManager(pool, req.user.id, p.id))) throw new HttpError(403, 'Chỉ quản lý điểm hoặc người thay');
+    const r = await pool.query(`UPDATE station_shortages SET closed_by = $3, closed_at = now(), close_note = $4 WHERE id = $2 AND station_id = $1 AND closed_at IS NULL`, [p.id, p.sid, req.user.id, b.note]);
+    if (!r.rowCount) throw new HttpError(404, 'Không tìm thấy báo thiếu đang mở');
+    return { ok: true };
+  });
+
+  /** Điểm quản lý của tôi, và tổng quan một điểm (quản lý, người thay; Ban Giám đốc, quản trị, trưởng ca, dược xem mọi điểm) */
+  app.get('/api/station-manager/mine', { preHandler: guard() }, async (req) => managedStations(pool, req.user.id));
+  app.get('/api/station-manager/overview', { preHandler: guard() }, async (req) => {
+    const q = z.object({ stationId: z.string().min(1) }).parse(req.query);
+    if (!['admin', 'director', 'supervisor', 'pharmacist'].includes(req.user.role) && !(await isStationManager(pool, req.user.id, q.stationId))) {
+      throw new HttpError(403, 'Bạn không quản lý điểm này');
+    }
+    return stationOverview(pool, q.stationId);
   });
 
   app.post('/api/requisitions/:id/decide', { preHandler: guard(...CENTRAL_MANAGE) }, async (req) => {
@@ -110,15 +203,16 @@ export function registerInventory(app: FastifyInstance, { pool }: Ctx) {
     return withTx(pool, (tx) => issueRequisition(tx, actorOf(req), id, b.witness));
   });
 
-  app.post('/api/requisitions/:id/receive', { preHandler: guard(...STATION_WORK) }, async (req) => {
+  app.post('/api/requisitions/:id/receive', { preHandler: guard() }, async (req) => {
     const id = idOf(req.params);
     const b = z.object({
       note: z.string().trim().max(500).nullish(),
       lines: z.array(z.object({ issueId: z.number().int(), receivedQty: z.number().min(0).max(100000) })).max(500).default([]),
     }).parse(req.body);
     const r = await one(pool, 'SELECT station_id, issued_by FROM stock_requisitions WHERE id = $1', [id]);
-    if (!r) throw new HttpError(404, 'Không tìm thấy phiếu lĩnh');
-    await assertStation(req, r.station_id);
+    if (!r) throw new HttpError(404, 'Không tìm thấy phiếu');
+    const rights = await stationSlipRights(pool, req.user, r.station_id);
+    if (!rights.canReceive) throw new HttpError(403, rights.hasManager ? 'Quản lý điểm hoặc người thay ký nhận phiếu của điểm' : `Bạn không làm ở điểm ${r.station_id}`);
     if (r.issued_by === req.user.id) throw new HttpError(403, 'Người xuất kho không tự xác nhận nhận hàng');
     return withTx(pool, (tx) => receiveRequisition(tx, actorOf(req), id, b));
   });

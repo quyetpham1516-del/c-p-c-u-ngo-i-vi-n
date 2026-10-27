@@ -18,6 +18,7 @@ const LINKS: { to: string; label: string; roles: Role[] }[] = [
   { to: '/benh-vien', label: 'Ca chuyển tới', roles: ['hospital'] },
   { to: '/nghien-cuu', label: 'Nghiên cứu', roles: ['crew', 'dispatcher', 'supervisor', 'qa', 'admin', 'director'] },
   { to: '/kho', label: 'Kho thuốc', roles: ['crew', 'dispatcher', 'supervisor', 'qa', 'admin', 'pharmacist', 'director'] },
+  { to: '/quan-ly-diem', label: 'Quản lý điểm', roles: ['admin', 'director', 'supervisor', 'pharmacist'] },
   { to: '/hau-can', label: 'Hậu cần', roles: ['crew', 'dispatcher', 'supervisor', 'qa', 'admin', 'pharmacist', 'technician', 'ipc', 'hr', 'accountant', 'director'] },
   { to: '/thiet-bi', label: 'Thiết bị', roles: ['dispatcher', 'supervisor', 'qa', 'admin', 'technician', 'ipc', 'director'] },
   { to: '/chat-luong', label: 'Chất lượng', roles: ['calltaker', 'dispatcher', 'supervisor', 'crew', 'qa', 'admin', 'pharmacist', 'technician', 'ipc', 'hr', 'accountant', 'director'] },
@@ -76,6 +77,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const path = usePathname();
   // Chưa cài xác thực hai lớp mà vai trò bắt buộc: chỉ hiện trang Bảo mật
   const setupOnly = !!user?.mfaSetup;
+  // Người được giao quản lý điểm (hoặc làm người thay) thấy thêm mục Quản lý điểm
+  const [managesStation, setManagesStation] = useState(false);
+  useEffect(() => { if (user && !setupOnly && user.role !== 'hospital') api<any[]>('GET', '/api/station-manager/mine').then((r) => setManagesStation(r.length > 0)).catch(() => {}); }, [user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
   const pending = usePendingReviews(!setupOnly && !!user && REVIEW_DECIDE.includes(user.role), path);
   const toggleTheme = () => {
     const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
@@ -92,6 +96,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
               {l.label}{l.to === '/bao-mat' && pending > 0 && <span className="nav-count" title="Mục hậu kiểm chờ xem">{pending}</span>}
             </Link>
           ))}
+          {managesStation && !LINKS.some((l) => l.to === '/quan-ly-diem' && user && l.roles.includes(user.role)) && (
+            <Link href="/quan-ly-diem" className={path.startsWith('/quan-ly-diem') ? 'active' : undefined}>Quản lý điểm</Link>
+          )}
         </nav>
         {user && !setupOnly && <Bell path={path} />}
         <button className="ghost" onClick={toggleTheme} title="Đổi nền sáng/tối">Sáng/Tối</button>

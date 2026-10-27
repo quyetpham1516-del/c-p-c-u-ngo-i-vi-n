@@ -100,7 +100,7 @@ export const SIGNING_PROVIDERS: Record<string, SigningProvider> = { noi_bo: inte
 export const signingPayload = (docType: string, docId: string, version: number, contentHash: string) =>
   `medone:${docType}:${docId}:v${version}:sha256:${contentHash}`;
 
-export async function signDocument(q: Queryable, userId: string, doc: { type: string; id: string; version: number; contentHash: string; purpose: 'ky_phieu' | 'bo_sung' }) {
+export async function signDocument(q: Queryable, userId: string, doc: { type: string; id: string; version: number; contentHash: string; purpose: 'ky_phieu' | 'bo_sung' | 'lap_phieu' | 'duyet' | 'xuat_kho' | 'nhan_hang' }) {
   const p = SIGNING_PROVIDERS[process.env.MEDONE_SIGN_PROVIDER?.trim() || 'noi_bo'] ?? internalProvider;
   const payload = signingPayload(doc.type, doc.id, doc.version, doc.contentHash);
   const s = await p.sign(q, userId, payload);

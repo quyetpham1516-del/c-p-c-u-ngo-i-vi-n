@@ -90,6 +90,10 @@ export async function remindersFor(q: Queryable, user: { id: string; role: strin
     const stale = await one(q, `SELECT count(*)::int AS n FROM registry_cases WHERE status <> 'du' AND created_at < now() - interval '30 days'`);
     if (stale?.n) out.push({ key: 'reg:stale', level: 'info', title: `${stale.n} ca biểu mẫu nghiên cứu quá 30 ngày chưa đủ phần trong viện`, link: '/nghien-cuu' });
   }
+  if (user.role === 'admin') {
+    const cr = await one(q, `SELECT count(*)::int AS n FROM change_requests WHERE status = 'cho_duyet' AND proposed_by <> $1`, [user.id]);
+    if (cr?.n) out.push({ key: 'change_requests', level: 'amber', title: `${cr.n} đề xuất thay đổi chờ duyệt`, link: '/quan-tri#de-xuat' });
+  }
   return out;
 }
 

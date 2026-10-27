@@ -2,6 +2,7 @@ import type { FastifyInstance, FastifyRequest } from 'fastify';
 import { z } from 'zod';
 import { suggestWithRoads } from '../routing.js';
 import { assertCanStartShift } from '../hr.js';
+import { activeDutyFor } from './duty.js';
 import { audit } from '../audit.js';
 import { many, one, withTx } from '../db.js';
 import { ackAssignment, AUTO_DISPATCH_KM, crewStatus, getIncident, HttpError, incidentScope, incidentSummary, recordTime, setVehicleStatus } from '../domain.js';
@@ -157,7 +158,8 @@ export function registerFleet(app: FastifyInstance, { pool, hub }: Ctx) {
       if (!role?.active) throw new HttpError(400, `Vai trò "${b.crewRole}" không có trong danh mục vai trò trong kíp`);
       if (home?.crew_roles?.length && !home.crew_roles.includes(b.crewRole))
         throw new HttpError(403, `Bạn được quản trị phân vai trò: ${home.crew_roles.join(', ')}`);
-      if (home?.station_id && home.station_id !== v.station_id) throw new HttpError(403, `Bạn được phân ở điểm ${home.station_id}, xe ${b.vehicleId} thuộc điểm ${v.station_id}`);
+      const duty = await activeDutyFor(tx, req.user.id, b.vehicleId);
+      if (!duty && home?.station_id && home.station_id !== v.station_id) throw new HttpError(403, `Bạn được phân ở điểm ${home.station_id}, xe ${b.vehicleId} thuộc điểm ${v.station_id}`);
       await tx.query('INSERT INTO crew_shifts(vehicle_id, user_id, crew_role) VALUES ($1,$2,$3)', [b.vehicleId, actor.id, b.crewRole]);
       if (v.status === 'S9') await setVehicleStatus(tx, actor, b.vehicleId, 'S1');
       await audit(tx, 'system', actor, 'crew.shift_started', 'vehicle', b.vehicleId, { crewRole: b.crewRole, warnings: check.warnings });

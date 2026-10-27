@@ -12,6 +12,7 @@ const LINKS: { to: string; label: string; roles: Role[] }[] = [
   { to: '/bang-xe', label: 'Bảng đội xe', roles: ['calltaker', 'dispatcher', 'supervisor', 'qa', 'admin'] },
   { to: '/vung-phu', label: 'Vùng phủ', roles: ['dispatcher', 'supervisor', 'qa', 'admin', 'director'] },
   { to: '/kip', label: 'Ứng dụng kíp', roles: ['crew'] },
+  { to: '/ca-truc', label: 'Ca trực', roles: ['calltaker', 'dispatcher', 'supervisor', 'admin', 'director', 'crew'] },
   { to: '/benh-an', label: 'Bệnh án', roles: ['crew', 'calltaker', 'dispatcher', 'supervisor', 'qa', 'admin'] },
   { to: '/benh-vien', label: 'Ca chuyển tới', roles: ['hospital'] },
   { to: '/nghien-cuu', label: 'Nghiên cứu', roles: ['crew', 'dispatcher', 'supervisor', 'qa', 'admin', 'director'] },
@@ -49,6 +50,24 @@ function usePendingReviews(enabled: boolean, path: string) {
   return n;
 }
 
+/** Thông báo khi một thay đổi đã thành đề xuất chờ duyệt (không áp dụng ngay) */
+function ProposalToast() {
+  const [p, setP] = useState<{ code: string; message: string } | null>(null);
+  useEffect(() => {
+    const on = (e: Event) => setP((e as CustomEvent).detail);
+    window.addEventListener('medone:proposal', on);
+    return () => window.removeEventListener('medone:proposal', on);
+  }, []);
+  if (!p) return null;
+  return (
+    <div className="alert amber no-print" style={{ margin: '8px 12px 0', display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+      <span>{p.message}. Thay đổi chưa áp dụng cho tới khi quản trị duyệt.</span>
+      <Link href="/ca-nhan#de-xuat">Xem, ghi lý do</Link>
+      <button className="ghost" onClick={() => setP(null)}>Đóng</button>
+    </div>
+  );
+}
+
 export function Layout({ children }: { children: React.ReactNode }) {
   const user = session.user;
   const router = useRouter();
@@ -81,6 +100,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <button className="ghost" onClick={() => { session.clear(); router.push('/dang-nhap'); }}>Đăng xuất</button>
       </header>
       {!setupOnly && <SosBanner />}
+      {!setupOnly && <ProposalToast />}
       <main>{children}</main>
     </div>
   );

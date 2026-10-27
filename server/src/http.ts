@@ -17,6 +17,8 @@ export interface TokenUser {
   mfaSetup?: boolean;
   /** Vé tạm giữa bước mật khẩu và bước mã 6 số: không dùng làm phiên đăng nhập */
   typ?: 'mfa_challenge';
+  /** Vé hệ thống tự cấp khi quản trị duyệt một đề xuất: chạy đúng thao tác đã đề xuất */
+  cr?: string;
 }
 
 declare module '@fastify/jwt' {
@@ -58,6 +60,8 @@ function check(roles: Role[], allowSetup: boolean) {
     if (req.user.mfaSetup && !allowSetup) {
       return reply.code(403).send({ error: 'Vai trò của bạn bắt buộc bật xác thực hai lớp: cài ứng dụng xác thực trước khi dùng phần mềm', details: { code: 'MFA_SETUP_REQUIRED' } });
     }
+    // Thao tác của đề xuất đã được quản trị duyệt (governanceHook đã đối chiếu): không xét vai trò nữa
+    if (req.changeRequestApproved) return;
     // Tài khoản bệnh viện là người ngoài trung tâm: API "mọi người đăng nhập" không mở cho họ, trừ thông báo của chính họ
     if (req.user.role === 'hospital' && !roles.includes('hospital') && !(allowSetup || HOSPITAL_OPEN.some((p) => req.url.startsWith(p)))) {
       return reply.code(403).send({ error: 'Tài khoản bệnh viện không dùng được chức năng này' });

@@ -6,6 +6,7 @@ import { TelephonyAdmin } from '../components/Telephony';
 import { PkiAdmin } from '../components/Pki';
 import { ScopeAdmin } from '../components/ScopeAdmin';
 import { ServicePrices } from '../components/ServicePrices';
+import { ChangeRequests } from '../components/ChangeRequests';
 
 interface UserRow { id: string; username: string; full_name: string; title: string | null; role: Role; active: boolean; station_id: string | null; sso_linked_at?: string | null; hospital_id?: number | null; hospital_name?: string | null }
 interface VehicleRow { id: string; type: string; status: string; station_id: string; station_name: string }
@@ -49,6 +50,7 @@ export function Admin() {
 
   return (
     <div className="col">
+      <ChangeRequests />
       <h2 style={{ margin: 0 }}>Quản trị điểm, trạm</h2>
       {error && <div className="error">{error}</div>}
       <div className="panel" style={{ overflowX: 'auto' }}>

@@ -6,6 +6,7 @@ import { api, ROLE_LABEL, session, type Role } from '../api';
 import { Brand } from '../Logo';
 import { SosBanner } from './Sos';
 import { Bell } from './Bell';
+import { HashFocus } from '../hashNav';
 
 const LINKS: { to: string; label: string; roles: Role[] }[] = [
   { to: '/eoc', label: 'Điều phối', roles: ['calltaker', 'dispatcher', 'supervisor', 'admin'] },
@@ -102,6 +103,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </header>
       {!setupOnly && <SosBanner />}
       {!setupOnly && <ProposalToast />}
+      <HashFocus />
       <main>{children}</main>
     </div>
   );

@@ -1,6 +1,7 @@
 'use client';
 import { Fragment, useEffect, useState } from 'react';
 import { api, fmtDateTime, session } from '../api';
+import { useHashRecord } from '../hashNav';
 
 export const CR_STATUS: Record<string, [string, string]> = {
   cho_duyet: ['Chờ duyệt', 'amber'], dang_ap_dung: ['Đang áp dụng', 'amber'], da_duyet: ['Đã duyệt, đã áp dụng', 'green'],
@@ -64,6 +65,8 @@ export function ChangeRequests({ mine = false }: { mine?: boolean }) {
     api<any[]>('GET', `/api/change-requests${status ? `?status=${status}` : ''}`).then((r) => setRows(mine ? r.filter((x) => x.proposed_by === session.user?.id) : r)),
   ]).catch((e) => setError(e.message));
   useEffect(() => { load(); }, [status]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Bấm thông báo một đề xuất: hiện mọi trạng thái để chắc thấy phiếu đó, rồi mở ra
+  useHashRecord('de-xuat', (id) => { setStatus(''); setOpen(id); });
 
   const run = async (fn: () => Promise<unknown>, ok?: string) => {
     setError(''); setMsg('');
@@ -105,7 +108,7 @@ export function ChangeRequests({ mine = false }: { mine?: boolean }) {
           <tbody>
             {rows.map((c) => (
               <Fragment key={c.id}>
-                <tr onClick={() => setOpen(open === c.id ? null : c.id)} style={{ cursor: 'pointer' }}>
+                <tr id={`de-xuat-${c.id}`} onClick={() => setOpen(open === c.id ? null : c.id)} style={{ cursor: 'pointer' }}>
                   <td className="mono">{c.code}</td>
                   <td>{c.label}<div className="small muted mono">{c.method} {c.url}</div></td>
                   <td className="small">{c.domainLabel}</td>

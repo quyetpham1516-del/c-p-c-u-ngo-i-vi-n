@@ -1,6 +1,7 @@
 'use client';
 import { Fragment, useEffect, useState } from 'react';
 import { api, fmtDateTime, session } from '../api';
+import { useHashRecord } from '../hashNav';
 
 const BADGE: Record<string, string> = { cho_duyet: 'amber', da_duyet: 'amber', da_xuat: 'amber', da_nhan: 'green', tu_choi: 'red', huy: '' };
 
@@ -27,6 +28,7 @@ export function Requisitions({ stationId, drugs }: { stationId: string; drugs: {
   useEffect(() => { api('GET', '/api/inventory/settings').then(setSettings).catch(() => {}); }, []);
   useEffect(() => { if (settings) load(); setOpen(null); setDraft([]); }, [stationId, settings]); // eslint-disable-line react-hooks/exhaustive-deps
   const show = async (id: string) => { const r = await api('GET', `/api/requisitions/${id}`); setOpen(r); setApprove({}); setRecv({}); };
+  useHashRecord('phieu-linh', (id) => show(id).catch(() => setError('Không mở được phiếu lĩnh này: đã xóa hoặc bạn không có quyền xem')));
   const run = async (fn: () => Promise<unknown>, ok: string) => {
     setError(''); setMsg('');
     try { await fn(); setMsg(ok); await load(); if (open) await show(open.id).catch(() => setOpen(null)); } catch (e) { setError((e as Error).message); }
@@ -82,7 +84,7 @@ export function Requisitions({ stationId, drugs }: { stationId: string; drugs: {
           <tbody>
             {list.map((r) => (
               <Fragment key={r.id}>
-                <tr className="click" onClick={() => (open?.id === r.id ? setOpen(null) : show(r.id).catch((e) => setError(e.message)))}>
+                <tr id={`phieu-linh-${r.id}`} className="click" onClick={() => (open?.id === r.id ? setOpen(null) : show(r.id).catch((e) => setError(e.message)))}>
                   <td className="mono">{r.code}</td><td>{r.station_name}</td>
                   <td className="small">{r.source === 'tu_dong' ? 'Kho tổng tự phát' : r.created_by_name}</td>
                   <td className="small">{fmtDateTime(r.created_at)}</td>

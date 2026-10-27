@@ -79,8 +79,8 @@ export async function createRequisition(tx: Tx, actor: Actor, b: { stationId: st
       [r.id, l.drugId, l.qty, auto ? l.qty : null]);
   }
   await audit(tx, 'system', actor, auto ? 'requisition.auto_created' : 'requisition.created', 'stock_requisition', r.id, { code: r.code, stationId: b.stationId, lines: b.lines.length });
-  if (auto) await notifyStation(tx, b.stationId, `Kho tổng sẽ phát bù định mức: ${r.code}`, `${b.lines.length} mặt hàng`);
-  else await notifyCentral(tx, `Phiếu lĩnh ${r.code} của ${b.stationId} chờ duyệt`, `${b.lines.length} mặt hàng`);
+  if (auto) await notifyStation(tx, b.stationId, `Kho tổng sẽ phát bù định mức: ${r.code}`, `${b.lines.length} mặt hàng`, `/kho#phieu-linh-${r.id}`);
+  else await notifyCentral(tx, `Phiếu lĩnh ${r.code} của ${b.stationId} chờ duyệt`, `${b.lines.length} mặt hàng`, false, `/kho#phieu-linh-${r.id}`);
   return r;
 }
 
@@ -107,7 +107,7 @@ export async function decideRequisition(tx: Tx, actor: Actor, id: string, b: { a
   await tx.query(`UPDATE stock_requisitions SET status = $2, decided_by = $3, decided_at = now(), decision_note = $4 WHERE id = $1`,
     [id, b.approve ? 'da_duyet' : 'tu_choi', actor.id, b.note ?? null]);
   await audit(tx, 'system', actor, b.approve ? 'requisition.approved' : 'requisition.rejected', 'stock_requisition', id, { code: r.code, note: b.note });
-  await notifyStation(tx, r.station_id, `Phiếu lĩnh ${r.code} ${b.approve ? 'đã duyệt, chờ xuất' : 'bị từ chối'}`, b.note ?? null);
+  await notifyStation(tx, r.station_id, `Phiếu lĩnh ${r.code} ${b.approve ? 'đã duyệt, chờ xuất' : 'bị từ chối'}`, b.note ?? null, `/kho#phieu-linh-${r.id}`);
 }
 
 /** Xuất kho tổng: chọn lô còn hạn, hết hạn sớm nhất trước; thiếu hàng thì xuất phần có và ghi số thiếu. Trừ kho tổng ngay. */
@@ -141,7 +141,7 @@ export async function issueRequisition(tx: Tx, actor: Actor, id: string, witness
                          decision_note = CASE WHEN $4::text IS NULL THEN decision_note ELSE concat_ws(' · ', decision_note, $4::text) END WHERE id = $1`,
   [id, actor.id, witness ?? null, short.length ? `Kho tổng thiếu: ${short.join(', ')}` : null]);
   await audit(tx, 'system', actor, 'requisition.issued', 'stock_requisition', id, { code: r.code, short });
-  await notifyStation(tx, r.station_id, `Kho tổng đã xuất ${r.code}: đếm và xác nhận khi nhận`, short.length ? `Thiếu: ${short.join(', ')}` : null);
+  await notifyStation(tx, r.station_id, `Kho tổng đã xuất ${r.code}: đếm và xác nhận khi nhận`, short.length ? `Thiếu: ${short.join(', ')}` : null, `/kho#phieu-linh-${r.id}`);
   return { short };
 }
 
@@ -174,7 +174,7 @@ export async function receiveRequisition(tx: Tx, actor: Actor, id: string, b: { 
   await tx.query(`UPDATE stock_requisitions SET status = 'da_nhan', received_by = $2, received_at = now(), receive_note = $3, discrepancy = $4 WHERE id = $1`,
     [id, actor.id, b.note ?? null, diffs.length > 0]);
   await audit(tx, 'system', actor, 'requisition.received', 'stock_requisition', id, { code: r.code, diffs });
-  if (diffs.length) await notifyCentral(tx, `Kho điểm ${r.station_id} nhận ${r.code} không đủ`, `${diffs.join('; ')}. Lý do: ${b.note}`, true);
+  if (diffs.length) await notifyCentral(tx, `Kho điểm ${r.station_id} nhận ${r.code} không đủ`, `${diffs.join('; ')}. Lý do: ${b.note}`, true, `/kho#phieu-linh-${r.id}`);
   return { diffs };
 }
 

@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { api, fmtDateTime, session } from '../api';
+import { useHashRecord } from '../hashNav';
 
 const STATUS: Record<string, [string, string]> = { mo: ['Đang mở', 'amber'], qua_han: ['Quá hạn', 'red'], da_nop: ['Đã nộp', 'green'] };
 
@@ -16,6 +17,7 @@ export function Stocktakes({ stationId }: { stationId: string }) {
   const load = () => api<any[]>('GET', `/api/stocktakes?stationId=${stationId}`).then(setList).catch((e) => setError(e.message));
   useEffect(() => { load(); setOpen(null); }, [stationId]); // eslint-disable-line react-hooks/exhaustive-deps
   const show = async (id: string) => { setOpen(await api('GET', `/api/stocktakes/${id}`)); setCounts({}); setNote(''); };
+  useHashRecord('kiem-ke', (id) => show(id).catch(() => setError('Không mở được phiên kiểm kê này: đã xóa hoặc bạn không có quyền xem')));
   const filled = open && open.lots.every((l: any) => counts[l.id] !== undefined && counts[l.id] !== '');
   const submit = async () => {
     setError(''); setMsg('');
@@ -49,7 +51,7 @@ export function Stocktakes({ stationId }: { stationId: string }) {
         </table>
       </div>
       {open && (
-        <div className="panel col">
+        <div className="panel col" id={`kiem-ke-${open.id}`}>
           <h3 style={{ margin: 0 }}>Kiểm kê {open.station_name} ngày {open.due_date} {open.blind && <span className="small muted">(kiểm mù: không hiện số sổ sách)</span>}</h3>
           <div style={{ overflowX: 'auto', maxHeight: 520 }}>
             <table className="small">

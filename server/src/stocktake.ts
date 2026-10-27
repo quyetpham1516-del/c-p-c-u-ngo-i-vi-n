@@ -32,20 +32,21 @@ export async function openDueStocktakes(tx: Tx, date: string, time: string) {
       ? (central ? [central] : [])
       : (await many(tx, `SELECT id FROM stations WHERE active AND id IS DISTINCT FROM $1 ORDER BY id`, [central])).map((r) => r.id);
     for (const st of stations) {
-      const r = await tx.query(`INSERT INTO stocktake_sessions(station_id, scope, due_date, blind) VALUES ($1,$2,$3,$4) ON CONFLICT (station_id, due_date) DO NOTHING`,
+      const r = await tx.query(`INSERT INTO stocktake_sessions(station_id, scope, due_date, blind) VALUES ($1,$2,$3,$4) ON CONFLICT (station_id, due_date) DO NOTHING RETURNING id`,
         [st, s.scope, date, s.blind]);
       if (!r.rowCount) continue;
+      const link = `/kho#kiem-ke-${r.rows[0].id}`;
       opened.push(st);
       const title = `Đến giờ kiểm kê ${s.scope === 'kho_tong' ? 'kho tổng' : `kho ${st}`} (${date})`;
-      if (s.scope === 'kho_tong') await notifyCentral(tx, title, 'Đếm toàn bộ lô trong kho rồi nộp', false, '/kho#kiem-ke', 'stocktake');
-      else await notifyStation(tx, st, title, 'Đếm toàn bộ lô trong kho điểm rồi nộp', '/kho#kiem-ke', 'stocktake');
+      if (s.scope === 'kho_tong') await notifyCentral(tx, title, 'Đếm toàn bộ lô trong kho rồi nộp', false, link, 'stocktake');
+      else await notifyStation(tx, st, title, 'Đếm toàn bộ lô trong kho điểm rồi nộp', link, 'stocktake');
     }
   }
-  const late = await many(tx, `UPDATE stocktake_sessions SET status = 'qua_han' WHERE status = 'mo' AND due_date < $1 RETURNING station_id, scope, due_date::text`, [date]);
+  const late = await many(tx, `UPDATE stocktake_sessions SET status = 'qua_han' WHERE status = 'mo' AND due_date < $1 RETURNING id, station_id, scope, due_date::text`, [date]);
   for (const l of late) {
     const title = `Quá hạn kiểm kê ${l.scope === 'kho_tong' ? 'kho tổng' : `kho ${l.station_id}`} ngày ${l.due_date}`;
-    if (l.scope === 'kho_tong') await notifyCentral(tx, title, null, true, '/kho#kiem-ke', 'stocktake');
-    else await notifyStation(tx, l.station_id, title, null, '/kho#kiem-ke', 'stocktake');
+    if (l.scope === 'kho_tong') await notifyCentral(tx, title, null, true, `/kho#kiem-ke-${l.id}`, 'stocktake');
+    else await notifyStation(tx, l.station_id, title, null, `/kho#kiem-ke-${l.id}`, 'stocktake');
   }
   return { opened, late: late.length };
 }

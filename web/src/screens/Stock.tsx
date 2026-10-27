@@ -1,5 +1,6 @@
 import { Fragment, useEffect, useMemo, useState } from 'react';
 import { api, download, session } from '../api';
+import { useHash } from '../hashNav';
 import { useStations } from '../catalog';
 import { ParSheet, type ParItem } from '../components/ParSheet';
 import { Requisitions } from '../components/Requisitions';
@@ -36,10 +37,14 @@ export function Stock() {
   const canManage = ['pharmacist', 'supervisor', 'admin'].includes(role);
   const canApprove = ['supervisor', 'admin', 'director'].includes(role);
   const [stationId, setStationId] = useState('');
-  const [tab, setTab] = useState<(typeof TABS)[number]>(() => (typeof window !== 'undefined' && window.location.hash === '#phieu-linh' ? 'Phiếu lĩnh kho tổng'
-    : typeof window !== 'undefined' && window.location.hash === '#kiem-ke' ? 'Kiểm kê theo lịch'
-    : typeof window !== 'undefined' && window.location.hash === '#phieu-kho' ? 'Phiếu kho'
-    : typeof window !== 'undefined' && window.location.hash.startsWith('#bao-cao') ? 'Báo cáo kho' : TABS[0]));
+  const [tab, setTab] = useState<(typeof TABS)[number]>(TABS[0]);
+  // Bấm thông báo (kể cả khi đang ở trang Kho): chuyển đúng thẻ theo phần "#..." của đường dẫn
+  const { hash, tick } = useHash();
+  useEffect(() => {
+    const t = hash.startsWith('phieu-linh') ? 'Phiếu lĩnh kho tổng' : hash.startsWith('kiem-ke') ? 'Kiểm kê theo lịch'
+      : hash.startsWith('phieu-kho') ? 'Phiếu kho' : hash.startsWith('bao-cao') ? 'Báo cáo kho' : null;
+    if (t && (TABS as readonly string[]).includes(t)) setTab(t as (typeof TABS)[number]);
+  }, [hash, tick]);
   const [drugs, setDrugs] = useState<Drug[]>([]);
   const [error, setError] = useState('');
   const [msg, setMsg] = useState('');

@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { api, download, fmtDateTime } from '../api';
+import { useHashRecord } from '../hashNav';
 
 /** Báo cáo kho tự động sau mỗi lần kiểm kê: nhập, xuất, tồn, chênh lệch; tải Excel */
 export function InventoryReports({ stationId, compact = false }: { stationId?: string; compact?: boolean }) {
@@ -10,10 +11,9 @@ export function InventoryReports({ stationId, compact = false }: { stationId?: s
   useEffect(() => {
     api<any[]>('GET', `/api/inventory-reports${stationId ? `?stationId=${stationId}` : ''}`).then((l) => {
       setList(l);
-      const m = typeof window !== 'undefined' ? window.location.hash.match(/^#bao-cao-([0-9a-f-]{36})$/) : null;
-      if (m) api('GET', `/api/inventory-reports/${m[1]}`).then(setOpen).catch(() => {});
     }).catch((e) => setError(e.message));
   }, [stationId]);
+  useHashRecord('bao-cao', (id) => api('GET', `/api/inventory-reports/${id}`).then(setOpen).catch(() => setError('Không mở được báo cáo này: đã xóa hoặc bạn không có quyền xem')));
   if (compact && !list.length) return null;
   const shown = compact ? list.slice(0, 5) : list;
   return (

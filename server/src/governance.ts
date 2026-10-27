@@ -165,7 +165,7 @@ export function governanceHook({ pool }: Ctx) {
                                 VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING id, code`,
       [code, g.route, g.label, req.method, req.url, req.body === undefined ? null : JSON.stringify(req.body), before, g.domain, lead.unitId, reason, user.id]);
       await audit(tx, 'system', { id: user.id, name: user.name }, 'change_request.created', 'change_request', cr.id, { code, route: g.route });
-      await notifyRoles(tx, ['admin'], { kind: 'change_request', title: `Đề xuất ${code} chờ duyệt: ${g.label}`, body: `${user.name} (${lead.unitName})`, link: '/quan-tri#de-xuat' });
+      await notifyRoles(tx, ['admin'], { kind: 'change_request', title: `Đề xuất ${code} chờ duyệt: ${g.label}`, body: `${user.name} (${lead.unitName})`, link: `/quan-tri#de-xuat-${cr.id}` });
       return cr;
     });
     return reply.code(202).send({ proposal: true, id: row.id, code: row.code, message: `Đã gửi đề xuất ${row.code} "${g.label}", chờ quản trị duyệt` });

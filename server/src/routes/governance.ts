@@ -93,9 +93,9 @@ export function registerGovernance(app: FastifyInstance, { pool }: Ctx) {
       if (res.statusCode < 300) { status = 'da_duyet'; result = json; } else { status = 'loi'; error = (json as any)?.error ?? `Lỗi ${res.statusCode}`; }
       await pool.query('UPDATE change_requests SET status = $2, result = $3, error = $4 WHERE id = $1', [id, status, JSON.stringify(result), error]);
     }
-    await pool.query(`INSERT INTO notifications(user_id, kind, title, body, link) VALUES ($1, 'change_request', $2, $3, '/ca-nhan#de-xuat')`,
+    await pool.query(`INSERT INTO notifications(user_id, kind, title, body, link) VALUES ($1, 'change_request', $2, $3, '/ca-nhan#de-xuat-' || $4)`,
       [c.proposed_by, `Đề xuất ${c.code} ${({ da_duyet: 'đã được duyệt và áp dụng', tu_choi: 'bị từ chối', loi: 'được duyệt nhưng áp dụng bị lỗi' } as Record<string, string>)[status]}`,
-        b.note ?? error ?? c.label]);
+        b.note ?? error ?? c.label, c.id]);
     return load(id);
   });
 }

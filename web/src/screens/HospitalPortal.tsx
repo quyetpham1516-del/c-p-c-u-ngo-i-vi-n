@@ -72,6 +72,34 @@ export function HospitalPortal() {
         </div>
       )}
       {cur?.registries.map((c: any) => <RegistryForm key={c.id} caseId={c.id} defs={defs} onSaved={load} />)}
+      <FormPreview defs={defs} />
     </div>
+  );
+}
+
+/**
+ * Xem trước các biểu mẫu (Utstein, PATOS, đột quỵ): phần bệnh viện sẽ điền. Ca chỉ hiện ở bảng trên sau khi kíp ký phiếu
+ * có đúng tiêu chí và ghi đúng tên bệnh viện này, nên khi chưa có ca, bệnh viện vẫn xem được mẫu.
+ */
+function FormPreview({ defs }: { defs: { code: string; name: string; criteria: string; fields: any[] }[] }) {
+  if (!defs.length) return null;
+  return (
+    <details className="panel">
+      <summary><b>Xem mẫu biểu mẫu bệnh viện cần điền</b></summary>
+      <div className="small muted" style={{ margin: '6px 0' }}>
+        Ca vào biểu mẫu khi kíp ký phiếu chuyển viện có đúng tiêu chí và chọn bệnh viện nhận là bệnh viện này. Khi đó ca hiện ở bảng trên để điền phần trong viện.
+      </div>
+      {defs.map((d) => (
+        <div key={d.code} style={{ marginTop: 8 }}>
+          <b>{d.name}</b>
+          <div className="small muted">Tiêu chí: {d.criteria}</div>
+          <ul className="small" style={{ margin: '4px 0 0 18px' }}>
+            {d.fields.filter((f) => f.part === 'trong_vien').map((f) => (
+              <li key={f.key}>{f.label}{f.required ? ' *' : ''}{f.options ? `: ${f.options.map((o: [string, string]) => o[1]).join(', ')}` : ''}</li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </details>
   );
 }

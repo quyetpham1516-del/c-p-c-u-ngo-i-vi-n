@@ -4,6 +4,7 @@ import { useStations } from '../catalog';
 import { ParSheet, type ParItem } from '../components/ParSheet';
 import { Requisitions } from '../components/Requisitions';
 import { Stocktakes } from '../components/Stocktakes';
+import { InventoryReports } from '../components/InventoryReports';
 
 interface Lot {
   id: string; station_id: string; station_name: string; vehicle_id: string | null; lot: string; expiry: string; qty: number;
@@ -19,7 +20,7 @@ interface Voucher {
 
 const KIND: Record<string, string> = { cap_xe: 'Cấp cơ số xe', tra_kho: 'Xe trả kho', dieu_chuyen: 'Điều chuyển', kiem_ke: 'Kiểm kê', huy: 'Hủy thuốc' };
 const VSTATUS: Record<string, string> = { cho_duyet: 'Chờ duyệt', da_duyet: 'Đã duyệt', tu_choi: 'Từ chối' };
-const TABS = ['Tồn kho điểm', 'Cơ số xe', 'Phiếu lĩnh kho tổng', 'Kiểm kê theo lịch', 'Phiếu kho', 'Cảnh báo, đặt hàng', 'Định mức, cơ số chuẩn'] as const;
+const TABS = ['Tồn kho điểm', 'Cơ số xe', 'Phiếu lĩnh kho tổng', 'Kiểm kê theo lịch', 'Báo cáo kho', 'Phiếu kho', 'Cảnh báo, đặt hàng', 'Định mức, cơ số chuẩn'] as const;
 const today = () => new Date().toISOString().slice(0, 10);
 const fmt = (n: number) => Number(n).toLocaleString('vi-VN');
 const at = (s: string) => new Date(s).toLocaleString('vi-VN', { dateStyle: 'short', timeStyle: 'short' });
@@ -37,7 +38,8 @@ export function Stock() {
   const [stationId, setStationId] = useState('');
   const [tab, setTab] = useState<(typeof TABS)[number]>(() => (typeof window !== 'undefined' && window.location.hash === '#phieu-linh' ? 'Phiếu lĩnh kho tổng'
     : typeof window !== 'undefined' && window.location.hash === '#kiem-ke' ? 'Kiểm kê theo lịch'
-    : typeof window !== 'undefined' && window.location.hash === '#phieu-kho' ? 'Phiếu kho' : TABS[0]));
+    : typeof window !== 'undefined' && window.location.hash === '#phieu-kho' ? 'Phiếu kho'
+    : typeof window !== 'undefined' && window.location.hash.startsWith('#bao-cao') ? 'Báo cáo kho' : TABS[0]));
   const [drugs, setDrugs] = useState<Drug[]>([]);
   const [error, setError] = useState('');
   const [msg, setMsg] = useState('');
@@ -67,6 +69,7 @@ export function Stock() {
       {stationId && tab === 'Cơ số xe' && <VehiclesTab {...ctx} />}
       {stationId && tab === 'Phiếu lĩnh kho tổng' && <Requisitions stationId={stationId} drugs={drugs} />}
       {stationId && tab === 'Kiểm kê theo lịch' && <Stocktakes stationId={stationId} />}
+      {stationId && tab === 'Báo cáo kho' && <InventoryReports stationId={stationId} />}
       {stationId && tab === 'Phiếu kho' && <VouchersTab {...ctx} />}
       {stationId && tab === 'Cảnh báo, đặt hàng' && <AlertsTab {...ctx} />}
       {stationId && tab === 'Định mức, cơ số chuẩn' && <SettingsTab {...ctx} />}

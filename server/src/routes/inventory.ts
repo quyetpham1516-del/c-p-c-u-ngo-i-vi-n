@@ -8,6 +8,7 @@ import {
   autoIssue, cancelRequisition, centralStation, createRequisition, decideRequisition, issueRequisition, receiveRequisition, REQ_STATUS, shortages,
 } from '../inventory.js';
 import { FREQ_LABEL, sessionDetail, submitSession } from '../stocktake.js';
+import { reportWorkbook } from '../inventory-report.js';
 
 /** Kho tổng: dược và quản trị thao tác; Ban Giám đốc, kế toán, QLCL xem. Điều phối viên, tiếp nhận không xem kho tổng. */
 const CENTRAL_MANAGE: Role[] = ['pharmacist', 'admin'];
@@ -192,5 +193,33 @@ export function registerInventory(app: FastifyInstance, { pool }: Ctx) {
       lines: z.array(z.object({ lotId: z.string().uuid(), counted: z.number().min(0).max(1000000) })).max(2000),
     }).parse(req.body);
     return withTx(pool, (tx) => submitSession(tx, actorOf(req), id, b));
+  });
+
+  /* ---------- Báo cáo kho tự động ---------- */
+
+  /** Người được xem: người nhận báo cáo, dược, quản trị, Ban Giám đốc; báo cáo kho tổng chỉ người được xem kho tổng */
+  const REPORT_SQL = `SELECT r.*, st.name AS station_name FROM inventory_reports r JOIN stations st ON st.id = r.station_id`;
+  const canSeeReport = (req: FastifyRequest, r: any) =>
+    r.recipients.includes(req.user.id) || ['pharmacist', 'admin', 'director'].includes(req.user.role)
+    || (r.scope === 'kho_tong' ? CENTRAL_VIEW.includes(req.user.role) : req.user.role === 'supervisor');
+
+  app.get('/api/inventory-reports', { preHandler: guard() }, async (req) => {
+    const q = z.object({ stationId: z.string().optional() }).parse(req.query);
+    const rows = await many(pool, `${REPORT_SQL} WHERE ($1::text IS NULL OR r.station_id = $1) ORDER BY r.created_at DESC LIMIT 200`, [q.stationId ?? null]);
+    return rows.filter((r) => canSeeReport(req, r)).map(({ rows: _rows, recipients: _r, ...r }) => r);
+  });
+
+  app.get('/api/inventory-reports/:id', { preHandler: guard() }, async (req) => {
+    const r = await one(pool, `${REPORT_SQL} WHERE r.id = $1`, [idOf(req.params)]);
+    if (!r || !canSeeReport(req, r)) throw new HttpError(404, 'Không tìm thấy báo cáo');
+    const { recipients: _r, ...rest } = r;
+    return rest;
+  });
+
+  app.get('/api/inventory-reports/:id/xlsx', { preHandler: guard() }, async (req, reply) => {
+    const r = await one(pool, `${REPORT_SQL} WHERE r.id = $1`, [idOf(req.params)]);
+    if (!r || !canSeeReport(req, r)) throw new HttpError(404, 'Không tìm thấy báo cáo');
+    return reply.header('content-type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+      .header('content-disposition', `attachment; filename="${r.code}.xlsx"`).send(await reportWorkbook(r));
   });
 }

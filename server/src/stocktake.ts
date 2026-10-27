@@ -3,6 +3,7 @@ import { many, one, type Queryable, type Tx } from './db.js';
 import { HttpError } from './domain.js';
 import { centralStation, notifyCentral, notifyStation } from './inventory.js';
 import { createStocktake } from './stock.js';
+import { buildStocktakeReport } from './inventory-report.js';
 
 /**
  * Lịch kiểm kê: đến giờ thì mở phiên kiểm kê cho từng kho (kho điểm hằng ngày, kho tổng cuối tháng).
@@ -84,5 +85,6 @@ export async function submitSession(tx: Tx, actor: Actor, id: string, b: { lines
                     SELECT id, 'stocktake', $1, $2, '/kho#phieu-kho' FROM users WHERE active AND role IN ('supervisor', 'admin', 'director') AND id IS DISTINCT FROM $3`,
     [title, 'Người thứ hai xem và duyệt chênh lệch', actor.id]);
   }
-  return { voucher: v, diffs };
+  const report = await buildStocktakeReport(tx, id);
+  return { voucher: v, diffs, report };
 }

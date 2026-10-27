@@ -2,18 +2,20 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { FastifyInstance } from 'fastify';
 import type pg from 'pg';
 import { runInventoryJobs } from '../src/inventory-jobs.js';
-import { freshApp, login } from './helpers.js';
+import { freshApp, login, token } from './helpers.js';
 
 type Client = Awaited<ReturnType<typeof login>>;
 let app: FastifyInstance; let pool: pg.Pool;
-let admin: Client, duoc: Client, ddBls: Client, ddVc: Client, dpv06: Client, giamdoc: Client;
+let admin: Client, duoc: Client, ddBls: Client, ddVc: Client, dpv06: Client, giamdoc: Client, bsAls: Client, ketoan: Client;
 let drugA = 0; let drugB = 0;
 const qty = async (station: string, drug: number) =>
   Number((await pool.query(`SELECT coalesce(sum(qty), 0) AS q FROM stock_lots WHERE station_id = $1 AND vehicle_id IS NULL AND drug_id = $2`, [station, drug])).rows[0].q);
 
 beforeAll(async () => {
   ({ app, pool } = await freshApp());
-  [admin, duoc, ddBls, ddVc, dpv06, giamdoc] = await Promise.all(['admin', 'duoc', 'dd.bls', 'dd.vc', 'dpv06', 'giamdoc'].map((u) => login(app, u)));
+  [admin, duoc, ddBls, ddVc, dpv06, giamdoc, bsAls, ketoan] = await Promise.all(['admin', 'duoc', 'dd.bls', 'dd.vc', 'dpv06', 'giamdoc', 'bs.als', 'ketoan'].map((u) => login(app, u)));
+  await pool.query(`UPDATE org_members m SET is_lead = true FROM staff s, users u, org_units o
+                     WHERE m.staff_id = s.id AND s.user_id = u.id AND u.username = 'bs.als' AND o.id = m.unit_id AND o.code = 'CM'`);
   await pool.query(`UPDATE users SET station_id = 'TR-01' WHERE username = 'dd.bls'`);
   await pool.query(`UPDATE users SET station_id = 'TR-02' WHERE username = 'dd.vc'`);
   const d = (await pool.query(`SELECT id FROM drugs WHERE active AND NOT controlled AND track_lot ORDER BY id LIMIT 2`)).rows;
@@ -135,6 +137,17 @@ describe('lịch kiểm kê', () => {
     expect(r.diffs).toBe(1);
     expect(r.voucher.status).toBe('cho_duyet');
     expect((await ddBls('POST', `/api/stocktakes/${open.id}/submit`, { lines })).http).toBe(409);
+    // báo cáo tự động gửi trưởng bộ phận cấp cứu (trưởng nhóm mảng kíp)
+    expect(r.report.code).toMatch(/^BCK-/);
+    const rep = await bsAls('GET', `/api/inventory-reports/${r.report.id}`);
+    expect(rep.http).toBe(200);
+    expect(rep.summary.diffItems).toBe(1);
+    expect(rep.rows[0].diff).toBe(-2);
+    expect(JSON.stringify(await bsAls('GET', '/api/notifications'))).toContain('Báo cáo kho TR-01');
+    expect((await ddVc('GET', `/api/inventory-reports/${r.report.id}`)).http).toBe(404);
+    expect((await ketoan('GET', `/api/inventory-reports/${r.report.id}`)).http).toBe(404);
+    const x = await app.inject({ method: 'GET', url: `/api/inventory-reports/${r.report.id}/xlsx`, headers: { authorization: `Bearer ${await token(app, 'bs.als')}` } });
+    expect(x.statusCode).toBe(200);
     const ts = (await duoc('GET', '/api/stocktakes?stationId=TS')).data[0];
     expect((await ddBls('GET', `/api/stocktakes/${ts.id}`)).http).toBe(403);
     // kiểm mù

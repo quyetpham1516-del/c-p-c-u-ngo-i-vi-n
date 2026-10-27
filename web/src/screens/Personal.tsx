@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api, money } from '../api';
 import { ChangeRequests } from '../components/ChangeRequests';
+import { InventoryReports } from '../components/InventoryReports';
 import { ProposalForm } from './Finance';
 import { MyPpe } from './Logistics';
 import { Payslip } from './Payroll';
@@ -37,6 +38,7 @@ export function Personal() {
       {error && <div className="error">{error}</div>}
       {msg && <div className="alert green">{msg}</div>}
       <ChangeRequests mine />
+      <InventoryReports compact />
       <CaseFeedback />
       <MyPayslips />
       <MyPpe />

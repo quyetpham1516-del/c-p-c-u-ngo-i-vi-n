@@ -86,6 +86,7 @@ export const GOVERNED: Governed[] = [
   },
   { route: 'PUT /api/inventory/settings', label: 'Cài đặt kho tổng, tự phát theo định mức', domain: 'kho' },
   { route: 'PUT /api/stocktake-schedules/:scope', label: 'Lịch kiểm kê', domain: 'kho' },
+  { route: 'PUT /api/handover-settings', label: 'Cài đặt bàn giao ca trên xe', domain: 'kip' },
   { route: 'PUT /api/duty-tasks/:position', label: 'Nhiệm vụ của vị trí trong kíp', domain: 'kip' },
   { route: 'PUT /api/governance', label: 'Khóa, mở khóa cấu hình', domain: 'ban_giam_doc' },
 ];

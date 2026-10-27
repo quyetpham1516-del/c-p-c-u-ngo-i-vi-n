@@ -42,6 +42,7 @@ import { registerGovernance } from './routes/governance.js';
 import { registerDuty } from './routes/duty.js';
 import { registerSheets } from './routes/sheets.js';
 import { registerInventory } from './routes/inventory.js';
+import { registerHandover } from './routes/handover.js';
 import { governanceHook } from './governance.js';
 
 export * from './http.js';
@@ -122,6 +123,7 @@ export async function buildApp(pool: pg.Pool, opts: { logger?: boolean } = {}) {
   registerDuty(app, ctx);
   registerSheets(app, ctx);
   registerInventory(app, ctx);
+  registerHandover(app, ctx);
   registerAdmin(app, ctx);
 
   app.setNotFoundHandler((_req, reply) => reply.code(404).send({ error: 'Không tìm thấy' }));

@@ -200,9 +200,13 @@ export function registerEoc(app: FastifyInstance, { pool, hub }: Ctx) {
     const b = z.object({
       vehicleId: z.string().min(1), divertReason: z.string().max(500).nullish(), confirmFar: z.boolean().optional(),
       equipmentOverride: z.string().trim().max(500).nullish(),
+      handoverOverride: z.string().trim().max(500).nullish(),
     }).parse(req.body);
     if (b.equipmentOverride && !['supervisor', 'admin'].includes(req.user.role)) throw new HttpError(403, 'Chỉ trưởng ca được cho xe thiếu thiết bị đi');
-    await withTx(pool, (tx) => assignVehicle(tx, actorOf(req), id, b.vehicleId, { divertReason: b.divertReason, confirmFar: b.confirmFar, equipmentOverride: b.equipmentOverride }));
+    if (b.handoverOverride && !['supervisor', 'admin'].includes(req.user.role)) throw new HttpError(403, 'Chỉ trưởng ca được cho xe chưa bàn giao ca đi');
+    await withTx(pool, (tx) => assignVehicle(tx, actorOf(req), id, b.vehicleId, {
+      divertReason: b.divertReason, confirmFar: b.confirmFar, equipmentOverride: b.equipmentOverride, handoverOverride: b.handoverOverride,
+    }));
     await Promise.all([pushIncident(id), hub.publish({ type: 'vehicle', id: b.vehicleId })]);
     return incidentDetail(pool, id);
   });

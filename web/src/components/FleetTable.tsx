@@ -6,6 +6,7 @@ export interface BoardVehicle {
   equipment_gaps?: string | null;
   crew: { name: string; title: string; role: string }[];
   leader?: string | null;
+  locked?: string | null;
   incident: null | { id: string; code: string; priority: string | null; complaint: string | null; destination: string | null; address: string | null; acknowledged: boolean };
   free: { freeAt: string | null; lowAt: string | null; highAt: string | null; basis: string };
 }
@@ -37,6 +38,7 @@ export function FleetTable({ board, compact = false, onPick }: { board: Board | 
               <td>
                 <b>{v.id}</b>{v.leader && <span style={{ marginLeft: 6 }} title="Trưởng kíp">{v.leader}</span>}
                 {v.equipment_gaps && <span className="badge far" style={{ marginLeft: 6 }} title={v.equipment_gaps}>Thiếu thiết bị</span>}
+                {v.locked && <span className="badge red" style={{ marginLeft: 6 }} title={v.locked}>Khóa</span>}
                 <div className="small muted">{compact ? v.type : v.type_label} · {v.station_name} · {DUTY[v.duty]}</div>
               </td>
               <td>

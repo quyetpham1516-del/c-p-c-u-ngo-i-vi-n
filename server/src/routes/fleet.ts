@@ -4,6 +4,7 @@ import { suggestWithRoads } from '../routing.js';
 import { assertCanStartShift } from '../hr.js';
 import { activeDutyFor } from './duty.js';
 import { leaderLabel } from '../accounts.js';
+import { handoverBlocks, onShiftStarted } from '../handover.js';
 import { audit } from '../audit.js';
 import { many, one, withTx } from '../db.js';
 import { ackAssignment, AUTO_DISPATCH_KM, crewStatus, getIncident, HttpError, incidentScope, incidentSummary, recordTime, setVehicleStatus } from '../domain.js';
@@ -19,16 +20,18 @@ import { findGroup, type Priority, type VehicleType } from '../triage/protocol.j
 const BOARD_ROLES = [...EOC_ROLES, 'qa' as const];
 
 export async function loadVehicles(q: import('../db.js').Queryable): Promise<VehicleRow[]> {
-  const [rows, gaps, legal] = await Promise.all([
+  const [rows, gaps, legal, handover] = await Promise.all([
     many<VehicleRow>(q, `
       SELECT v.*, s.name AS station_name, s.lat AS station_lat, s.lng AS station_lng
         FROM vehicles v JOIN stations s ON s.id = v.station_id ORDER BY v.id`),
     equipmentGaps(q),
     fleetCompliance(q),
+    handoverBlocks(q),
   ]);
   return rows.map((v) => ({
     ...v, equipment_gaps: gaps[v.id]?.length ? gapText(gaps[v.id]) : null,
-    locked: legal[v.id]?.blocks.length ? legal[v.id].blocks.join('; ') : null,
+    locked: [...(legal[v.id]?.blocks ?? []), ...(handover[v.id] ? [handover[v.id]] : [])].join('; ') || null,
+    handover_block: handover[v.id] ?? null,
     fleet_warnings: legal[v.id]?.warnings.length ? legal[v.id].warnings.join('; ') : null,
   }));
 }
@@ -177,6 +180,7 @@ export function registerFleet(app: FastifyInstance, { pool, hub }: Ctx) {
       const duty = await activeDutyFor(tx, req.user.id, b.vehicleId);
       if (!duty && home?.station_id && home.station_id !== v.station_id) throw new HttpError(403, `Bạn được phân ở điểm ${home.station_id}, xe ${b.vehicleId} thuộc điểm ${v.station_id}`);
       await tx.query('INSERT INTO crew_shifts(vehicle_id, user_id, crew_role) VALUES ($1,$2,$3)', [b.vehicleId, actor.id, b.crewRole]);
+      await onShiftStarted(tx, req.user.id, b.vehicleId);
       if (v.status === 'S9') await setVehicleStatus(tx, actor, b.vehicleId, 'S1');
       await audit(tx, 'system', actor, 'crew.shift_started', 'vehicle', b.vehicleId, { crewRole: b.crewRole, warnings: check.warnings });
       return check;

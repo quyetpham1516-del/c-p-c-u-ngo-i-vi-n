@@ -34,6 +34,7 @@ const LINKS: { to: string; label: string; roles: Role[] }[] = [
   { to: '/ca-nhan', label: 'Cá nhân', roles: ['calltaker', 'dispatcher', 'supervisor', 'crew', 'qa', 'admin', 'pharmacist', 'technician', 'ipc', 'hr', 'accountant', 'director'] },
   { to: '/bao-mat', label: 'Bảo mật', roles: ['calltaker', 'dispatcher', 'supervisor', 'crew', 'qa', 'admin', 'pharmacist', 'technician', 'ipc', 'hr', 'accountant', 'director', 'hospital'] },
   { to: '/quan-tri', label: 'Quản trị', roles: ['admin'] },
+  { to: '/file-mau', label: 'File mẫu', roles: ['admin', 'director'] },
 ];
 const REVIEW_DECIDE: Role[] = ['supervisor', 'director', 'admin'];
 

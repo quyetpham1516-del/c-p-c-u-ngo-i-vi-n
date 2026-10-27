@@ -3,6 +3,7 @@ import { audit } from './audit.js';
 import { many, nextCounter, one, withTx, type Queryable } from './db.js';
 import type { Ctx } from './http.js';
 import { notifyRoles } from './notify.js';
+import { sheetByKey } from './sheets.js';
 
 /**
  * Trưởng nhóm đề xuất, quản trị duyệt. Khi đã "khóa cấu hình", các thao tác sửa danh mục, cấu hình dưới đây không chạy ngay:
@@ -25,6 +26,8 @@ interface Governed {
   before?: { table: string; key: string; param: string };
   /** Thao tác quản trị được làm ngay dù đã khóa (khóa tài khoản khẩn) */
   exempt?: (body: any) => boolean;
+  /** Tên và mảng phụ thuộc tham số (file mẫu: mỗi danh mục một mảng) */
+  resolve?: (params: Record<string, string>) => { label: string; domain: Domain } | null;
 }
 
 export const GOVERNED: Governed[] = [
@@ -77,6 +80,10 @@ export const GOVERNED: Governed[] = [
   { route: 'PUT /api/security/settings', label: 'Cài đặt bảo mật', domain: 'ban_giam_doc' },
   { route: 'PUT /api/approvals/limits', label: 'Hạn mức phê duyệt', domain: 'ban_giam_doc' },
   { route: 'PUT /api/ops/settings/population', label: 'Dân số vùng phục vụ', domain: 'ban_giam_doc' },
+  {
+    route: 'POST /api/sheets/:key/apply', label: 'Nạp danh mục từ Excel', domain: 'ban_giam_doc',
+    resolve: (p) => { const s = sheetByKey(p.key); return s ? { label: `Nạp Excel: ${s.label}`, domain: s.domain } : null; },
+  },
   { route: 'PUT /api/duty-tasks/:position', label: 'Nhiệm vụ của vị trí trong kíp', domain: 'kip' },
   { route: 'PUT /api/governance', label: 'Khóa, mở khóa cấu hình', domain: 'ban_giam_doc' },
 ];
@@ -118,8 +125,10 @@ declare module 'fastify' {
  */
 export function governanceHook({ pool }: Ctx) {
   return async (req: FastifyRequest, reply: FastifyReply) => {
-    const g = governedRoute(req.method, req.routeOptions?.url);
-    if (!g) return;
+    const found = governedRoute(req.method, req.routeOptions?.url);
+    if (!found) return;
+    const resolved = found.resolve?.((req.params ?? {}) as Record<string, string>);
+    const g = resolved ? { ...found, ...resolved } : found;
     try { await req.jwtVerify(); } catch { return; } // chưa đăng nhập: để phần kiểm tra của thao tác trả lỗi
     const user = req.user as any;
     if (user.cr) {

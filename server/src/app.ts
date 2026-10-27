@@ -40,6 +40,7 @@ import { registerTelephony } from './routes/telephony.js';
 import { registerRegistry } from './routes/registry.js';
 import { registerGovernance } from './routes/governance.js';
 import { registerDuty } from './routes/duty.js';
+import { registerSheets } from './routes/sheets.js';
 import { governanceHook } from './governance.js';
 
 export * from './http.js';
@@ -118,6 +119,7 @@ export async function buildApp(pool: pg.Pool, opts: { logger?: boolean } = {}) {
   registerRegistry(app, ctx);
   registerGovernance(app, ctx);
   registerDuty(app, ctx);
+  registerSheets(app, ctx);
   registerAdmin(app, ctx);
 
   app.setNotFoundHandler((_req, reply) => reply.code(404).send({ error: 'Không tìm thấy' }));

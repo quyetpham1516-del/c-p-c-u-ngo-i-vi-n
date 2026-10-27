@@ -12,6 +12,20 @@ const show = (v: unknown) => v === null || v === undefined || v === '' ? '—' :
 
 /** So giá trị hiện tại lúc đề xuất với giá trị đề xuất, theo từng trường */
 function Diff({ before, body }: { before: any; body: any }) {
+  if (body && Array.isArray(body.rows)) {
+    const cols = Object.keys(body.rows[0] ?? {}).filter((k) => k !== '_action');
+    return (
+      <div style={{ overflowX: 'auto', maxHeight: 360 }}>
+        <div className="small">{body.rows.length} dòng nạp từ Excel</div>
+        <table className="small">
+          <thead><tr><th />{cols.map((c) => <th key={c}>{c}</th>)}</tr></thead>
+          <tbody>{body.rows.map((r: any, i: number) => (
+            <tr key={i}><td>{r._action === 'them' ? 'Thêm' : r._action === 'sua' ? 'Sửa' : ''}</td>{cols.map((c) => <td key={c}>{show(r[c])}</td>)}</tr>
+          ))}</tbody>
+        </table>
+      </div>
+    );
+  }
   if (!body || typeof body !== 'object' || Array.isArray(body)) return <pre className="small" style={{ whiteSpace: 'pre-wrap', margin: 0 }}>{show(body)}</pre>;
   const keys = Object.keys(body);
   if (!keys.length) return <span className="small muted">Không có nội dung</span>;
@@ -70,7 +84,8 @@ export function ChangeRequests({ mine = false }: { mine?: boolean }) {
       </div>
       {mine && gov.myDomains.length > 0 && (
         <div className="small muted">Bạn là trưởng nhóm: {gov.myDomains.map((d: any) => `${d.label} (${d.unitName})`).join(', ')}.
-          {gov.enforced ? ' Thay đổi bạn gửi ở các màn hình sẽ thành đề xuất chờ quản trị duyệt.' : ' Cấu hình chưa khóa nên quản trị đang nhập thẳng.'}</div>
+          {gov.enforced ? ' Thay đổi bạn gửi ở các màn hình sẽ thành đề xuất chờ quản trị duyệt.' : ' Cấu hình chưa khóa nên quản trị đang nhập thẳng.'}
+          {' '}Sửa hàng loạt bằng Excel ở <a href="/file-mau">File mẫu</a>.</div>
       )}
       {isAdmin && (
         <div className={`alert ${gov.enforced ? 'green' : 'amber'} small`} style={{ marginTop: 8 }}>

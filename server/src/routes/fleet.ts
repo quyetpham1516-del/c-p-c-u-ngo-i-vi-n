@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { suggestWithRoads } from '../routing.js';
 import { assertCanStartShift } from '../hr.js';
 import { activeDutyFor } from './duty.js';
+import { leaderLabel } from '../accounts.js';
 import { audit } from '../audit.js';
 import { many, one, withTx } from '../db.js';
 import { ackAssignment, AUTO_DISPATCH_KM, crewStatus, getIncident, HttpError, incidentScope, incidentSummary, recordTime, setVehicleStatus } from '../domain.js';
@@ -33,7 +34,7 @@ export async function loadVehicles(q: import('../db.js').Queryable): Promise<Veh
 }
 
 export async function boardRows(q: import('../db.js').Queryable) {
-  const [vehicles, crews, incidents, medians, waiting] = await Promise.all([
+  const [vehicles, crews, incidents, medians, waiting, planned] = await Promise.all([
     loadVehicles(q),
     many(q, `SELECT cs.vehicle_id, u.full_name, u.title, cs.crew_role FROM crew_shifts cs JOIN users u ON u.id = cs.user_id
               WHERE cs.ended_at IS NULL ORDER BY cs.started_at`),
@@ -42,8 +43,18 @@ export async function boardRows(q: import('../db.js').Queryable) {
                FROM assignments a JOIN incidents i ON i.id = a.incident_id WHERE a.ended_at IS NULL`),
     statusMedians(q),
     one(q, `SELECT count(*)::int AS n, min(ringing_at) AS oldest FROM calls WHERE state = 'ringing'`),
+    // Trưởng kíp theo ca trực đang hiệu lực, dùng khi kíp chưa đăng nhập ca
+    many(q, `SELECT DISTINCT ON (p.vehicle_id) p.vehicle_id, u.full_name, u.title FROM duty_posts p
+               JOIN duty_post_members m ON m.post_id = p.id JOIN users u ON u.id = m.user_id
+              WHERE p.status = 'ke_hoach' AND now() BETWEEN p.starts_at AND p.ends_at
+              ORDER BY p.vehicle_id, (m.position = 'Trưởng kíp') DESC, u.full_name`),
   ]);
   const now = new Date();
+  const leaderOf = (vehicleId: string) => {
+    const onShift = crews.filter((c) => c.vehicle_id === vehicleId);
+    const lead = onShift.find((c) => c.crew_role === 'Trưởng kíp') ?? onShift[0] ?? planned.find((p) => p.vehicle_id === vehicleId);
+    return lead ? leaderLabel(lead.title, lead.full_name) : null;
+  };
   const rows = vehicles.map((v) => {
     const inc = incidents.find((i) => i.vehicle_id === v.id) ?? null;
     let toScene: number | null = null;
@@ -55,6 +66,7 @@ export async function boardRows(q: import('../db.js').Queryable) {
       type_label: VEHICLE_LABEL[v.type],
       status_label: STATUS_LABEL[v.status],
       crew: crews.filter((c) => c.vehicle_id === v.id).map((c) => ({ name: c.full_name, title: c.title, role: c.crew_role })),
+      leader: leaderOf(v.id),
       incident: inc && {
         id: inc.id, code: inc.code, priority: inc.final_priority, complaint: findGroup(inc.chief_complaint)?.label ?? null,
         destination: inc.destination, address: inc.address, acknowledged: !!inc.acknowledged_at,
@@ -139,10 +151,14 @@ export function registerFleet(app: FastifyInstance, { pool, hub }: Ctx) {
 
   /* ---------- Ứng dụng kíp ---------- */
 
-  /** Kíp được phân điểm thì chỉ thấy xe của điểm đó */
+  /** Kíp được phân điểm thì chỉ thấy xe của điểm đó, cộng xe của ca trực mình được xếp */
   app.get('/api/crew/vehicles', { preHandler: guard('crew') }, async (req) =>
     many(pool, `SELECT v.id, v.type, v.status, v.station_id, s.name AS station_name FROM vehicles v JOIN stations s ON s.id = v.station_id
-                 WHERE v.station_id = coalesce((SELECT station_id FROM users WHERE id = $1), v.station_id) ORDER BY v.id`, [req.user.id]));
+                 WHERE v.station_id = coalesce((SELECT station_id FROM users WHERE id = $1), v.station_id)
+                    OR EXISTS (SELECT 1 FROM duty_posts p JOIN duty_post_members m ON m.post_id = p.id
+                                WHERE m.user_id = $1 AND p.vehicle_id = v.id AND p.status = 'ke_hoach'
+                                  AND now() BETWEEN p.starts_at - interval '1 hour' AND p.ends_at)
+                 ORDER BY v.id`, [req.user.id]));
 
   app.post('/api/crew/shift', { preHandler: guard('crew') }, async (req) => {
     const b = z.object({ vehicleId: z.string().min(1), crewRole: z.string().min(1).max(60) }).parse(req.body);

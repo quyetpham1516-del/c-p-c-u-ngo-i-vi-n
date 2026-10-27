@@ -17,8 +17,8 @@ beforeAll(async () => {
   hospitalId = hs.find((h) => h.name === 'Bệnh viện Chợ Rẫy').id;
   otherId = hs.find((h) => h.name !== 'Bệnh viện Chợ Rẫy').id;
   expect((await admin('POST', '/api/users', { username: 'bv.choray', fullName: 'BS Cấp cứu Chợ Rẫy', role: 'hospital', password: testPassword })).http).toBe(400);
-  expect((await admin('POST', '/api/users', { username: 'bv.choray', fullName: 'BS Cấp cứu Chợ Rẫy', role: 'hospital', hospitalId, password: testPassword })).http).toBe(200);
-  expect((await admin('POST', '/api/users', { username: 'bv.khac', fullName: 'BS Bệnh viện khác', role: 'hospital', hospitalId: otherId, password: testPassword })).http).toBe(200);
+  expect((await admin('POST', '/api/users', { username: 'bv.choray', fullName: 'BS Cấp cứu Chợ Rẫy', role: 'hospital', hospitalId, cccd: '079200000001', password: testPassword })).http).toBe(200);
+  expect((await admin('POST', '/api/users', { username: 'bv.khac', fullName: 'BS Bệnh viện khác', role: 'hospital', hospitalId: otherId, cccd: '079200000002', password: testPassword })).http).toBe(200);
   [bv, bvKhac] = await Promise.all(['bv.choray', 'bv.khac'].map((u) => login(app, u)));
   await crew('POST', '/api/crew/shift', { vehicleId: 'MD-ALS-01', crewRole: 'Bác sĩ' });
 }, 60000);

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api, fmtDateTime, money, session } from '../api';
 import { useStations } from '../catalog';
+import { DutyTasksAdmin } from '../components/DutyTasks';
 
 type Member = { userId: string; position: string };
 const localInput = (d: Date) => new Date(d.getTime() - d.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
@@ -142,6 +143,8 @@ export function Duty() {
           <div className="small muted">Người trong ca đăng nhập ca trên xe này không bị giới hạn theo điểm được phân, từ 1 giờ trước giờ bắt đầu tới hết ca.</div>
         </div>
       )}
+
+      <DutyTasksAdmin />
 
       {prices && (
         <div className="panel">

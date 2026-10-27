@@ -188,10 +188,10 @@ describe('tìm ICD không dấu, tài khoản cho các vai trò mới', () => {
   });
 
   it('admin tạo tài khoản dược sĩ, khóa tài khoản; người khác không tạo được', async () => {
-    const u = await admin('POST', '/api/users', { username: 'duoc2', fullName: 'Dược sĩ 2', role: 'pharmacist', password: 'mat-khau-dai-du-10' });
+    const u = await admin('POST', '/api/users', { username: 'duoc2', fullName: 'Dược sĩ 2', role: 'pharmacist', cccd: '079200000003', password: 'mat-khau-dai-du-10' });
     expect(u.http).toBe(200);
     expect((await sup('POST', '/api/users', { username: 'x1', fullName: 'X', role: 'admin', password: 'mat-khau-dai-du-10' })).http).toBe(403);
-    expect((await admin('POST', '/api/users', { username: 'duoc2', fullName: 'Trùng', role: 'pharmacist', password: 'mat-khau-dai-du-10' })).http).toBe(409);
+    expect((await admin('POST', '/api/users', { username: 'duoc2', fullName: 'Trùng', role: 'pharmacist', cccd: '079200000004', password: 'mat-khau-dai-du-10' })).http).toBe(409);
     const login1 = await app.inject({ method: 'POST', url: '/api/auth/login', payload: { username: 'duoc2', password: 'mat-khau-dai-du-10' } });
     expect(login1.statusCode).toBe(200);
     expect((await admin('PATCH', `/api/users/${u.id}`, { active: false })).http).toBe(200);

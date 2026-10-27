@@ -4,6 +4,7 @@ import { ParSheet } from '../components/ParSheet';
 import { MciReport } from '../components/MciReport';
 import { CaseRestock } from '../components/CaseRestock';
 import { EpcrForm } from '../components/EpcrForm';
+import { MyDutyTasks } from '../components/DutyTasks';
 import { CrewSos } from '../components/Sos';
 import { FLAG_LABEL } from '../components/Triage';
 import { startAlarm, unlockAudio } from '../alarm';
@@ -179,6 +180,7 @@ export function Crew() {
             if (r.warnings?.length) alert(`Đã nhận ca. Lưu ý hồ sơ: ${r.warnings.join('; ')}`);
           }); }}>Bắt đầu ca</button>
         </div>
+        <MyDutyTasks />
         <OfflineDrafts drafts={drafts} onOpen={(d) => openDraft(d.id)} />
         {draft && <EpcrForm key={draft.id} draft={draft} onChange={() => allDrafts().then(setDrafts)} />}
       </div>
@@ -207,6 +209,7 @@ export function Crew() {
           <button className="ghost" onClick={() => act(() => api('DELETE', '/api/crew/shift'))}>Kết thúc ca</button>
         </div>
       </div>
+      <MyDutyTasks refreshKey={cur.shift?.crew_role} />
 
       {inc && !inc.acknowledged && (
         <div className="alert red order-alarm" role="alert">

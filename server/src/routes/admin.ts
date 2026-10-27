@@ -2,6 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { audit } from '../audit.js';
 import { many, one, withTx, type Queryable } from '../db.js';
+import { checkAccount, normalizeTaxCode, sealCccd } from '../accounts.js';
 import { hashPassword } from '../crypto.js';
 import { HttpError } from '../domain.js';
 import { actorOf, guard, type Ctx } from '../http.js';
@@ -86,7 +87,7 @@ export function registerAdmin(app: FastifyInstance, { pool, hub }: Ctx) {
 
   app.get('/api/users', admin, async () =>
     many(pool, `SELECT u.id, u.username, u.full_name, u.title, u.role, u.active, u.license_no, u.station_id, s.name AS station_name, u.sso_linked_at,
-                  u.hospital_id, h.name AS hospital_name
+                  u.hospital_id, h.name AS hospital_name, u.account_type, u.tax_code, u.cccd_last4
                   FROM users u LEFT JOIN stations s ON s.id = u.station_id LEFT JOIN hospitals h ON h.id = u.hospital_id ORDER BY u.role, u.username`));
 
   /** Phân điểm làm việc cho nhân viên (để trống = làm được mọi điểm) */
@@ -124,15 +125,36 @@ export function registerAdmin(app: FastifyInstance, { pool, hub }: Ctx) {
       fullName: z.string().trim().min(2).max(120), role: ROLE, title: z.string().trim().max(80).nullish(),
       licenseNo: z.string().trim().max(60).nullish(), stationId: z.string().nullish(), password,
       hospitalId: z.number().int().positive().nullish(),
+      accountType: z.enum(['ca_nhan', 'to_chuc']).default('ca_nhan'), taxCode: z.string().max(20).nullish(), cccd: z.string().max(20).nullish(),
     }).parse(req.body);
+    const taxCode = normalizeTaxCode(b.taxCode);
+    checkAccount({ accountType: b.accountType, title: b.title, licenseNo: b.licenseNo, taxCode, hasCccd: !!b.cccd?.trim(), creating: true });
     return withTx(pool, async (tx) => {
       if (await one(tx, 'SELECT 1 FROM users WHERE username = $1', [b.username])) throw new HttpError(409, `Tên đăng nhập ${b.username} đã có`);
       const hospitalId = await hospitalFor(tx, b.role, b.hospitalId);
-      const u = await one(tx, `INSERT INTO users(username, full_name, role, title, license_no, station_id, password_hash, hospital_id)
-                               VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id, username, full_name, role, title, station_id, active, hospital_id`,
-      [b.username, b.fullName, b.role, b.title ?? null, b.licenseNo ?? null, b.role === 'hospital' ? null : b.stationId ?? null, hashPassword(b.password), hospitalId]);
-      await audit(tx, 'system', actorOf(req), 'user.created', 'user', u.id, { username: b.username, role: b.role });
+      const id = b.cccd?.trim() ? await sealCccd(tx, b.cccd, null) : null;
+      const u = await one(tx, `INSERT INTO users(username, full_name, role, title, license_no, station_id, password_hash, hospital_id, account_type, tax_code, cccd_enc, cccd_last4, cccd_hash)
+                               VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
+                               RETURNING id, username, full_name, role, title, station_id, active, hospital_id, account_type, tax_code, cccd_last4`,
+      [b.username, b.fullName, b.role, b.title ?? null, b.licenseNo ?? null, b.role === 'hospital' ? null : b.stationId ?? null, hashPassword(b.password), hospitalId,
+        b.accountType, taxCode, id?.enc ?? null, id?.last4 ?? null, id?.hash ?? null]);
+      await audit(tx, 'system', actorOf(req), 'user.created', 'user', u.id, { username: b.username, role: b.role, accountType: b.accountType });
       return u;
+    });
+  });
+
+  /** Ghi, sửa số căn cước của tài khoản cá nhân (mã hóa, chỉ hiện 4 số cuối). Thông tin định danh nên quản trị ghi thẳng, không qua đề xuất. */
+  app.put('/api/users/:id/cccd', admin, async (req) => {
+    const id = z.object({ id: z.string().uuid() }).parse(req.params).id;
+    const b = z.object({ cccd: z.string().max(20) }).parse(req.body);
+    return withTx(pool, async (tx) => {
+      const cur = await one(tx, 'SELECT account_type FROM users WHERE id = $1 FOR UPDATE', [id]);
+      if (!cur) throw new HttpError(404, 'Không tìm thấy tài khoản');
+      if (cur.account_type !== 'ca_nhan') throw new HttpError(400, 'Tài khoản tổ chức không ghi số căn cước');
+      const c = await sealCccd(tx, b.cccd, id);
+      await tx.query('UPDATE users SET cccd_enc = $2, cccd_last4 = $3, cccd_hash = $4 WHERE id = $1', [id, c.enc, c.last4, c.hash]);
+      await audit(tx, 'system', actorOf(req), 'user.cccd_set', 'user', id, { last4: c.last4 });
+      return { ok: true, cccdLast4: c.last4 };
     });
   });
 
@@ -141,20 +163,25 @@ export function registerAdmin(app: FastifyInstance, { pool, hub }: Ctx) {
     const b = z.object({
       fullName: z.string().trim().min(2).max(120).optional(), role: ROLE.optional(), title: z.string().trim().max(80).nullish(),
       licenseNo: z.string().trim().max(60).nullish(), active: z.boolean().optional(),
-      hospitalId: z.number().int().positive().nullish(),
+      hospitalId: z.number().int().positive().nullish(), taxCode: z.string().max(20).nullish(),
     }).parse(req.body);
     if (id === req.user.id && (b.active === false || (b.role && b.role !== 'admin'))) throw new HttpError(409, 'Không tự khóa hoặc tự bỏ quyền quản trị của chính mình');
     return withTx(pool, async (tx) => {
-      const cur = await one(tx, 'SELECT role, hospital_id FROM users WHERE id = $1', [id]);
+      const cur = await one(tx, 'SELECT role, hospital_id, account_type, title, license_no, tax_code, cccd_hash FROM users WHERE id = $1', [id]);
       if (!cur) throw new HttpError(404, 'Không tìm thấy tài khoản');
+      const taxCode = 'taxCode' in b ? normalizeTaxCode(b.taxCode) : cur.tax_code;
+      if (b.title !== undefined || b.licenseNo !== undefined || b.taxCode !== undefined) {
+        checkAccount({ accountType: cur.account_type, title: 'title' in b ? b.title : cur.title, licenseNo: 'licenseNo' in b ? b.licenseNo : cur.license_no,
+          taxCode, hasCccd: !!cur.cccd_hash, creating: false });
+      }
       const role = b.role ?? cur.role;
       const hospitalId = await hospitalFor(tx, role, 'hospitalId' in b ? b.hospitalId : cur.hospital_id);
       const u = await one(tx, `UPDATE users SET full_name = coalesce($2, full_name), role = coalesce($3, role),
                                       title = CASE WHEN $6 THEN $4 ELSE title END, license_no = CASE WHEN $7 THEN $5 ELSE license_no END,
-                                      active = coalesce($8, active), hospital_id = $9,
+                                      active = coalesce($8, active), hospital_id = $9, tax_code = $10,
                                       station_id = CASE WHEN $3 = 'hospital' THEN NULL ELSE station_id END
-                                WHERE id = $1 RETURNING id, username, full_name, role, title, station_id, active, hospital_id`,
-      [id, b.fullName ?? null, b.role ?? null, b.title ?? null, b.licenseNo ?? null, 'title' in b, 'licenseNo' in b, b.active ?? null, hospitalId]);
+                                WHERE id = $1 RETURNING id, username, full_name, role, title, station_id, active, hospital_id, account_type, tax_code, cccd_last4`,
+      [id, b.fullName ?? null, b.role ?? null, b.title ?? null, b.licenseNo ?? null, 'title' in b, 'licenseNo' in b, b.active ?? null, hospitalId, taxCode]);
       if (!u) throw new HttpError(404, 'Không tìm thấy tài khoản');
       if (b.active === false) await tx.query('UPDATE crew_shifts SET ended_at = now() WHERE user_id = $1 AND ended_at IS NULL', [id]);
       await audit(tx, 'system', actorOf(req), 'user.updated', 'user', id, b);

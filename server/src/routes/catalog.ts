@@ -1,5 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
+import { normalizeTaxCode } from '../accounts.js';
 import { audit } from '../audit.js';
 import { many, one, withTx } from '../db.js';
 import { HttpError } from '../domain.js';
@@ -11,7 +12,7 @@ export function registerCatalog(app: FastifyInstance, { pool }: Ctx) {
   /* ---------- Bệnh viện và khoa nhận bệnh ---------- */
   app.get('/api/hospitals', { preHandler: guard() }, async () => {
     return many(pool, `
-      SELECT h.id, h.name, h.kcb_code, h.kind, h.address, h.phone, h.capabilities,
+      SELECT h.id, h.name, h.kcb_code, h.kind, h.address, h.phone, h.capabilities, h.tax_code,
              COALESCE(json_agg(json_build_object('id', d.id, 'name', d.name) ORDER BY d.id) FILTER (WHERE d.id IS NOT NULL), '[]') AS departments
         FROM hospitals h LEFT JOIN hospital_departments d ON d.hospital_id = h.id AND d.active
        WHERE h.active GROUP BY h.id ORDER BY h.name`);
@@ -20,10 +21,13 @@ export function registerCatalog(app: FastifyInstance, { pool }: Ctx) {
   app.post('/api/hospitals', { preHandler: guard(...CATALOG_ADMIN) }, async (req) => {
     const b = z.object({
       name: z.string().trim().min(3).max(200), address: z.string().max(300).nullish(), phone: z.string().max(50).nullish(),
+      taxCode: z.string().max(20),
       departments: z.array(z.string().trim().min(2).max(120)).max(50).default(['Khoa Cấp cứu']),
     }).parse(req.body);
     return withTx(pool, async (tx) => {
-      const h = await one(tx, 'INSERT INTO hospitals(name, address, phone) VALUES ($1,$2,$3) RETURNING *', [b.name, b.address ?? null, b.phone ?? null]);
+      const taxCode = normalizeTaxCode(b.taxCode);
+      if (!taxCode) throw new HttpError(400, 'Bệnh viện là tổ chức: cần mã số thuế');
+      const h = await one(tx, 'INSERT INTO hospitals(name, address, phone, tax_code) VALUES ($1,$2,$3,$4) RETURNING *', [b.name, b.address ?? null, b.phone ?? null, taxCode]);
       for (const d of b.departments) await tx.query('INSERT INTO hospital_departments(hospital_id, name) VALUES ($1,$2) ON CONFLICT DO NOTHING', [h.id, d]);
       await audit(tx, 'system', actorOf(req), 'hospital.created', 'hospital', String(h.id), b);
       return h;
@@ -32,9 +36,10 @@ export function registerCatalog(app: FastifyInstance, { pool }: Ctx) {
 
   app.patch('/api/hospitals/:id', { preHandler: guard(...CATALOG_ADMIN) }, async (req) => {
     const id = z.object({ id: z.coerce.number().int() }).parse(req.params).id;
-    const b = z.object({ address: z.string().max(300).nullish(), phone: z.string().max(50).nullish(), active: z.boolean().optional() }).parse(req.body);
-    const h = await one(pool, `UPDATE hospitals SET address = COALESCE($2, address), phone = COALESCE($3, phone), active = COALESCE($4, active)
-                               WHERE id = $1 RETURNING *`, [id, b.address ?? null, b.phone ?? null, b.active ?? null]);
+    const b = z.object({ address: z.string().max(300).nullish(), phone: z.string().max(50).nullish(), active: z.boolean().optional(), taxCode: z.string().max(20).nullish() }).parse(req.body);
+    const taxCode = b.taxCode === undefined ? null : normalizeTaxCode(b.taxCode);
+    const h = await one(pool, `UPDATE hospitals SET address = COALESCE($2, address), phone = COALESCE($3, phone), active = COALESCE($4, active), tax_code = COALESCE($5, tax_code)
+                               WHERE id = $1 RETURNING *`, [id, b.address ?? null, b.phone ?? null, b.active ?? null, taxCode]);
     if (!h) throw new HttpError(404, 'Không tìm thấy bệnh viện');
     await withTx(pool, (tx) => audit(tx, 'system', actorOf(req), 'hospital.updated', 'hospital', String(id), b));
     return h;

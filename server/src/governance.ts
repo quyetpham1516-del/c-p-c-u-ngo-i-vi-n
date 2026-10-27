@@ -137,7 +137,7 @@ export function governanceHook({ pool }: Ctx) {
       return reply.code(403).send({ error: `Thay đổi "${g.label}" do trưởng nhóm ${DOMAIN_LABEL[g.domain]} đề xuất, quản trị duyệt`, details: { code: 'GOVERNED_NOT_LEAD' } });
     }
     // Đề xuất lưu nguyên nội dung thay đổi nên không nhận mật khẩu, khóa bí mật
-    if (JSON.stringify(req.body ?? {}).match(/"(password|secret|token|apiKey|privateKey)[^"]*"\s*:/i)) {
+    if (JSON.stringify(req.body ?? {}).match(/"(password|secret|token|apiKey|privateKey|cccd)[^"]*"\s*:/i)) {
       return reply.code(400).send({ error: 'Đề xuất không được chứa mật khẩu hay khóa bí mật' });
     }
     const params = (req.params ?? {}) as Record<string, string>;

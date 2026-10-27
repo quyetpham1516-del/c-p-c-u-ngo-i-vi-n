@@ -111,6 +111,40 @@ export function registerDuty(app: FastifyInstance, { pool }: Ctx) {
     return { ok: true };
   });
 
+  /* ---------- Nhiệm vụ từng vị trí trong kíp ---------- */
+  const PHASE = z.enum(['dau_ca', 'hien_truong', 'sau_ca']);
+  const tasksOf = (q: Tx | typeof pool, positions: string[] | null) => many(q, `
+    SELECT r.name AS position, r.sort,
+           coalesce((SELECT json_agg(json_build_object('phase', t.phase, 'task', t.task) ORDER BY t.phase, t.sort, t.id)
+                       FROM crew_duty_tasks t WHERE t.position = r.name), '[]') AS tasks
+      FROM crew_roles r WHERE r.active AND ($1::text[] IS NULL OR r.name = ANY($1)) ORDER BY r.sort, r.name`, [positions]);
+
+  app.get('/api/duty-tasks', { preHandler: guard() }, async () => tasksOf(pool, null));
+
+  /** Việc của tôi: theo vị trí đang nhận ca trên xe, hoặc vị trí được xếp trong ca trực sắp tới */
+  app.get('/api/duty-tasks/mine', { preHandler: guard() }, async (req) => {
+    const s = await one(pool, `SELECT crew_role AS position, vehicle_id FROM crew_shifts WHERE user_id = $1 AND ended_at IS NULL ORDER BY started_at DESC LIMIT 1`, [req.user.id])
+      ?? await one(pool, `SELECT m.position, p.vehicle_id FROM duty_post_members m JOIN duty_posts p ON p.id = m.post_id
+                           WHERE m.user_id = $1 AND p.status = 'ke_hoach' AND p.ends_at > now() ORDER BY p.starts_at LIMIT 1`, [req.user.id]);
+    if (!s) return { position: null, vehicleId: null, tasks: [] };
+    const [row] = await tasksOf(pool, [s.position]);
+    return { position: s.position, vehicleId: s.vehicle_id, tasks: row?.tasks ?? [] };
+  });
+
+  /** Thay cả danh sách việc của một vị trí. Đã khóa cấu hình thì trưởng nhóm kíp đề xuất, quản trị duyệt. */
+  app.put('/api/duty-tasks/:position', { preHandler: guard('admin') }, async (req) => {
+    const position = z.object({ position: z.string().min(1).max(60) }).parse(req.params).position;
+    const b = z.object({ tasks: z.array(z.object({ phase: PHASE, task: z.string().trim().min(2).max(300) })).max(60) }).parse(req.body);
+    return withTx(pool, async (tx) => {
+      if (!(await one(tx, 'SELECT 1 FROM crew_roles WHERE name = $1', [position]))) throw new HttpError(404, `Không có vị trí "${position}"`);
+      await tx.query('DELETE FROM crew_duty_tasks WHERE position = $1', [position]);
+      let i = 0;
+      for (const t of b.tasks) await tx.query('INSERT INTO crew_duty_tasks(position, phase, sort, task) VALUES ($1,$2,$3,$4)', [position, t.phase, ++i, t.task]);
+      await audit(tx, 'system', actorOf(req), 'duty_tasks.updated', 'crew_role', position, { count: b.tasks.length });
+      return (await tasksOf(tx, [position]))[0];
+    });
+  });
+
   /** Danh sách để xếp ca: nhân viên kíp đang làm, xe, vị trí trong kíp */
   app.get('/api/duty/options', { preHandler: guard(...DUTY_VIEW) }, async () => ({
     crew: await many(pool, `SELECT id, full_name, title, station_id, crew_roles FROM users WHERE role = 'crew' AND active ORDER BY full_name`),

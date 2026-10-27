@@ -5,6 +5,7 @@ export interface BoardVehicle {
   status: string; status_since: string; lat: number | null; lng: number | null; supplies_ok: boolean; supplies_note: string | null;
   equipment_gaps?: string | null;
   crew: { name: string; title: string; role: string }[];
+  leader?: string | null;
   incident: null | { id: string; code: string; priority: string | null; complaint: string | null; destination: string | null; address: string | null; acknowledged: boolean };
   free: { freeAt: string | null; lowAt: string | null; highAt: string | null; basis: string };
 }
@@ -34,7 +35,7 @@ export function FleetTable({ board, compact = false, onPick }: { board: Board | 
           return (
             <tr key={v.id} className={onPick ? 'click' : ''} onClick={() => onPick?.(v)}>
               <td>
-                <b>{v.id}</b>
+                <b>{v.id}</b>{v.leader && <span style={{ marginLeft: 6 }} title="Trưởng kíp">{v.leader}</span>}
                 {v.equipment_gaps && <span className="badge far" style={{ marginLeft: 6 }} title={v.equipment_gaps}>Thiếu thiết bị</span>}
                 <div className="small muted">{compact ? v.type : v.type_label} · {v.station_name} · {DUTY[v.duty]}</div>
               </td>

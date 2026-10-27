@@ -2,6 +2,7 @@ import { Fragment, useEffect, useMemo, useState } from 'react';
 import { api, download, session } from '../api';
 import { useStations } from '../catalog';
 import { ParSheet, type ParItem } from '../components/ParSheet';
+import { Requisitions } from '../components/Requisitions';
 
 interface Lot {
   id: string; station_id: string; station_name: string; vehicle_id: string | null; lot: string; expiry: string; qty: number;
@@ -17,19 +18,23 @@ interface Voucher {
 
 const KIND: Record<string, string> = { cap_xe: 'Cấp cơ số xe', tra_kho: 'Xe trả kho', dieu_chuyen: 'Điều chuyển', kiem_ke: 'Kiểm kê', huy: 'Hủy thuốc' };
 const VSTATUS: Record<string, string> = { cho_duyet: 'Chờ duyệt', da_duyet: 'Đã duyệt', tu_choi: 'Từ chối' };
-const TABS = ['Tồn kho điểm', 'Cơ số xe', 'Phiếu kho', 'Cảnh báo, đặt hàng', 'Định mức, cơ số chuẩn'] as const;
+const TABS = ['Tồn kho điểm', 'Cơ số xe', 'Phiếu lĩnh kho tổng', 'Phiếu kho', 'Cảnh báo, đặt hàng', 'Định mức, cơ số chuẩn'] as const;
 const today = () => new Date().toISOString().slice(0, 10);
 const fmt = (n: number) => Number(n).toLocaleString('vi-VN');
 const at = (s: string) => new Date(s).toLocaleString('vi-VN', { dateStyle: 'short', timeStyle: 'short' });
 
 /** Kho thuốc (QL-13, QLCL-16): kho điểm → cơ số xe → người bệnh; phiếu kho duyệt hai cấp; cảnh báo hạn dùng, định mức */
 export function Stock() {
-  const [stations] = useStations();
+  const [allStations] = useStations();
   const role = session.user?.role ?? '';
+  // Điều phối viên không xem kho tổng
+  const [central, setCentral] = useState<string | null>(null);
+  useEffect(() => { api('GET', '/api/inventory/settings').then((s) => setCentral(s.central)).catch(() => {}); }, []);
+  const stations = ['dispatcher', 'calltaker'].includes(role) ? allStations.filter((s) => s.id !== central) : allStations;
   const canManage = ['pharmacist', 'supervisor', 'admin'].includes(role);
   const canApprove = ['supervisor', 'admin', 'director'].includes(role);
   const [stationId, setStationId] = useState('');
-  const [tab, setTab] = useState<(typeof TABS)[number]>(TABS[0]);
+  const [tab, setTab] = useState<(typeof TABS)[number]>(() => (typeof window !== 'undefined' && window.location.hash === '#phieu-linh' ? 'Phiếu lĩnh kho tổng' : TABS[0]));
   const [drugs, setDrugs] = useState<Drug[]>([]);
   const [error, setError] = useState('');
   const [msg, setMsg] = useState('');
@@ -57,6 +62,7 @@ export function Stock() {
       {msg && <div className="alert green">{msg}</div>}
       {stationId && tab === 'Tồn kho điểm' && <LotsTab {...ctx} />}
       {stationId && tab === 'Cơ số xe' && <VehiclesTab {...ctx} />}
+      {stationId && tab === 'Phiếu lĩnh kho tổng' && <Requisitions stationId={stationId} drugs={drugs} />}
       {stationId && tab === 'Phiếu kho' && <VouchersTab {...ctx} />}
       {stationId && tab === 'Cảnh báo, đặt hàng' && <AlertsTab {...ctx} />}
       {stationId && tab === 'Định mức, cơ số chuẩn' && <SettingsTab {...ctx} />}

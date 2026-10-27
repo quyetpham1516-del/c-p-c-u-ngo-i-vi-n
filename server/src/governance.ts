@@ -84,6 +84,7 @@ export const GOVERNED: Governed[] = [
     route: 'POST /api/sheets/:key/apply', label: 'Nạp danh mục từ Excel', domain: 'ban_giam_doc',
     resolve: (p) => { const s = sheetByKey(p.key); return s ? { label: `Nạp Excel: ${s.label}`, domain: s.domain } : null; },
   },
+  { route: 'PUT /api/inventory/settings', label: 'Cài đặt kho tổng, tự phát theo định mức', domain: 'kho' },
   { route: 'PUT /api/duty-tasks/:position', label: 'Nhiệm vụ của vị trí trong kíp', domain: 'kip' },
   { route: 'PUT /api/governance', label: 'Khóa, mở khóa cấu hình', domain: 'ban_giam_doc' },
 ];

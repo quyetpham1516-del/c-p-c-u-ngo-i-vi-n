@@ -16,7 +16,7 @@ const LINKS: { to: string; label: string; roles: Role[] }[] = [
   { to: '/benh-an', label: 'Bệnh án', roles: ['crew', 'calltaker', 'dispatcher', 'supervisor', 'qa', 'admin'] },
   { to: '/benh-vien', label: 'Ca chuyển tới', roles: ['hospital'] },
   { to: '/nghien-cuu', label: 'Nghiên cứu', roles: ['crew', 'dispatcher', 'supervisor', 'qa', 'admin', 'director'] },
-  { to: '/kho', label: 'Kho thuốc', roles: ['dispatcher', 'supervisor', 'qa', 'admin', 'pharmacist', 'director'] },
+  { to: '/kho', label: 'Kho thuốc', roles: ['crew', 'dispatcher', 'supervisor', 'qa', 'admin', 'pharmacist', 'director'] },
   { to: '/hau-can', label: 'Hậu cần', roles: ['crew', 'dispatcher', 'supervisor', 'qa', 'admin', 'pharmacist', 'technician', 'ipc', 'hr', 'accountant', 'director'] },
   { to: '/thiet-bi', label: 'Thiết bị', roles: ['dispatcher', 'supervisor', 'qa', 'admin', 'technician', 'ipc', 'director'] },
   { to: '/chat-luong', label: 'Chất lượng', roles: ['calltaker', 'dispatcher', 'supervisor', 'crew', 'qa', 'admin', 'pharmacist', 'technician', 'ipc', 'hr', 'accountant', 'director'] },

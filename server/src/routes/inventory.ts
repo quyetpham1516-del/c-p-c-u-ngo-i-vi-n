@@ -7,6 +7,7 @@ import { actorOf, guard, type Ctx, type Role } from '../http.js';
 import {
   autoIssue, cancelRequisition, centralStation, createRequisition, decideRequisition, issueRequisition, receiveRequisition, REQ_STATUS, shortages,
 } from '../inventory.js';
+import { FREQ_LABEL, sessionDetail, submitSession } from '../stocktake.js';
 
 /** Kho tổng: dược và quản trị thao tác; Ban Giám đốc, kế toán, QLCL xem. Điều phối viên, tiếp nhận không xem kho tổng. */
 const CENTRAL_MANAGE: Role[] = ['pharmacist', 'admin'];
@@ -133,4 +134,63 @@ export function registerInventory(app: FastifyInstance, { pool }: Ctx) {
   /** Kho tổng bấm phát bù định mức ngay (ngoài lịch tự động hằng ngày) */
   app.post('/api/requisitions/auto', { preHandler: guard(...CENTRAL_MANAGE) }, async (req) =>
     ({ created: await withTx(pool, (tx) => autoIssue(tx, actorOf(req))) }));
+
+  /* ---------- Lịch kiểm kê ---------- */
+
+  app.get('/api/stocktake-schedules', { preHandler: guard(...CENTRAL_VIEW, 'supervisor', 'crew') }, async () => ({
+    schedules: await many(pool, `SELECT scope, frequency, to_char(at, 'HH24:MI') AS at, blind, active FROM stocktake_schedules ORDER BY scope DESC`),
+    frequencies: FREQ_LABEL,
+  }));
+
+  /** Sửa lịch kiểm kê. Đã khóa cấu hình thì trưởng nhóm kho đề xuất, quản trị duyệt. */
+  app.put('/api/stocktake-schedules/:scope', { preHandler: guard('admin') }, async (req) => {
+    const scope = z.object({ scope: z.enum(['kho_diem', 'kho_tong']) }).parse(req.params).scope;
+    const b = z.object({
+      frequency: z.enum(['hang_ngay', 'hang_tuan', 'cuoi_thang']), at: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/), blind: z.boolean(), active: z.boolean(),
+    }).parse(req.body);
+    await withTx(pool, async (tx) => {
+      await tx.query('UPDATE stocktake_schedules SET frequency = $2, at = $3::time, blind = $4, active = $5 WHERE scope = $1', [scope, b.frequency, b.at, b.blind, b.active]);
+      await audit(tx, 'system', actorOf(req), 'stocktake.schedule', 'stocktake_schedule', scope, b);
+    });
+    return { ok: true };
+  });
+
+  app.get('/api/stocktakes', { preHandler: guard(...CENTRAL_VIEW, 'supervisor', 'crew') }, async (req) => {
+    const q = z.object({ stationId: z.string().optional(), status: z.enum(['mo', 'da_nop', 'qua_han']).optional() }).parse(req.query);
+    if (q.stationId) await assertStation(req, q.stationId);
+    const central = await centralStation(pool);
+    // Kho tổng chỉ người được xem kho tổng thấy
+    const hideCentral = !CENTRAL_VIEW.includes(req.user.role);
+    return many(pool, `
+      SELECT ss.id, ss.station_id, st.name AS station_name, ss.scope, ss.due_date::text AS due_date, ss.blind, ss.status, ss.submitted_at,
+             u.full_name AS submitted_by_name, v.code AS voucher_code, v.status AS voucher_status
+        FROM stocktake_sessions ss JOIN stations st ON st.id = ss.station_id LEFT JOIN users u ON u.id = ss.submitted_by LEFT JOIN stock_vouchers v ON v.id = ss.voucher_id
+       WHERE ($1::text IS NULL OR ss.station_id = $1) AND ($2::text IS NULL OR ss.status = $2) AND NOT ($3 AND ss.station_id = $4)
+       ORDER BY (ss.status <> 'da_nop') DESC, ss.due_date DESC, ss.station_id LIMIT 200`, [q.stationId ?? null, q.status ?? null, hideCentral, central]);
+  });
+
+  async function sessionGuard(req: FastifyRequest, id: string) {
+    const s = await one(pool, 'SELECT station_id, scope FROM stocktake_sessions WHERE id = $1', [id]);
+    if (!s) throw new HttpError(404, 'Không tìm thấy phiên kiểm kê');
+    if (s.scope === 'kho_tong' && !CENTRAL_VIEW.includes(req.user.role)) throw new HttpError(403, 'Không xem được kho tổng');
+    await assertStation(req, s.station_id);
+    return s;
+  }
+
+  app.get('/api/stocktakes/:id', { preHandler: guard(...CENTRAL_VIEW, 'supervisor', 'crew') }, async (req) => {
+    const id = idOf(req.params);
+    await sessionGuard(req, id);
+    return sessionDetail(pool, id);
+  });
+
+  app.post('/api/stocktakes/:id/submit', { preHandler: guard(...STATION_WORK) }, async (req) => {
+    const id = idOf(req.params);
+    const s = await sessionGuard(req, id);
+    if (s.scope === 'kho_tong' && !CENTRAL_MANAGE.includes(req.user.role)) throw new HttpError(403, 'Kho tổng do dược, quản trị kiểm kê');
+    const b = z.object({
+      note: z.string().trim().max(500).nullish(),
+      lines: z.array(z.object({ lotId: z.string().uuid(), counted: z.number().min(0).max(1000000) })).max(2000),
+    }).parse(req.body);
+    return withTx(pool, (tx) => submitSession(tx, actorOf(req), id, b));
+  });
 }

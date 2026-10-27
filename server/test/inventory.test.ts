@@ -83,11 +83,66 @@ describe('kho tổng phát cho kho điểm', () => {
     expect(await runInventoryJobs(pool, at(5))).toEqual([]);
     const ran = await runInventoryJobs(pool, at(6));
     expect(ran[0]).toContain('PL-');
-    expect(await runInventoryJobs(pool, at(7))).toEqual([]);
+    expect((await runInventoryJobs(pool, at(7))).filter((m) => m.includes('PL-'))).toEqual([]);
     const list = (await ddVc('GET', '/api/requisitions')).data;
     expect(list[0]).toMatchObject({ station_id: 'TR-02', source: 'tu_dong', status: 'da_duyet' });
     // đang có phiếu chưa nhận thì không phát trùng
     expect((await duoc('POST', '/api/requisitions/auto')).created).toEqual([]);
     expect((await giamdoc('GET', '/api/requisitions')).data.length).toBeGreaterThan(0);
+  });
+});
+
+describe('lịch kiểm kê', () => {
+  it('ngày cuối tháng, thứ Hai', async () => {
+    const { isDue } = await import('../src/stocktake.js');
+    expect(isDue('cuoi_thang', '2026-10-31')).toBe(true);
+    expect(isDue('cuoi_thang', '2026-10-30')).toBe(false);
+    expect(isDue('cuoi_thang', '2028-02-29')).toBe(true);
+    expect(isDue('hang_tuan', '2026-10-26')).toBe(true);
+    expect(isDue('hang_ngay', '2026-10-27')).toBe(true);
+  });
+
+  it('7:00 mở phiên kiểm kê toàn bộ cho mỗi kho điểm; kho tổng chỉ ngày cuối tháng; quá ngày thì báo trễ', async () => {
+    const at = (d: number, h: number, m = 0) => new Date(Date.UTC(2026, 9, d, h - 7, m));
+    await pool.query('DELETE FROM stocktake_sessions');
+    await runInventoryJobs(pool, at(29, 6, 59));
+    expect((await pool.query(`SELECT count(*)::int AS n FROM stocktake_sessions`)).rows[0].n).toBe(0);
+    const ran = await runInventoryJobs(pool, at(29, 7));
+    expect(ran.join(' ')).toContain('TR-01');
+    const rows = (await pool.query(`SELECT station_id, scope FROM stocktake_sessions ORDER BY station_id`)).rows;
+    expect(rows).toEqual([{ station_id: 'TR-01', scope: 'kho_diem' }, { station_id: 'TR-02', scope: 'kho_diem' }]);
+    await runInventoryJobs(pool, at(29, 8));
+    expect((await pool.query(`SELECT count(*)::int AS n FROM stocktake_sessions`)).rows[0].n).toBe(2);
+    // kho TR-02 không nộp: hôm sau báo trễ
+    await runInventoryJobs(pool, at(31, 7));
+    const s = (await pool.query(`SELECT station_id, scope, status, due_date::text AS d FROM stocktake_sessions ORDER BY due_date, station_id`)).rows;
+    expect(s.filter((x) => x.d === '2026-10-29').map((x) => x.status)).toEqual(['qua_han', 'qua_han']);
+    expect(s.filter((x) => x.d === '2026-10-31').map((x) => x.station_id)).toEqual(['TR-01', 'TR-02', 'TS']);
+    expect(s.find((x) => x.station_id === 'TS').scope).toBe('kho_tong');
+  });
+
+  it('nộp phải đếm đủ mọi lô; lệch thì phiếu kiểm kê chờ người thứ hai duyệt; kiểm mù ẩn số sổ sách', async () => {
+    const list = (await ddBls('GET', '/api/stocktakes?stationId=TR-01')).data;
+    const open = list.find((x: any) => x.due_date === '2026-10-31');
+    expect((await ddBls('GET', '/api/stocktakes')).data.some((x: any) => x.station_id === 'TS')).toBe(false);
+    const d = await ddBls('GET', `/api/stocktakes/${open.id}`);
+    expect(d.lots.length).toBeGreaterThan(1);
+    expect(d.lots[0].qty).toBeDefined();
+    const lines = d.lots.map((l: any) => ({ lotId: l.id, counted: l.qty }));
+    expect((await ddBls('POST', `/api/stocktakes/${open.id}/submit`, { lines: lines.slice(1) })).http).toBe(400);
+    lines[0].counted -= 2;
+    const r = await ddBls('POST', `/api/stocktakes/${open.id}/submit`, { lines });
+    expect(r.diffs).toBe(1);
+    expect(r.voucher.status).toBe('cho_duyet');
+    expect((await ddBls('POST', `/api/stocktakes/${open.id}/submit`, { lines })).http).toBe(409);
+    const ts = (await duoc('GET', '/api/stocktakes?stationId=TS')).data[0];
+    expect((await ddBls('GET', `/api/stocktakes/${ts.id}`)).http).toBe(403);
+    // kiểm mù
+    expect((await admin('PUT', '/api/stocktake-schedules/kho_diem', { frequency: 'hang_ngay', at: '07:00', blind: true, active: true })).http).toBe(200);
+    await runInventoryJobs(pool, new Date(Date.UTC(2026, 10, 1, 0, 5)));
+    const nov = (await ddBls('GET', '/api/stocktakes?stationId=TR-01&status=mo')).data.find((x: any) => x.due_date === '2026-11-01');
+    const blind = await ddBls('GET', `/api/stocktakes/${nov.id}`);
+    expect(blind.blind).toBe(true);
+    expect(blind.lots[0].qty).toBeUndefined();
   });
 });

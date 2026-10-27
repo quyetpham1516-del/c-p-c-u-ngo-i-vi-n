@@ -11,11 +11,12 @@ const IN = ['nhap_kho', 'nhan_kho_tong', 'tra_kho'];
 const USE = ['dung_cho_nguoi_benh'];
 const OUT = ['cap_xe', 'xuat_kho_diem', 'huy'];
 
-export async function reportRecipients(q: Queryable, scope: string): Promise<string[]> {
+export async function reportRecipients(q: Queryable, scope: string, stationId?: string): Promise<string[]> {
   const rows = scope === 'kho_tong'
     ? await many(q, `SELECT id FROM users WHERE active AND role IN ('admin', 'director', 'accountant')`)
     : await many(q, `SELECT DISTINCT s.user_id AS id FROM org_members m JOIN org_units o ON o.id = m.unit_id JOIN staff s ON s.id = m.staff_id
-                      JOIN users u ON u.id = s.user_id WHERE m.is_lead AND o.domain = 'kip' AND o.active AND u.active`);
+                      JOIN users u ON u.id = s.user_id WHERE m.is_lead AND o.domain = 'kip' AND o.active AND u.active
+                     UNION SELECT u.id FROM stations st JOIN users u ON u.id IN (st.manager_id, st.deputy_id) WHERE st.id = $1 AND u.active`, [stationId ?? null]);
   return rows.map((r) => r.id);
 }
 
@@ -56,7 +57,7 @@ export async function buildStocktakeReport(tx: Tx, sessionId: string) {
     received: rows.reduce((t, r) => t + r.received, 0), used: rows.reduce((t, r) => t + r.used, 0), issued: rows.reduce((t, r) => t + r.issued, 0),
     late: s.status === 'qua_han',
   };
-  const recipients = await reportRecipients(tx, s.scope);
+  const recipients = await reportRecipients(tx, s.scope, s.station_id);
   const year = String(end.getFullYear());
   const code = `BCK-${year}-${String(await nextCounter(tx, 'inventory_report', year)).padStart(5, '0')}`;
   const rep = await one(tx, `INSERT INTO inventory_reports(code, station_id, scope, period_start, period_end, session_id, summary, rows, recipients)

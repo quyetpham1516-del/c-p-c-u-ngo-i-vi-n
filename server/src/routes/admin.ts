@@ -27,7 +27,8 @@ export function registerAdmin(app: FastifyInstance, { pool, hub }: Ctx) {
   app.get('/api/stations', { preHandler: guard() }, async (req) => {
     const all = req.user.role === 'admin' && (req.query as { all?: string }).all === '1';
     return many(pool, `
-      SELECT s.*, (SELECT count(*)::int FROM vehicles v WHERE v.station_id = s.id) AS vehicle_count,
+      SELECT s.*, (SELECT full_name FROM users WHERE id = s.manager_id) AS manager_name, (SELECT full_name FROM users WHERE id = s.deputy_id) AS deputy_name,
+             (SELECT count(*)::int FROM vehicles v WHERE v.station_id = s.id) AS vehicle_count,
              (SELECT count(*)::int FROM users u WHERE u.station_id = s.id AND u.active) AS staff_count,
              (SELECT coalesce(sum(qty), 0)::float FROM stock_lots l WHERE l.station_id = s.id) AS stock_qty
         FROM stations s WHERE $1 OR s.active ORDER BY s.active DESC, (s.kind = 'tru_so') DESC, s.id`, [all]);
@@ -64,6 +65,24 @@ export function registerAdmin(app: FastifyInstance, { pool, hub }: Ctx) {
       [id, b.name ?? null, b.kind ?? null, b.address !== undefined, b.address ?? null, b.phone !== undefined, b.phone ?? null,
         b.lat ?? null, b.lng ?? null, b.active ?? null]);
       await audit(tx, 'system', actorOf(req), 'station.updated', 'station', id, b);
+      return s;
+    });
+  });
+
+  /** Quản lý điểm và người thay: chọn trong nhân viên đang làm ở điểm đó */
+  app.put('/api/stations/:id/managers', admin, async (req) => {
+    const id = z.object({ id: z.string() }).parse(req.params).id;
+    const b = z.object({ managerId: z.string().uuid().nullable(), deputyId: z.string().uuid().nullable() }).parse(req.body);
+    if (b.managerId && b.managerId === b.deputyId) throw new HttpError(400, 'Quản lý điểm và người thay phải là hai người khác nhau');
+    return withTx(pool, async (tx) => {
+      if (!(await one(tx, 'SELECT 1 FROM stations WHERE id = $1 FOR UPDATE', [id]))) throw new HttpError(404, 'Không tìm thấy điểm');
+      for (const uid of [b.managerId, b.deputyId].filter(Boolean)) {
+        const u = await one(tx, 'SELECT full_name, station_id, active, role FROM users WHERE id = $1', [uid]);
+        if (!u || !u.active || u.role === 'hospital') throw new HttpError(400, 'Tài khoản không hợp lệ hoặc đã khóa');
+        if (u.station_id !== id) throw new HttpError(400, `${u.full_name} chưa được phân làm ở điểm ${id}: phân điểm trước rồi mới chọn làm quản lý`);
+      }
+      const s = await one(tx, 'UPDATE stations SET manager_id = $2, deputy_id = $3 WHERE id = $1 RETURNING *', [id, b.managerId, b.deputyId]);
+      await audit(tx, 'system', actorOf(req), 'station.managers', 'station', id, b);
       return s;
     });
   });

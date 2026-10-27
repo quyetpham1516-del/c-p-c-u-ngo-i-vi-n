@@ -35,6 +35,7 @@ export const GOVERNED: Governed[] = [
   { route: 'PATCH /api/stations/:id', label: 'Sửa điểm', domain: 'dieu_phoi', before: { table: 'stations', key: 'id', param: 'id' } },
   { route: 'PATCH /api/vehicles/:id/station', label: 'Chuyển xe sang điểm khác', domain: 'dieu_phoi', before: { table: 'vehicles', key: 'id', param: 'id' } },
   { route: 'PATCH /api/users/:id/station', label: 'Phân điểm làm việc cho nhân viên', domain: 'nhan_su' },
+  { route: 'PUT /api/stations/:id/managers', label: 'Chọn quản lý điểm', domain: 'nhan_su', before: { table: 'stations', key: 'id', param: 'id' } },
   {
     route: 'PATCH /api/users/:id', label: 'Sửa tài khoản', domain: 'nhan_su',
     exempt: (b) => b && typeof b === 'object' && Object.keys(b).length === 1 && b.active === false,

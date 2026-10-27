@@ -55,12 +55,24 @@ export function Admin() {
       {error && <div className="error">{error}</div>}
       <div className="panel" style={{ overflowX: 'auto' }}>
         <table>
-          <thead><tr><th>Mã</th><th>Tên điểm</th><th>Loại</th><th>Địa chỉ</th><th className="right">Xe</th><th className="right">Nhân viên</th><th>Trạng thái</th><th /></tr></thead>
+          <thead><tr><th>Mã</th><th>Tên điểm</th><th>Loại</th><th>Địa chỉ</th><th className="right">Xe</th><th className="right">Nhân viên</th><th>Quản lý điểm / người thay</th><th>Trạng thái</th><th /></tr></thead>
           <tbody>
             {stations.map((s) => (
               <tr key={s.id} style={s.active ? undefined : { opacity: 0.55 }}>
                 <td className="mono"><b>{s.id}</b></td><td>{s.name}</td><td>{STATION_KIND[s.kind] ?? s.kind}</td><td className="small">{s.address ?? '—'}</td>
                 <td className="right">{s.vehicle_count}</td><td className="right">{s.staff_count}</td>
+                <td className="small">
+                  {(['manager_id', 'deputy_id'] as const).map((k) => (
+                    <select key={k} value={s[k] ?? ''} title={k === 'manager_id' ? 'Quản lý điểm' : 'Người thay khi vắng'} style={{ display: 'block', marginBottom: 2 }}
+                      onChange={(e) => run(() => api('PUT', `/api/stations/${s.id}/managers`, {
+                        managerId: k === 'manager_id' ? e.target.value || null : s.manager_id ?? null,
+                        deputyId: k === 'deputy_id' ? e.target.value || null : s.deputy_id ?? null,
+                      }))}>
+                      <option value="">{k === 'manager_id' ? '— Quản lý điểm —' : '— Người thay —'}</option>
+                      {users.filter((u) => u.active && u.station_id === s.id).map((u) => <option key={u.id} value={u.id}>{u.full_name}{u.title ? ` (${u.title})` : ''}</option>)}
+                    </select>
+                  ))}
+                </td>
                 <td>{s.active ? 'Đang hoạt động' : 'Tạm ngưng'}</td>
                 <td className="right row" style={{ justifyContent: 'flex-end' }}>
                   <button className="ghost small" onClick={() => edit(s)}>Sửa</button>

@@ -35,11 +35,12 @@ async function newCode(tx: Tx) {
 }
 
 export async function notifyStation(tx: Tx, stationId: string, title: string, body: string | null, link = '/kho#phieu-linh', kind = 'requisition') {
-  // Người làm ở điểm (kíp, dược) và trưởng bộ phận cấp cứu nhận thông báo; điểm không có trưởng điểm
+  // Người làm ở điểm (kíp, dược), quản lý điểm và người thay, trưởng bộ phận cấp cứu nhận thông báo
   await tx.query(`
     INSERT INTO notifications(user_id, kind, title, body, link)
     SELECT DISTINCT u.id, $5, $2, $3, $4 FROM users u
      WHERE u.active AND ((u.station_id = $1 AND u.role IN ('crew', 'pharmacist', 'supervisor'))
+        OR u.id IN (SELECT manager_id FROM stations WHERE id = $1 UNION SELECT deputy_id FROM stations WHERE id = $1)
         OR u.id IN (SELECT s.user_id FROM org_members m JOIN org_units o ON o.id = m.unit_id JOIN staff s ON s.id = m.staff_id
                      WHERE m.is_lead AND o.domain = 'kip' AND o.active AND s.user_id IS NOT NULL))`, [stationId, title, body, link, kind]);
 }

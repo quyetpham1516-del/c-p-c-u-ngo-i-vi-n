@@ -7,9 +7,9 @@ import { api } from './api';
  * để ứng dụng kíp vẫn chọn được khi mất mạng.
  */
 export interface Department { id: number; name: string }
-export interface Hospital { id: number; name: string; kcb_code: string | null; phone?: string | null; kind: string | null; address: string | null; capabilities: string[]; departments: Department[] }
+export interface Hospital { id: number; name: string; kcb_code: string | null; tax_code?: string | null; phone?: string | null; kind: string | null; address: string | null; capabilities: string[]; departments: Department[] }
 export interface StockLot { id: string; lot: string; expiry: string; qty: number; drug_id: number; drug_name: string; unit: string; default_route: string | null; controlled?: boolean; place?: 'xe' | 'kho'; kind?: string; track_lot?: boolean }
-export interface Station { id: string; name: string; kind: string; address: string | null; phone: string | null; lat: number; lng: number; active: boolean; vehicle_count: number; staff_count: number; stock_qty: number }
+export interface Station { id: string; name: string; kind: string; address: string | null; phone: string | null; lat: number; lng: number; active: boolean; vehicle_count: number; staff_count: number; stock_qty: number; manager_id?: string | null; deputy_id?: string | null; manager_name?: string | null; deputy_name?: string | null }
 
 function useCached<T>(key: string, url: string | null, initial: T): [T, () => void] {
   const [data, setData] = useState<T>(initial);

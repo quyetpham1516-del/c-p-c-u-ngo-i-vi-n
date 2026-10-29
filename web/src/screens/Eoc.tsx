@@ -531,6 +531,16 @@ function DispatchCard({ inc, suggest, run, id, active }: { inc: any; suggest: an
           }}>Trưởng ca cho xe thiếu thiết bị đi…</button>
         </div>
       )}
+      {!active.length && isSupervisor && suggest?.advice?.some((a: string) => a.includes('bàn giao')) && (
+        <div className="row" style={{ marginBottom: 6 }}>
+          <button className="ghost small" onClick={() => {
+            const vehicleId = prompt('Trưởng ca cho xe chưa ký bàn giao ca đi. Mã xe:')?.trim();
+            if (!vehicleId) return;
+            const reason = prompt(`Lý do cho ${vehicleId} đi khi chưa bàn giao ca (ghi vào nhật ký):`)?.trim();
+            if (reason) run(() => api('POST', `/api/incidents/${id}/assign`, { vehicleId, handoverOverride: reason, confirmFar: true }));
+          }}>Trưởng ca cho xe chưa bàn giao đi…</button>
+        </div>
+      )}
       {!active.length && (
         <div className="row" style={{ marginBottom: 8 }}>
           <button className="primary" disabled={!suggest?.suggestions?.length || inc.lat == null} onClick={autoAssign}>Tự động báo xe rảnh gần nhất (≤ {limit} km)</button>

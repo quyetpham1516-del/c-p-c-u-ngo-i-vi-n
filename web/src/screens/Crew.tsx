@@ -4,6 +4,8 @@ import { ParSheet } from '../components/ParSheet';
 import { MciReport } from '../components/MciReport';
 import { CaseRestock } from '../components/CaseRestock';
 import { EpcrForm } from '../components/EpcrForm';
+import { MyDutyTasks } from '../components/DutyTasks';
+import { Handover } from '../components/Handover';
 import { CrewSos } from '../components/Sos';
 import { FLAG_LABEL } from '../components/Triage';
 import { startAlarm, unlockAudio } from '../alarm';
@@ -179,6 +181,8 @@ export function Crew() {
             if (r.warnings?.length) alert(`Đã nhận ca. Lưu ý hồ sơ: ${r.warnings.join('; ')}`);
           }); }}>Bắt đầu ca</button>
         </div>
+        <Handover />
+        <MyDutyTasks />
         <OfflineDrafts drafts={drafts} onOpen={(d) => openDraft(d.id)} />
         {draft && <EpcrForm key={draft.id} draft={draft} onChange={() => allDrafts().then(setDrafts)} />}
       </div>
@@ -207,6 +211,8 @@ export function Crew() {
           <button className="ghost" onClick={() => act(() => api('DELETE', '/api/crew/shift'))}>Kết thúc ca</button>
         </div>
       </div>
+      <Handover />
+      <MyDutyTasks refreshKey={cur.shift?.crew_role} />
 
       {inc && !inc.acknowledged && (
         <div className="alert red order-alarm" role="alert">
@@ -320,14 +326,13 @@ export function Crew() {
             ))}
           </div>
         )}
-        <OfflineDrafts drafts={drafts.filter((d) => !inc?.transfers?.some((t: any) => t.id === d.id) && d.id !== draft?.id)} onOpen={(d) => openDraft(d.id)} />
       </div>
       {draft && <EpcrForm key={draft.id} draft={draft} initialTab={autoOpened.current === draft.id ? 'ABCDE và can thiệp' : undefined} onChange={() => allDrafts().then(setDrafts)} />}
       <CaseRestock vehicleId={v.id} />
       <VehicleKit vehicleId={v.id} incidentId={inc?.id ?? null} act={act} />
       <Disinfection vehicleId={v.id} status={v.status} refreshKey={error} />
       {error && <div className="error">{error}</div>}
-
+      <div className="panel"><OfflineDrafts drafts={drafts.filter((d) => !inc?.transfers?.some((t: any) => t.id === d.id) && d.id !== draft?.id)} onOpen={(d) => openDraft(d.id)} /></div>
     </div>
   );
 }
@@ -455,20 +460,30 @@ function Disinfection({ vehicleId, status, refreshKey }: { vehicleId: string; st
   );
 }
 
+/**
+ * Phiếu lưu trên máy này: phiếu được lưu ngay vào máy mỗi lần sửa để mất mạng vẫn không mất dữ liệu, có mạng thì tự gửi lên
+ * máy chủ. Thu gọn, để cuối màn hình; chỉ dùng để mở lại phiếu cũ hoặc xem phiếu nào chưa gửi được.
+ */
 function OfflineDrafts({ drafts, onOpen }: { drafts: Draft[]; onOpen: (d: Draft) => void }) {
   if (!drafts.length) return null;
+  const pending = drafts.filter((d) => d.dirty).length;
   return (
-    <div style={{ marginTop: 8 }}>
-      <div className="small muted">Phiếu trên máy này</div>
+    <details>
+      <summary className="small">
+        Phiếu lưu trên máy này ({drafts.length}){pending > 0 && <span style={{ color: 'var(--warn)' }}> · {pending} phiếu chưa gửi lên máy chủ</span>}
+      </summary>
+      <div className="small muted" style={{ margin: '6px 0' }}>
+        Phiếu được lưu vào máy ngay khi gõ, nên mất mạng vẫn không mất. Có mạng thì tự gửi lên máy chủ. Bấm vào một phiếu để mở lại.
+      </div>
       <div className="list">
         {drafts.slice(0, 10).map((d) => (
           <div key={d.id} className="item row" style={{ justifyContent: 'space-between' }} onClick={() => onOpen(d)}>
             <span><b>{d.number ?? 'Chưa cấp số'}</b> · {d.epcr?.patient?.fullName ?? d.patientLabel ?? 'Chưa rõ tên'} · {d.status === 'signed' ? 'đã ký' : 'nháp'}</span>
-            <span className="small">{d.dirty ? <span style={{ color: 'var(--warn)' }}>chờ đồng bộ</span> : <span style={{ color: 'var(--ok)' }}>đã đồng bộ</span>}</span>
+            <span className="small">{d.dirty ? <span style={{ color: 'var(--warn)' }}>chưa gửi</span> : <span style={{ color: 'var(--ok)' }}>đã gửi</span>}</span>
           </div>
         ))}
       </div>
-    </div>
+    </details>
   );
 }
 

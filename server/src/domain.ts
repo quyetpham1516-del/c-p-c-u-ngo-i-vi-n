@@ -2,6 +2,7 @@ import { audit, type Actor } from './audit.js';
 import { many, nextCounter, one, type Queryable, type Tx } from './db.js';
 import { equipmentGaps, gapText } from './equipment.js';
 import { assertVehicleLegal } from './ops.js';
+import { handoverBlocks } from './handover.js';
 import { haversineKm } from './fleet.js';
 import { recordLimited } from './security.js';
 import { assertDisinfected, ensureDisinfection, queueSurvey } from './quality.js';
@@ -271,6 +272,8 @@ export interface AssignOptions {
   divertReason?: string | null; confirmFar?: boolean; auto?: boolean;
   /** Trưởng ca cho xe thiếu thiết bị bắt buộc đi (ghi lý do vào nhật ký) */
   equipmentOverride?: string | null;
+  /** Trưởng ca cho xe chưa ký bàn giao ca đi (ghi lý do) */
+  handoverOverride?: string | null;
 }
 
 export async function assignVehicle(tx: Tx, actor: Actor, incidentId: string, vehicleId: string, opts: AssignOptions = {}) {
@@ -296,6 +299,11 @@ export async function assignVehicle(tx: Tx, actor: Actor, incidentId: string, ve
   }
   // Đăng kiểm, bảo hiểm bắt buộc hết hạn: khóa cứng, không ai cho đi được
   await assertVehicleLegal(tx, vehicleId);
+  // Quá hạn bàn giao ca mà chưa ký: khóa, trưởng ca cho đi được kèm lý do
+  const handover = (await handoverBlocks(tx, [vehicleId]))[vehicleId];
+  if (handover && !opts.handoverOverride?.trim()) {
+    throw new HttpError(409, `Xe ${vehicleId} ${handover}. Kíp ký bàn giao xong mới giao xe; trưởng ca cho đi được, kèm lý do`, { code: 'HANDOVER', vehicleId });
+  }
   const gaps = (await equipmentGaps(tx, [vehicleId]))[vehicleId] ?? [];
   if (gaps.length && !opts.equipmentOverride?.trim()) {
     throw new HttpError(409, `Xe ${vehicleId} thiếu thiết bị bắt buộc: ${gapText(gaps)}. Chỉ trưởng ca được cho xe đi, kèm lý do`,
@@ -311,6 +319,7 @@ export async function assignVehicle(tx: Tx, actor: Actor, incidentId: string, ve
   await audit(tx, incidentScope(incidentId), actor, opts.auto ? 'assignment.auto' : 'assignment.created', 'vehicle', vehicleId, {
     vehicleType: v.type, divertReason: divertReason ?? null, distanceKm,
     equipmentOverride: gaps.length ? { reason: opts.equipmentOverride, gaps: gapText(gaps) } : undefined,
+    handoverOverride: handover ? opts.handoverOverride : undefined,
     farConfirmed: distanceKm != null && distanceKm > AUTO_DISPATCH_KM ? true : undefined,
   });
   await recordTime(tx, incidentId, 'T4', new Date(), 'CAD → máy tính bảng', actor);

@@ -90,6 +90,19 @@ export async function remindersFor(q: Queryable, user: { id: string; role: strin
     const stale = await one(q, `SELECT count(*)::int AS n FROM registry_cases WHERE status <> 'du' AND created_at < now() - interval '30 days'`);
     if (stale?.n) out.push({ key: 'reg:stale', level: 'info', title: `${stale.n} ca biểu mẫu nghiên cứu quá 30 ngày chưa đủ phần trong viện`, link: '/nghien-cuu' });
   }
+  if (user.role === 'crew') {
+    const hs = await many(q, `SELECT h.vehicle_id, h.status, h.reminded_at + make_interval(mins => s.grace_minutes) AS due
+                                FROM vehicle_handovers h, handover_settings s WHERE h.status <> 'da_khoa' AND $1 = ANY(h.outgoing || h.incoming)`, [user.id]);
+    for (const h of hs) {
+      const late = new Date(h.due) < new Date();
+      out.push({ key: `handover:${h.vehicle_id}`, level: late ? 'red' : 'amber', link: '/kip#ban-giao',
+        title: `Bàn giao xe ${h.vehicle_id} chưa xong (${h.status === 'cho_giao' ? 'chờ kíp cũ giao' : 'chờ kíp mới nhận'})${late ? ': xe bị khóa khi không có ca' : ''}` });
+    }
+  }
+  if (user.role === 'admin') {
+    const cr = await one(q, `SELECT count(*)::int AS n FROM change_requests WHERE status = 'cho_duyet' AND proposed_by <> $1`, [user.id]);
+    if (cr?.n) out.push({ key: 'change_requests', level: 'amber', title: `${cr.n} đề xuất thay đổi chờ duyệt`, link: '/quan-tri#de-xuat' });
+  }
   return out;
 }
 

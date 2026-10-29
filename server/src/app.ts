@@ -38,6 +38,12 @@ import { registerOrg } from './routes/org.js';
 import { registerCoverage } from './routes/coverage.js';
 import { registerTelephony } from './routes/telephony.js';
 import { registerRegistry } from './routes/registry.js';
+import { registerGovernance } from './routes/governance.js';
+import { registerDuty } from './routes/duty.js';
+import { registerSheets } from './routes/sheets.js';
+import { registerInventory } from './routes/inventory.js';
+import { registerHandover } from './routes/handover.js';
+import { governanceHook } from './governance.js';
 
 export * from './http.js';
 
@@ -53,6 +59,8 @@ export async function buildApp(pool: pg.Pool, opts: { logger?: boolean } = {}) {
   await app.register(cors, { origin: (origin, cb) => cb(null, corsAllowed(origin)) });
   await app.register(jwt, { secret: config.jwtSecret, sign: { expiresIn: '14h' } });
   await app.register(websocket);
+  // Trưởng nhóm đề xuất, quản trị duyệt: chặn sửa danh mục, cấu hình trực tiếp khi đã khóa cấu hình
+  app.addHook('preHandler', governanceHook(ctx));
   // Tổng đài Asterisk gửi webhook dạng biểu mẫu (hàm CURL): đọc như JSON phẳng
   app.addContentTypeParser('application/x-www-form-urlencoded', { parseAs: 'string' }, (_req, body, done) => {
     done(null, Object.fromEntries(new URLSearchParams(body as string)));
@@ -111,6 +119,11 @@ export async function buildApp(pool: pg.Pool, opts: { logger?: boolean } = {}) {
   registerCoverage(app, ctx);
   registerTelephony(app, ctx);
   registerRegistry(app, ctx);
+  registerGovernance(app, ctx);
+  registerDuty(app, ctx);
+  registerSheets(app, ctx);
+  registerInventory(app, ctx);
+  registerHandover(app, ctx);
   registerAdmin(app, ctx);
 
   app.setNotFoundHandler((_req, reply) => reply.code(404).send({ error: 'Không tìm thấy' }));

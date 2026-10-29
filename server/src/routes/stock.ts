@@ -5,6 +5,7 @@ import { many, one, withTx } from '../db.js';
 import { HttpError } from '../domain.js';
 import { actorOf, guard, type Ctx, type Role } from '../http.js';
 import { importParWorkbook, ITEM_KIND, parWorkbook } from '../items.js';
+import { centralStation } from '../inventory.js';
 import {
   caseRestockList, createDisposal, createStocktake, pendingRestock, restockForTransfer, decideVoucher, lotsForVehicle, orderSuggestion, receiveStock, restockVehicle, returnFromVehicle,
   STOCK_APPROVERS, stockAlerts, transferBetweenStations, vehicleParStatus,
@@ -12,6 +13,8 @@ import {
 
 const STOCK_VIEW: Role[] = ['crew', 'dispatcher', 'supervisor', 'qa', 'admin', 'pharmacist', 'director'];
 const STOCK_MANAGE: Role[] = ['pharmacist', 'supervisor', 'admin'];
+/** Không xem kho tổng: điều phối viên chỉ cần cơ số xe, kho điểm */
+const NO_CENTRAL: Role[] = ['dispatcher', 'calltaker'];
 
 const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 const lines = z.array(z.object({ lotId: z.string().uuid(), qty: z.number().positive().max(100000) })).min(1).max(200);
@@ -32,6 +35,8 @@ export function registerStock(app: FastifyInstance, { pool }: Ctx) {
   /** Tồn kho: kho điểm, cơ số trên xe, hoặc cả hai */
   app.get('/api/stock', { preHandler: guard(...STOCK_VIEW) }, async (req) => {
     const q = z.object({ stationId: z.string().optional(), vehicleId: z.string().optional(), place: z.enum(['kho', 'xe', 'all']).default('kho') }).parse(req.query);
+    const hidden = NO_CENTRAL.includes(req.user.role) ? await centralStation(pool) : null;
+    if (hidden && q.stationId === hidden) throw new HttpError(403, 'Điều phối viên không xem kho tổng');
     return many(pool, `
       SELECT l.id, l.station_id, s.name AS station_name, l.vehicle_id, l.lot, l.expiry, l.qty, l.supplier, l.received_at,
              d.id AS drug_id, d.name AS drug_name, d.unit, d.controlled, (l.expiry - vn_today()) AS days_left
@@ -40,7 +45,8 @@ export function registerStock(app: FastifyInstance, { pool }: Ctx) {
          AND ($2::text IS NULL OR l.vehicle_id = $2)
          AND ($3 = 'all' OR ($3 = 'kho' AND l.vehicle_id IS NULL) OR ($3 = 'xe' AND l.vehicle_id IS NOT NULL))
          AND (l.qty > 0 OR l.received_at > now() - interval '30 days')
-       ORDER BY s.id, l.vehicle_id NULLS FIRST, d.name, l.expiry`, [q.stationId ?? null, q.vehicleId ?? null, q.vehicleId ? 'all' : q.place]);
+         AND ($4::text IS NULL OR l.station_id <> $4)
+       ORDER BY s.id, l.vehicle_id NULLS FIRST, d.name, l.expiry`, [q.stationId ?? null, q.vehicleId ?? null, q.vehicleId ? 'all' : q.place, hidden]);
   });
 
   /** Lô dùng được cho ePCR của xe: cơ số trên xe trước, kho điểm sau */
@@ -137,7 +143,12 @@ export function registerStock(app: FastifyInstance, { pool }: Ctx) {
 
   app.get('/api/stock/alerts', { preHandler: guard(...STOCK_VIEW) }, async (req) => {
     const q = z.object({ stationId: z.string().optional(), days: z.coerce.number().int().min(1).max(365).default(90) }).parse(req.query);
-    return stockAlerts(pool, q.stationId ?? null, q.days);
+    const hidden = NO_CENTRAL.includes(req.user.role) ? await centralStation(pool) : null;
+    if (hidden && q.stationId === hidden) throw new HttpError(403, 'Điều phối viên không xem kho tổng');
+    const a = await stockAlerts(pool, q.stationId ?? null, q.days);
+    if (!hidden) return a;
+    const keep = (r: { station_id: string }) => r.station_id !== hidden;
+    return { ...a, expired: a.expired.filter(keep), expiring: a.expiring.filter(keep), belowMin: a.belowMin.filter(keep) };
   });
 
   app.get('/api/stock/order-suggestion', { preHandler: guard(...STOCK_VIEW) }, async (req) => {

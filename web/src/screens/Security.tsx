@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import qrcode from 'qrcode-generator';
 import { api, homeFor, ROLE_LABEL, session, useLive, type Role } from '../api';
+import { useHash } from '../hashNav';
 
 type Run = (fn: () => Promise<unknown>, ok?: string) => Promise<boolean>;
 const ROLES = Object.keys(ROLE_LABEL) as Role[];
@@ -23,7 +24,9 @@ export function Security() {
     'Hạn mức phê duyệt',
     ...(REVIEW_VIEW.includes(role) ? ['Hậu kiểm'] : []),
   ];
-  const [tab, setTab] = useState(() => (typeof window !== 'undefined' && window.location.hash === '#hau-kiem' && tabs.includes('Hậu kiểm') ? 'Hậu kiểm' : tabs[0]));
+  const [tab, setTab] = useState(tabs[0]);
+  const { hash, tick } = useHash();
+  useEffect(() => { if (hash === 'hau-kiem' && tabs.includes('Hậu kiểm')) setTab('Hậu kiểm'); }, [hash, tick]); // eslint-disable-line react-hooks/exhaustive-deps
   const [error, setError] = useState('');
   const [msg, setMsg] = useState('');
   const run: Run = async (fn, ok) => {

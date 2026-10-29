@@ -329,7 +329,38 @@ function LatestLabs({ labs, types, onOpen }: { labs: any[]; types: LabType[]; on
   );
 }
 
-function UtsteinSection({ r, set, locked }: { r: any; set: Setter; locked: boolean }) {
+interface ArrestDrug { key: string; name: string; dose: string; match: RegExp }
+const ARREST_DRUGS: ArrestDrug[] = [
+  { key: 'adrenalin', name: 'Adrenalin 1 mg/1 ml', dose: '1 mg', match: /adrenalin|epinephrin/i },
+  { key: 'amiodaron', name: 'Amiodaron 150 mg/3 ml', dose: '300 mg', match: /amiodaron/i },
+  { key: 'lidocain', name: 'Lidocain 2%', dose: '1 mg/kg', match: /lidocain/i },
+];
+const ARREST_ROUTES = ['Tiêm tĩnh mạch', 'Qua xương'];
+
+/** Các liều thuốc hồi sức đã ghi: bấm nút để thêm một liều với giờ hiện tại */
+function ArrestDoses({ meds, onDose, removeMed, locked }: { meds: any[]; onDose: (d: ArrestDrug, route: string) => void; removeMed: (i: number) => void; locked: boolean }) {
+  const rows = meds.map((m, i) => ({ m, i })).filter(({ m }) => ARREST_DRUGS.some((d) => d.match.test(m.name ?? '')));
+  return (
+    <div className="col" style={{ gap: 4 }}>
+      {rows.map(({ m, i }) => (
+        <div key={i} className="row small" style={{ gap: 8 }}>
+          <b>{m.at ? new Date(m.at).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '--:--'}</b>
+          <span>{m.name} {m.dose ?? ''} · {m.route ?? ''}{m.lot ? ` · lô ${m.lot}` : ' · ngoài kho xe'}</span>
+          {!locked && <button className="ghost small" onClick={() => removeMed(i)}>✕</button>}
+        </div>
+      ))}
+      {!locked && (
+        <div className="row" style={{ gap: 4, flexWrap: 'wrap' }}>
+          {ARREST_DRUGS.map((d) => ARREST_ROUTES.map((r) => (
+            <button key={d.key + r} className="small" onClick={() => onDose(d, r)}>+ {d.name.split(' ')[0]} {d.dose} {r === 'Qua xương' ? '(qua xương)' : '(TM)'}</button>
+          )))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function UtsteinSection({ r, set, locked, meds, onDose, removeMed }: { r: any; set: Setter; locked: boolean; meds: any[]; onDose: (d: ArrestDrug, route: string) => void; removeMed: (i: number) => void }) {
   const s = (k: string) => (v: any) => set(`arrest.${k}`, v);
   return (
     <div className="col">
@@ -343,6 +374,7 @@ function UtsteinSection({ r, set, locked }: { r: any; set: Setter; locked: boole
             <Pick label="Nơi xảy ra" value={r.location} options={UT.location as any} onChange={s('location')} />
             <Pick label="Nguyên nhân" value={r.cause} options={UT.cause as any} onChange={s('cause')} />
             <div className="grid3"><TimeAt label="Giờ ngã quỵ (người chứng kiến ước tính)" value={r.collapseAt} onChange={s('collapseAt')} locked={locked} /></div>
+            <Other value={r.otherEvent} onChange={s('otherEvent')} />
           </div>
           {r.witnessed !== 'kip' && (
             <div className="panel col">
@@ -350,6 +382,7 @@ function UtsteinSection({ r, set, locked }: { r: any; set: Setter; locked: boole
               <Pick label="Người dân ép tim" value={r.bystanderCpr} options={UT.bystanderCpr as any} onChange={s('bystanderCpr')} />
               <Chk label="Điều phối viên hướng dẫn ép tim qua điện thoại" value={r.dispatcherCpr} onChange={s('dispatcherCpr')} />
               <Pick label="Máy AED công cộng" value={r.publicAed} options={UT.publicAed as any} onChange={s('publicAed')} />
+              <Other value={r.otherBystander} onChange={s('otherBystander')} />
             </div>
           )}
           <div className="panel col">
@@ -364,18 +397,27 @@ function UtsteinSection({ r, set, locked }: { r: any; set: Setter; locked: boole
                   <TimeAt label="Kíp bắt đầu ép tim" value={r.cprStartAt} onChange={s('cprStartAt')} locked={locked} />
                   <TimeAt label="Sốc điện lần đầu" value={r.firstShockAt} onChange={s('firstShockAt')} locked={locked} />
                   <Txt label="Số lần sốc" type="number" value={r.shocks} onChange={s('shocks')} />
-                  <TimeAt label="Adrenalin liều đầu" value={r.adrenalineFirstAt} onChange={s('adrenalineFirstAt')} locked={locked} />
-                  <Txt label="Số liều adrenalin" type="number" value={r.adrenalineDoses} onChange={s('adrenalineDoses')} />
                   <Txt label="EtCO2 cao nhất (mmHg)" type="number" value={r.etco2Max} onChange={s('etco2Max')} />
                 </div>
                 <Pick label="Đường thở" value={r.airway} options={UT.airway as any} onChange={s('airway')} />
                 {r.airway && r.airway !== 'khong' && <div className="grid3"><TimeAt label="Giờ đặt đường thở" value={r.airwayAt} onChange={s('airwayAt')} locked={locked} /></div>}
+                <b className="small">Thuốc hồi sức (mỗi lần bấm là một liều, tự trừ cơ số xe)</b>
+                <ArrestDoses meds={meds} onDose={onDose} removeMed={removeMed} locked={locked} />
+                <b className="small">Thuốc và can thiệp</b>
                 <div className="row">
+                  <Chk label="Adrenalin" value={r.adrenaline || !!r.adrenalineFirstAt || (r.adrenalineDoses ?? 0) > 0} onChange={s('adrenaline')} />
                   <Chk label="Thuốc chống loạn nhịp (amiodaron, lidocain)" value={r.antiarrhythmic} onChange={s('antiarrhythmic')} />
                   <Chk label="Ép tim cơ học" value={r.mechanicalCpr} onChange={s('mechanicalCpr')} />
                   <Chk label="Bắt đầu hạ thân nhiệt chỉ huy" value={r.ttm} onChange={s('ttm')} />
                   <Chk label="Chuyển ECMO hồi sức (ECPR)" value={r.ecpr} onChange={s('ecpr')} />
                 </div>
+                {(r.adrenaline || r.adrenalineFirstAt || (r.adrenalineDoses ?? 0) > 0) && (
+                  <div className="grid3">
+                    <TimeAt label="Adrenalin liều đầu" value={r.adrenalineFirstAt} onChange={s('adrenalineFirstAt')} locked={locked} />
+                    <Txt label="Số liều adrenalin" type="number" value={r.adrenalineDoses} onChange={s('adrenalineDoses')} />
+                  </div>
+                )}
+                <Other value={r.otherCare} onChange={s('otherCare')} />
               </>
             )}
           </div>
@@ -400,10 +442,11 @@ function UtsteinSection({ r, set, locked }: { r: any; set: Setter; locked: boole
                   <Txt label="Lý do ngừng hồi sức" value={r.terminationReason} onChange={s('terminationReason')} />
                 </div>
               )}
+              <Other value={r.otherOutcome} onChange={s('otherOutcome')} />
             </div>
           )}
           <Txt label="Ghi chú" area value={r.note} onChange={s('note')} />
-          <div className="small muted">Kết cục tại bệnh viện (nhập viện, sống 30 ngày, CPC) do QLCL theo dõi trong sổ Utstein.</div>
+          <div className="alert amber small">Ký phiếu xong, ca này tự vào biểu mẫu Utstein. Phần trong viện (nhập viện, ra viện, sống 30 ngày, CPC) do bệnh viện nhận điền ở Cổng bệnh viện, hoặc trung tâm điền ở mục Nghiên cứu.</div>
         </>
       )}
     </div>
@@ -463,6 +506,20 @@ export function EpcrForm({ draft: initial, onChange, initialTab }: { draft: Draf
     const row = applyLot({ at: nowIso(), name: '', route }, lot);
     row.route = route;
     (x.medications ??= []).push(row);
+    return x;
+  });
+  /** Liều thuốc hồi sức bấm nhanh ở mục Ngừng tuần hoàn: thành một dòng thuốc (số lô, trừ cơ số, tính tiền) và tự điền biến Utstein */
+  const addArrestDose = (drug: ArrestDrug, route: string) => update((x) => {
+    const lot = stock.find((l) => drug.match.test(l.drug_name));
+    const row = applyLot({ at: nowIso(), name: drug.name, route }, lot);
+    row.route = route; row.dose = drug.dose; row.qty = 1;
+    (x.medications ??= []).push(row);
+    const a = (x.arrest ??= {});
+    if (drug.key === 'adrenalin') {
+      a.adrenaline = true;
+      a.adrenalineFirstAt ??= row.at;
+      a.adrenalineDoses = x.medications.filter((m: any) => ARREST_DRUGS[0].match.test(m.name ?? '')).length;
+    } else a.antiarrhythmic = true;
     return x;
   });
   const setMed = (i: number, patch: Record<string, any>) => update((x) => {
@@ -884,6 +941,7 @@ export function EpcrForm({ draft: initial, onChange, initialTab }: { draft: Draf
               {['Ép tim', 'Sốc điện', 'Mask thanh quản', 'Nội khí quản', 'Đường truyền TM', 'Kim truyền trong xương', 'Thở oxy', 'Cố định cột sống', 'Garo cầm máu'].map((n) => (
                 <button key={n} onClick={() => update((x) => { (x.interventions ??= []).push({ at: nowIso(), name: n }); return x; })}>+ {n}</button>
               ))}
+              <button onClick={() => update((x) => { (x.interventions ??= []).push({ at: nowIso(), name: '' }); return x; })}>+ Khác (ghi tên)</button>
             </div>
             <h3>Thuốc, dịch truyền, vật tư đã dùng</h3>
             {d.vehicleId && <ItemPicker lots={allItems} onPick={pickItem} />}
@@ -997,7 +1055,7 @@ export function EpcrForm({ draft: initial, onChange, initialTab }: { draft: Draf
           </div>
         )}
 
-        {tab === 'Ngừng tuần hoàn' && <UtsteinSection r={e.arrest ?? {}} set={set} locked={locked} />}
+        {tab === 'Ngừng tuần hoàn' && <UtsteinSection r={e.arrest ?? {}} set={set} locked={locked} meds={e.medications ?? []} onDose={addArrestDose} removeMed={removeMed} />}
 
         {tab === 'Em bé (sanh rớt)' && (
           <div className="col">

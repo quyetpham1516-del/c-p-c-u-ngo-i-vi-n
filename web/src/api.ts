@@ -82,6 +82,10 @@ export async function api<T = any>(method: string, url: string, body?: unknown):
     const details = Array.isArray(json?.details) && typeof json.details[0] === 'string' ? `: ${json.details.join('; ')}` : '';
     throw new ApiError(res.status, (json?.error ?? `Lỗi ${res.status}`) + details, json);
   }
+  // Đã khóa cấu hình: thay đổi của trưởng nhóm được lưu thành đề xuất chờ quản trị duyệt
+  if (res.status === 202 && json?.proposal && typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('medone:proposal', { detail: json }));
+  }
   return json as T;
 }
 

@@ -136,7 +136,7 @@ export function utsteinReport(rows: ArrestRow[], populationServed: number | null
     },
     treatment: {
       shocked: attempted.filter((r) => (a(r).shocks ?? 0) > 0 || a(r).firstShockAt).length,
-      adrenaline: attempted.filter((r) => (a(r).adrenalineDoses ?? 0) > 0 || a(r).adrenalineFirstAt).length,
+      adrenaline: attempted.filter((r) => a(r).adrenaline || (a(r).adrenalineDoses ?? 0) > 0 || a(r).adrenalineFirstAt).length,
       advancedAirway: attempted.filter((r) => ['mat_na_thanh_quan', 'noi_khi_quan'].includes(a(r).airway)).length,
       mechanical: attempted.filter((r) => a(r).mechanicalCpr).length,
       ttm: attempted.filter((r) => a(r).ttm).length,

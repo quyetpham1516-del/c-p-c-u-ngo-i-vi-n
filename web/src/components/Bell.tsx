@@ -1,6 +1,8 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { announceHash } from '../hashNav';
 import { api, fmtTime } from '../api';
 
 interface Reminder { key: string; level: 'red' | 'amber' | 'info'; title: string; body?: string; link: string }
@@ -15,6 +17,15 @@ export function Bell({ path }: { path: string }) {
   const [data, setData] = useState<Resp | null>(null);
   const [open, setOpen] = useState(false);
   const box = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+  /** Đi tới đúng trang, đúng mục; cùng trang thì vẫn chuyển thẻ và cuộn tới */
+  const go = (e: React.MouseEvent, link: string | null) => {
+    e.preventDefault();
+    setOpen(false);
+    if (!link) return;
+    router.push(link);
+    announceHash();
+  };
   const load = () => api<Resp>('GET', '/api/notifications').then(setData).catch(() => {});
   useEffect(() => {
     load();
@@ -43,16 +54,16 @@ export function Bell({ path }: { path: string }) {
           </div>
           {!data?.reminders.length && <div className="small muted">Không còn việc nào bị quên.</div>}
           {data?.reminders.map((r) => (
-            <Link key={r.key} href={r.link} className={`bell-item ${r.level}`} onClick={() => setOpen(false)}>
-              <div>{r.title}</div>{r.body && <div className="small muted">{r.body}</div>}
+            <Link key={r.key} href={r.link} className={`bell-item ${r.level}`} onClick={(e) => go(e, r.link)}>
+              <div className="bell-title">{r.title}</div>{r.body && <div className="bell-body">{r.body}</div>}
             </Link>
           ))}
           {!!data?.messages.length && <b style={{ marginTop: 8 }}>Tin</b>}
           {data?.messages.map((m) => (
-            <Link key={m.id} href={m.link ?? '#'} className={`bell-item ${m.read_at ? 'read' : 'info'}`} onClick={() => { read(m); setOpen(false); }}>
-              <div>{!m.read_at && '● '}{m.title}</div>
-              {m.body && <div className="small muted">{m.body}</div>}
-              <div className="small muted">{fmtTime(m.created_at)}</div>
+            <Link key={m.id} href={m.link ?? '#'} className={`bell-item ${m.read_at ? 'read' : 'info unread'}`} onClick={(e) => { read(m); go(e, m.link); }}>
+              <div className="bell-title">{!m.read_at && '● '}{m.title}</div>
+              {m.body && <div className="bell-body">{m.body}</div>}
+              <div className="bell-time">{fmtTime(m.created_at)}{!m.link && ' · không có mục để mở'}</div>
             </Link>
           ))}
         </div>

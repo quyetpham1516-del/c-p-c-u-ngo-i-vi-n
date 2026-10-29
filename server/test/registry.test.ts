@@ -100,6 +100,62 @@ describe('biểu mẫu nghiên cứu và cổng bệnh viện', () => {
     expect(r.body).not.toContain('Nguyễn Văn Đột');
   });
 
+  it('ca tự đến: khoa cấp cứu tạo phiếu đủ các phần, chặn trùng số hồ sơ, dùng chung danh sách và file xuất', async () => {
+    const defs = await bv('GET', '/api/registry/defs');
+    expect(defs.data.find((d: any) => d.code === 'utstein')).toMatchObject({ collecting: true });
+    expect(defs.data.find((d: any) => d.code === 'patos').collecting).toBe(false);
+    // Biểu mẫu không lấy số liệu thì không tạo được; nhân viên kíp không tạo được
+    expect((await bv('POST', '/api/registry/walk-in', { registry: 'patos', hospitalRecordNo: 'CR-1' })).http).toBe(409);
+    expect((await crew('POST', '/api/registry/walk-in', { registry: 'utstein', hospitalRecordNo: 'CR-1', hospitalId })).http).toBe(403);
+    expect((await qa('POST', '/api/registry/walk-in', { registry: 'utstein', hospitalRecordNo: 'CR-1' })).http).toBe(400);
+
+    const c = await bv('POST', '/api/registry/walk-in', { registry: 'utstein', hospitalRecordNo: 'CR-1', hospitalId: otherId,
+      data: { age: 58, sex: 'M', arrivedAt: '2026-10-28T21:05', arrivalMode: 'gia_dinh', witnessed: 'co', bystanderCpr: 'khong' } });
+    expect(c).toMatchObject({ source: 'tu_den', hospital_id: hospitalId, hospital_record_no: 'CR-1', transfer_id: null, created_by_name: 'BS Cấp cứu Chợ Rẫy', status: 'dang_bo_sung', age: '58' });
+    expect(c.missing).toEqual(expect.arrayContaining(['Chẩn đoán tại khoa cấp cứu', 'Nhịp đầu tiên tại khoa cấp cứu', 'Còn tuần hoàn khi tới khoa cấp cứu']));
+    expect((await bv('POST', '/api/registry/walk-in', { registry: 'utstein', hospitalRecordNo: 'CR-1' })).http).toBe(409);
+    expect((await bvKhac('GET', `/api/registry/cases/${c.id}`)).http).toBe(403);
+    // Ca tự đến: bệnh viện sửa được cả phần khi tới viện
+    const done = await bv('PUT', `/api/registry/cases/${c.id}`, { diagnosis: 'Ngừng tuần hoàn ngoài viện', firstRhythmEd: 'vf', edRosc: 'co', edOutcome: 'tu_vong_cc' });
+    expect(done.status).toBe('du');
+    // Ca xe 115 không có phần tu_den
+    expect((await dpv('PUT', `/api/registry/cases/${caseId}`, { arrivalMode: 'gia_dinh' })).http).toBe(403);
+
+    const walk = await dpv('GET', '/api/registry/cases?source=tu_den');
+    expect(walk.data.map((r: any) => r.id)).toEqual([c.id]);
+    expect((await dpv('GET', '/api/registry/cases?source=xe_115')).data.every((r: any) => r.source === 'xe_115')).toBe(true);
+    expect((await bv('GET', '/api/registry/cases')).data.map((r: any) => r.source).sort()).toEqual(['tu_den', 'xe_115', 'xe_115']);
+    const r = await app.inject({ method: 'GET', url: '/api/registry/export?registry=utstein', headers: { authorization: `Bearer ${(await app.inject({ method: 'POST', url: '/api/auth/login', payload: { username: 'qlcl', password: testPassword } })).json().token}` } });
+    expect(r.body).toContain('Tự đến');
+    expect(r.body).toContain('gia_dinh');
+    expect(r.body).not.toContain('CR-1');
+  });
+
+  it('thống kê ca theo bệnh viện, người nhập; đặt đơn giá; đánh dấu đã trả mỗi ca một lần', async () => {
+    expect((await crew('GET', '/api/registry/contributors')).http).toBe(403);
+    let s = await qa('GET', '/api/registry/contributors?registry=utstein');
+    const row = s.data.find((x: any) => x.source === 'tu_den');
+    expect(row).toMatchObject({ hospital_id: hospitalId, full_name: 'BS Cấp cứu Chợ Rẫy', total: 1, complete: 1, unpaid: 1, rate: null, due: null });
+    // Chưa đặt đơn giá: không đánh dấu trả được ca nào
+    expect((await admin('POST', '/api/registry/payouts', { registry: 'utstein' })).cases).toBe(0);
+    expect((await qa('POST', '/api/registry/payouts', {})).http).toBe(403);
+    expect((await admin('PUT', '/api/registry/settings/utstein', { enabled: true, rateWalkIn: 200000, rateEms: 100000 })).http).toBe(200);
+    // Sửa cài đặt mà không gửi đơn giá thì giữ nguyên
+    expect((await admin('PUT', '/api/registry/settings/utstein', { enabled: true })).rate_walk_in).toBe('200000');
+    s = await qa('GET', '/api/registry/contributors?registry=utstein');
+    expect(s.data.find((x: any) => x.source === 'tu_den')).toMatchObject({ rate: 200000, due: 200000 });
+    // Bệnh viện chỉ thấy số của bệnh viện mình
+    expect((await bvKhac('GET', '/api/registry/contributors')).data).toHaveLength(0);
+    expect((await bv('GET', '/api/registry/contributors')).data.length).toBeGreaterThan(0);
+    expect(await admin('POST', '/api/registry/payouts', { registry: 'utstein' })).toMatchObject({ cases: 1, total: 200000 });
+    expect((await admin('POST', '/api/registry/payouts', { registry: 'utstein' })).cases).toBe(0);
+    expect((await qa('GET', '/api/registry/contributors?registry=utstein&source=tu_den')).data[0]).toMatchObject({ paid: 1, unpaid: 0, paid_amount: 200000, due: 0 });
+    const id = (await bv('GET', '/api/registry/cases?source=tu_den')).data[0].id;
+    expect((await bv('PUT', `/api/registry/cases/${id}`, { diagnosis: null })).http).toBe(409);
+    const csv = await app.inject({ method: 'GET', url: '/api/registry/contributors?format=csv', headers: { authorization: `Bearer ${(await app.inject({ method: 'POST', url: '/api/auth/login', payload: { username: 'qlcl', password: testPassword } })).json().token}` } });
+    expect(csv.body).toContain('BS Cấp cứu Chợ Rẫy');
+  });
+
   it('nhật ký không ghi token trong đường dẫn', () => {
     expect(redactUrl('/ws?token=bimat.123')).toBe('/ws?token=***');
     expect(redactUrl('/api/x?a=1&token=abc&b=2')).toBe('/api/x?a=1&token=***&b=2');

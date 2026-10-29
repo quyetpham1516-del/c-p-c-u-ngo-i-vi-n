@@ -9,18 +9,44 @@ import { HttpError, incidentScope } from './domain.js';
  */
 
 export type FieldType = 'bool' | 'number' | 'text' | 'date' | 'datetime' | 'select';
-export interface Field { key: string; label: string; type: FieldType; options?: [string, string][]; part: 'truoc_vien' | 'trong_vien'; required?: boolean; when?: [string, string] }
+/** truoc_vien: trước viện; trong_vien: bệnh viện điền; tu_den: chỉ ca tự đến bệnh viện (thay phần chụp từ phiếu chuyển viện) */
+export type Part = 'truoc_vien' | 'trong_vien' | 'tu_den';
+export interface Field { key: string; label: string; type: FieldType; options?: [string, string][]; part: Part; required?: boolean; when?: [string, string] }
 
 const YN3: [string, string][] = [['co', 'Có'], ['khong', 'Không'], ['khong_ro', 'Không rõ']];
 const CPC: [string, string][] = [['1', 'CPC 1: tốt'], ['2', 'CPC 2: di chứng vừa'], ['3', 'CPC 3: di chứng nặng'], ['4', 'CPC 4: hôn mê, sống thực vật'], ['5', 'CPC 5: tử vong']];
 const MRS: [string, string][] = [0, 1, 2, 3, 4, 5, 6].map((n) => [String(n), `mRS ${n}`]);
 const OUTCOME: [string, string][] = [['song', 'Sống ra viện'], ['tu_vong', 'Tử vong trong viện'], ['chuyen_vien', 'Chuyển viện khác'], ['xin_ve', 'Xin về']];
 
+/** Thông tin khi tới viện của ca tự đến: thay cho phần trước viện chụp từ phiếu chuyển viện */
+const WALK_IN: Field[] = [
+  { key: 'age', label: 'Tuổi', type: 'number', part: 'tu_den', required: true },
+  { key: 'sex', label: 'Giới', type: 'select', options: [['M', 'Nam'], ['F', 'Nữ']], part: 'tu_den', required: true },
+  { key: 'arrivedAt', label: 'Giờ tới khoa cấp cứu', type: 'datetime', part: 'tu_den', required: true },
+  { key: 'arrivalMode', label: 'Cách tới viện', type: 'select', part: 'tu_den', required: true, options: [
+    ['gia_dinh', 'Người nhà đưa tới'], ['nguoi_dan', 'Người đi đường, người dân đưa tới'], ['tu_di', 'Tự đi tới'], ['taxi', 'Taxi, xe công nghệ'],
+    ['xe_vien_khac', 'Xe của cơ sở y tế khác'], ['cong_an', 'Công an, cứu hộ đưa tới'], ['khac', 'Khác']] },
+  { key: 'referredFrom', label: 'Chuyển từ cơ sở y tế (nếu có)', type: 'text', part: 'tu_den' },
+  { key: 'chiefComplaint', label: 'Lý do vào viện', type: 'text', part: 'tu_den' },
+  { key: 'diagnosis', label: 'Chẩn đoán tại khoa cấp cứu', type: 'text', part: 'tu_den', required: true },
+  { key: 'icd10', label: 'Mã ICD-10', type: 'text', part: 'tu_den' },
+];
+const RHYTHM: [string, string][] = [['vf', 'Rung thất'], ['vt', 'Nhanh thất vô mạch'], ['pea', 'Hoạt động điện vô mạch'], ['asystole', 'Vô tâm thu'], ['rosc', 'Đã có mạch khi tới'], ['khong_ro', 'Không rõ']];
+
 export const REGISTRIES: Record<string, { name: string; criteria: string; fields: Field[] }> = {
   utstein: {
     name: 'Utstein: ngừng tuần hoàn ngoài viện',
     criteria: 'Phiếu có ngừng tuần hoàn (mẫu Utstein trên phiếu)',
     fields: [
+      ...WALK_IN,
+      { key: 'collapseAt', label: 'Giờ ngừng tim (ước tính)', type: 'datetime', part: 'tu_den' },
+      { key: 'arrestPlace', label: 'Nơi ngừng tim', type: 'select', part: 'tu_den', options: [['nha', 'Nhà'], ['cong_cong', 'Nơi công cộng'], ['noi_lam_viec', 'Nơi làm việc'], ['duong', 'Đường giao thông'], ['tren_xe', 'Trên đường tới viện'], ['khac', 'Khác']] },
+      { key: 'witnessed', label: 'Có người chứng kiến lúc ngừng tim', type: 'select', options: YN3, part: 'tu_den', required: true },
+      { key: 'bystanderCpr', label: 'Người dân ép tim trước khi tới', type: 'select', options: YN3, part: 'tu_den', required: true },
+      { key: 'publicAed', label: 'Có dùng máy sốc tim AED công cộng', type: 'select', options: YN3, part: 'tu_den' },
+      { key: 'arrestCause', label: 'Nguyên nhân nghĩ tới', type: 'select', part: 'tu_den', options: [['tim', 'Do tim (nội khoa)'], ['chan_thuong', 'Chấn thương'], ['duoi_nuoc', 'Đuối nước'], ['ngat_tho', 'Ngạt, tắc đường thở'], ['ngo_doc', 'Ngộ độc, quá liều'], ['dien_giat', 'Điện giật'], ['khac', 'Khác']] },
+      { key: 'firstRhythmEd', label: 'Nhịp đầu tiên tại khoa cấp cứu', type: 'select', options: RHYTHM, part: 'tu_den', required: true },
+      { key: 'edCprMinutes', label: 'Thời gian hồi sức tại khoa (phút)', type: 'number', part: 'tu_den' },
       { key: 'edRosc', label: 'Còn tuần hoàn khi tới khoa cấp cứu', type: 'select', options: YN3, part: 'trong_vien', required: true },
       { key: 'edOutcome', label: 'Kết cục tại khoa cấp cứu', type: 'select', options: [['nhap_vien', 'Nhập viện'], ['tu_vong_cc', 'Tử vong tại cấp cứu'], ['chuyen_vien', 'Chuyển viện khác']], part: 'trong_vien', required: true },
       { key: 'coronaryAngio', label: 'Chụp mạch vành', type: 'bool', part: 'trong_vien' },
@@ -40,6 +66,8 @@ export const REGISTRIES: Record<string, { name: string; criteria: string; fields
     name: 'PATOS: chấn thương',
     criteria: 'Phiếu có chấn thương (mục chấn thương, chấn thương ở mục E hoặc cố định cột sống)',
     fields: [
+      ...WALK_IN,
+      { key: 'injuryAt', label: 'Giờ bị chấn thương', type: 'datetime', part: 'tu_den' },
       { key: 'mechanism', label: 'Cơ chế chấn thương', type: 'select', part: 'truoc_vien', required: true, options: [
         ['tngt', 'Tai nạn giao thông'], ['nga_cao', 'Ngã cao'], ['nga_mat_phang', 'Ngã cùng mặt phẳng'], ['vat_sac', 'Vật sắc nhọn'], ['vat_tu', 'Vật tù, bị đánh'],
         ['hoa_khi', 'Hỏa khí, nổ'], ['bong', 'Bỏng'], ['duoi_nuoc', 'Đuối nước'], ['dong_vat', 'Động vật'], ['may_moc', 'Máy móc lao động'], ['khac', 'Khác']] },
@@ -69,6 +97,7 @@ export const REGISTRIES: Record<string, { name: string; criteria: string; fields
     name: 'Đột quỵ',
     criteria: 'FAST dương tính trên phiếu, hoặc chẩn đoán ICD I60–I64, G45, hoặc chẩn đoán có chữ "đột quỵ"',
     fields: [
+      ...WALK_IN,
       { key: 'lastKnownWell', label: 'Lần cuối còn bình thường', type: 'datetime', part: 'truoc_vien', required: true },
       { key: 'onsetWitnessed', label: 'Có người chứng kiến lúc khởi phát', type: 'bool', part: 'truoc_vien' },
       { key: 'prehospitalScale', label: 'Thang điểm trước viện (BE-FAST, RACE...)', type: 'text', part: 'truoc_vien' },
@@ -93,9 +122,12 @@ export const REGISTRIES: Record<string, { name: string; criteria: string; fields
 const has = (v: unknown) => v !== undefined && v !== null && v !== '';
 const shown = (f: Field, d: Record<string, unknown>) => !f.when || String(d[f.when[0]]) === f.when[1];
 
+/** Trường dùng cho ca theo nguồn: phần tu_den chỉ có ở ca tự đến */
+export const fieldsFor = (code: string, source: string) => REGISTRIES[code].fields.filter((f) => f.part !== 'tu_den' || source === 'tu_den');
+
 /** Đủ khi mọi trường bắt buộc (đang hiện theo câu trả lời trước) đã điền */
-export function missingFields(code: string, data: Record<string, unknown>) {
-  return REGISTRIES[code].fields.filter((f) => f.required && shown(f, data) && !has(data[f.key])).map((f) => f.label);
+export function missingFields(code: string, data: Record<string, unknown>, source = 'xe_115') {
+  return fieldsFor(code, source).filter((f) => f.required && shown(f, data) && !has(data[f.key])).map((f) => f.label);
 }
 
 /** Ca có đúng tiêu chí của biểu mẫu không */
@@ -166,15 +198,16 @@ export async function enrollOnSign(tx: Tx, actor: Actor, transferId: string, e: 
 export async function saveRegistryCase(tx: Tx, actor: Actor, user: { id: string; role: string }, id: string, patch: Record<string, unknown>) {
   const c = await one(tx, 'SELECT * FROM registry_cases WHERE id = $1 FOR UPDATE', [id]);
   if (!c) throw new HttpError(404, 'Không tìm thấy ca trong biểu mẫu');
-  const def = REGISTRIES[c.registry];
   if (user.role === 'hospital') {
     const me = await one(tx, 'SELECT hospital_id FROM users WHERE id = $1', [user.id]);
     if (!me?.hospital_id || me.hospital_id !== c.hospital_id) throw new HttpError(403, 'Ca này không chuyển tới bệnh viện của bạn');
   }
-  const allowed = new Set(def.fields.filter((f) => user.role !== 'hospital' || f.part === 'trong_vien').map((f) => f.key));
+  // Ca tự đến: bệnh viện nhập cả phiếu; ca xe 115: bệnh viện chỉ phần trong viện
+  const fields = fieldsFor(c.registry, c.source);
+  const allowed = new Set(fields.filter((f) => user.role !== 'hospital' || c.source === 'tu_den' || f.part === 'trong_vien').map((f) => f.key));
   const bad = Object.keys(patch).filter((k) => !allowed.has(k));
   if (bad.length) throw new HttpError(403, `Không sửa được trường: ${bad.join(', ')}`);
-  for (const f of def.fields) {
+  for (const f of fields) {
     const v = patch[f.key];
     if (!(f.key in patch) || v === null || v === '') continue;
     if (f.type === 'number' && (typeof v !== 'number' || !Number.isFinite(v))) throw new HttpError(400, `${f.label}: phải là số`);
@@ -184,10 +217,28 @@ export async function saveRegistryCase(tx: Tx, actor: Actor, user: { id: string;
   }
   const data = { ...(c.data ?? {}), ...patch };
   for (const [k, v] of Object.entries(data)) if (v === null || v === '') delete data[k];
-  const miss = missingFields(c.registry, data);
+  const miss = missingFields(c.registry, data, c.source);
   const status = miss.length ? (Object.keys(data).length ? 'dang_bo_sung' : 'cho_bo_sung') : 'du';
+  if (c.paid_at && status !== 'du') throw new HttpError(409, 'Ca đã thanh toán: không xóa được trường bắt buộc');
   const row = await one(tx, `UPDATE registry_cases SET data = $2, status = $3, completed_at = CASE WHEN $3 = 'du' THEN coalesce(completed_at, now()) ELSE NULL END,
+                                  completed_by = CASE WHEN $3 = 'du' THEN coalesce(completed_by, $4) ELSE NULL END,
                                   updated_by = $4, updated_at = now() WHERE id = $1 RETURNING *`, [id, data, status, user.id]);
   await audit(tx, c.incident_id ? incidentScope(c.incident_id) : 'system', actor, 'registry.updated', 'registry_case', id, { registry: c.registry, fields: Object.keys(patch), status });
   return { ...row, missing: miss };
+}
+
+/**
+ * Ca tự đến bệnh viện: khoa cấp cứu tạo ca mới trong biểu mẫu đang lấy số liệu. Số hồ sơ bệnh viện chặn nhập trùng;
+ * ghi bệnh viện và người tạo để thống kê, thanh toán.
+ */
+export async function createWalkIn(tx: Tx, actor: Actor, user: { id: string; role: string }, b: { registry: string; hospitalId: number; hospitalRecordNo: string; data: Record<string, unknown> }) {
+  const on = await one(tx, `SELECT 1 FROM registry_settings WHERE code = $1 AND enabled AND (start_on IS NULL OR start_on <= vn_today()) AND (end_on IS NULL OR end_on >= vn_today())`, [b.registry]);
+  if (!on) throw new HttpError(409, `Biểu mẫu ${REGISTRIES[b.registry].name} đang không lấy số liệu`);
+  const dup = await one(tx, `SELECT id FROM registry_cases WHERE source = 'tu_den' AND registry = $1 AND hospital_id = $2 AND hospital_record_no = $3`, [b.registry, b.hospitalId, b.hospitalRecordNo]);
+  if (dup) throw new HttpError(409, `Số hồ sơ ${b.hospitalRecordNo} đã có trong biểu mẫu này`, { id: dup.id });
+  const row = await one(tx, `INSERT INTO registry_cases(registry, source, hospital_id, hospital_record_no, prehospital, created_by, updated_by)
+                             VALUES ($1, 'tu_den', $2, $3, $4, $5, $5) RETURNING id`,
+  [b.registry, b.hospitalId, b.hospitalRecordNo, { source: 'tu_den', hospitalRecordNo: b.hospitalRecordNo }, user.id]);
+  await audit(tx, 'system', actor, 'registry.walk_in', 'registry_case', row.id, { registry: b.registry, hospitalId: b.hospitalId });
+  return saveRegistryCase(tx, actor, user, row.id, b.data);
 }

@@ -284,6 +284,7 @@ tr.sel td { background: color-mix(in srgb, var(--brand) 14%, var(--panel)); }
 .badge.green { border-color: var(--ok); color: var(--ok); }
 .badge.amber { border-color: var(--p2); color: var(--p2); }
 .badge.red { border-color: var(--p1); color: var(--p1); }
+.badge.blue { border-color: var(--brand); color: var(--brand); }
 .panel.green { border-color: var(--ok); }
 .panel.amber { border-color: var(--p2); }
 .panel.red { border-color: var(--p1); }

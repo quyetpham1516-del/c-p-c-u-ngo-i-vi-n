@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { api, download, fmtDateTime, session } from '../api';
 import { useHospitals } from '../catalog';
-import { REGISTRY_STATUS, RegistryForm, StatusBadge, useRegistryDefs } from '../components/RegistryForm';
+import { RegistryContributors } from '../components/RegistryContributors';
+import { REGISTRY_STATUS, RegistryForm, SOURCE_NAME, SourceBadge, StatusBadge, useRegistryDefs, WalkInCreate } from '../components/RegistryForm';
 
 /**
  * Biểu mẫu nghiên cứu: Utstein (ngừng tuần hoàn), PATOS (chấn thương), đột quỵ. Admin, Ban Giám đốc bật, tắt từng biểu mẫu
@@ -12,11 +13,14 @@ export function Research() {
   const canSet = ['admin', 'director'].includes(role);
   const canAdd = ['dispatcher', 'supervisor', 'qa', 'admin', 'director'].includes(role);
   const canExport = ['supervisor', 'qa', 'admin', 'director'].includes(role);
+  const canWalkIn = canExport;
+  const canSeePay = ['admin', 'director', 'accountant', 'qa'].includes(role);
   const defs = useRegistryDefs();
   const hospitals = useHospitals();
   const [settings, setSettings] = useState<any[]>([]);
   const [cases, setCases] = useState<any[]>([]);
-  const [filter, setFilter] = useState({ registry: '', status: 'chua_du', hospitalId: '', from: '', to: '' });
+  const [filter, setFilter] = useState({ registry: '', status: 'chua_du', hospitalId: '', from: '', to: '', source: '' });
+  const [rates, setRates] = useState<Record<string, string>>({});
   const [sel, setSel] = useState<string | null>(null);
   const [add, setAdd] = useState({ registry: 'utstein', transferNumber: '' });
   const [msg, setMsg] = useState('');
@@ -26,8 +30,9 @@ export function Research() {
     const qs = new URLSearchParams(Object.entries(filter).filter(([, v]) => v) as [string, string][]).toString();
     return api<any[]>('GET', `/api/registry/cases?${qs}`).then(setCases).catch((e) => setMsg(e.message));
   };
-  useEffect(() => { loadSettings(); }, []);
-  useEffect(() => { loadCases(); }, [filter]);
+  const payOnly = role === 'accountant';
+  useEffect(() => { if (!payOnly) loadSettings(); }, []);
+  useEffect(() => { if (!payOnly) loadCases(); }, [filter]);
 
   const run = async (fn: () => Promise<unknown>, ok?: string) => {
     setMsg('');
@@ -38,6 +43,9 @@ export function Research() {
   }));
   const nameOf = (code: string) => defs.find((d) => d.code === code)?.name ?? code;
 
+  // Kế toán chỉ xem bảng kê người nhập để thanh toán
+  if (payOnly) return <RegistryContributors defs={defs} hospitals={hospitals} />;
+
   return (
     <div>
       <div className="panel">
@@ -46,7 +54,8 @@ export function Research() {
           (mã QR trên phiếu in), hoặc bác sĩ, điều phối của trung tâm điền thay.</div>
         <div style={{ overflowX: 'auto', marginTop: 8 }}>
           <table>
-            <thead><tr><th>Biểu mẫu</th><th>Lấy số liệu</th><th>Từ ngày</th><th>Đến ngày</th><th>Số ca</th></tr></thead>
+            <thead><tr><th>Biểu mẫu</th><th>Lấy số liệu</th><th>Từ ngày</th><th>Đến ngày</th><th>Số ca</th>
+              <th title="Trả cho người nhập mỗi ca đủ; để trống là chưa đặt">Đơn giá ca tự đến</th><th title="Trả cho người điền phần trong viện mỗi ca đủ">Đơn giá ca xe 115</th></tr></thead>
             <tbody>{settings.map((s) => (
               <tr key={s.code}>
                 <td><b>{nameOf(s.code)}</b><div className="small muted">{defs.find((d) => d.code === s.code)?.criteria}</div></td>
@@ -60,6 +69,19 @@ export function Research() {
                 <td><input type="date" value={s.start_on?.slice(0, 10) ?? ''} disabled={!canSet} onChange={(e) => saveSetting(s, { startOn: e.target.value || null })} /></td>
                 <td><input type="date" value={s.end_on?.slice(0, 10) ?? ''} disabled={!canSet} onChange={(e) => saveSetting(s, { endOn: e.target.value || null })} /></td>
                 <td>{s.cases}{s.open_cases > 0 && <span className="small muted"> ({s.open_cases} chưa đủ)</span>}</td>
+                {(['rate_walk_in', 'rate_ems'] as const).map((k) => {
+                  const key = `${s.code}:${k}`;
+                  const val = rates[key] ?? (s[k] == null ? '' : String(Number(s[k])));
+                  const commit = () => {
+                    if (rates[key] === undefined) return;
+                    const n = rates[key].trim() === '' ? null : Number(rates[key]);
+                    setRates(({ [key]: _, ...rest }) => rest);
+                    if (n !== null && (!Number.isInteger(n) || n < 0)) { setMsg('Đơn giá phải là số đồng, không âm'); return; }
+                    saveSetting(s, { [k === 'rate_walk_in' ? 'rateWalkIn' : 'rateEms']: n });
+                  };
+                  return <td key={k}><input type="number" min={0} step={1000} style={{ width: 110 }} placeholder="Chưa đặt" value={val} disabled={!canSet}
+                    onChange={(e) => setRates({ ...rates, [key]: e.target.value })} onBlur={commit} onKeyDown={(e) => e.key === 'Enter' && commit()} /></td>;
+                })}
               </tr>))}</tbody>
           </table>
         </div>
@@ -78,6 +100,9 @@ export function Research() {
           </select>
           <select value={filter.hospitalId} onChange={(e) => setFilter({ ...filter, hospitalId: e.target.value })}>
             <option value="">Mọi bệnh viện</option>{hospitals.map((h) => <option key={h.id} value={h.id}>{h.name}</option>)}
+          </select>
+          <select value={filter.source} onChange={(e) => setFilter({ ...filter, source: e.target.value })}>
+            <option value="">Mọi nguồn ca</option>{Object.entries(SOURCE_NAME).map(([k, l]) => <option key={k} value={k}>{l}</option>)}
           </select>
           <label className="row small" style={{ gap: 4 }}>Từ<input type="date" value={filter.from} onChange={(e) => setFilter({ ...filter, from: e.target.value })} /></label>
           <label className="row small" style={{ gap: 4 }}>Đến<input type="date" value={filter.to} onChange={(e) => setFilter({ ...filter, to: e.target.value })} /></label>
@@ -100,27 +125,35 @@ export function Research() {
             }, 'Đã thêm ca')}>Thêm</button>
           </div>
         )}
+        {canWalkIn && (
+          <details style={{ marginTop: 8 }}>
+            <summary className="small">Tạo ca tự đến thay bệnh viện</summary>
+            <div style={{ marginTop: 6 }}><WalkInCreate defs={defs} hospitals={hospitals} onCreated={(c) => { setSel(c.id); loadCases(); }} /></div>
+          </details>
+        )}
         {msg && <div className="small" style={{ marginTop: 6 }}>{msg}</div>}
         <div style={{ overflowX: 'auto', marginTop: 8 }}>
           <table>
-            <thead><tr><th>Số phiếu</th><th>Biểu mẫu</th><th>Bệnh viện nhận</th><th>Tuổi, chẩn đoán</th><th>Trạng thái</th><th>Vào biểu mẫu</th></tr></thead>
+            <thead><tr><th>Số phiếu / hồ sơ</th><th>Biểu mẫu</th><th>Bệnh viện</th><th>Tuổi, chẩn đoán</th><th>Người nhập</th><th>Trạng thái</th><th>Vào biểu mẫu</th></tr></thead>
             <tbody>
               {cases.map((c) => (
                 <tr key={c.id} onClick={() => setSel(c.id)} style={{ cursor: 'pointer', background: c.id === sel ? 'var(--panel-2)' : undefined }}>
-                  <td className="mono">{c.transfer_number}<div className="small muted">{c.incident_code}</div></td>
+                  <td><SourceBadge source={c.source} /> <span className="mono">{c.transfer_number ?? c.hospital_record_no}</span><div className="small muted">{c.incident_code}</div></td>
                   <td>{nameOf(c.registry)}</td>
                   <td>{c.hospital_name ?? <span className="muted">Chưa gắn</span>}</td>
                   <td className="small">{[c.age && `${c.age} tuổi`, c.diagnosis].filter(Boolean).join(' · ')}</td>
+                  <td className="small">{c.source === 'tu_den' ? c.created_by_name : c.completed_by_name ?? <span className="muted">—</span>}</td>
                   <td><StatusBadge status={c.status} /></td>
                   <td className="small">{fmtDateTime(c.created_at)}</td>
                 </tr>
               ))}
-              {cases.length === 0 && <tr><td colSpan={6} className="muted">Không có ca nào.</td></tr>}
+              {cases.length === 0 && <tr><td colSpan={7} className="muted">Không có ca nào.</td></tr>}
             </tbody>
           </table>
         </div>
       </div>
       {sel && <RegistryForm key={sel} caseId={sel} defs={defs} onSaved={loadCases} />}
+      {canSeePay && <RegistryContributors defs={defs} hospitals={hospitals} />}
     </div>
   );
 }

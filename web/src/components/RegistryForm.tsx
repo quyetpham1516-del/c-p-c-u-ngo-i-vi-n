@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { api, fmtDateTime, session } from '../api';
 
-export interface RegistryField { key: string; label: string; type: 'bool' | 'number' | 'text' | 'date' | 'datetime' | 'select'; options?: [string, string][]; part: 'truoc_vien' | 'trong_vien'; required?: boolean; when?: [string, string] }
-export interface RegistryDef { code: string; name: string; criteria: string; fields: RegistryField[] }
+export interface RegistryField { key: string; label: string; type: 'bool' | 'number' | 'text' | 'date' | 'datetime' | 'select'; options?: [string, string][]; part: 'truoc_vien' | 'trong_vien' | 'tu_den'; required?: boolean; when?: [string, string] }
+export interface RegistryDef { code: string; name: string; criteria: string; fields: RegistryField[]; collecting?: boolean }
 
 export const REGISTRY_STATUS: Record<string, [string, string]> = {
   cho_bo_sung: ['Chờ bổ sung', 'red'], dang_bo_sung: ['Đang bổ sung', 'amber'], du: ['Đã đủ', 'green'],
@@ -16,6 +16,11 @@ export function useRegistryDefs() {
     defsCache.then(setDefs).catch(() => {});
   }, []);
   return defs;
+}
+
+export const SOURCE_NAME: Record<string, string> = { xe_115: 'Xe 115', tu_den: 'Tự đến' };
+export function SourceBadge({ source }: { source: string }) {
+  return <span className={`badge ${source === 'tu_den' ? 'blue' : ''}`}>{SOURCE_NAME[source] ?? source}</span>;
 }
 
 export function StatusBadge({ status }: { status: string }) {
@@ -83,6 +88,7 @@ export function RegistryForm({ caseId, defs, onSaved }: { caseId: string; defs: 
   const def = defs.find((d) => d.code === c?.registry);
   if (!c || !def) return <div className="panel">{msg || 'Đang tải…'}</div>;
   const isHospital = session.user?.role === 'hospital';
+  const walkIn = c.source === 'tu_den';
   const data = { ...(c.data ?? {}), ...draft };
   const dirty = Object.keys(draft).length > 0;
   const save = async () => {
@@ -93,13 +99,14 @@ export function RegistryForm({ caseId, defs, onSaved }: { caseId: string; defs: 
       setMsg(next.status === 'du' ? 'Đã lưu: biểu mẫu đã đủ' : 'Đã lưu');
     } catch (e: any) { setMsg(e.message); } finally { setBusy(false); }
   };
-  const part = (p: 'truoc_vien' | 'trong_vien') => {
+  const TITLE = { tu_den: 'Thông tin khi tới khoa cấp cứu', truoc_vien: walkIn ? 'Trước khi tới viện' : 'Phần trước viện bổ sung', trong_vien: 'Phần trong viện' };
+  const part = (p: 'truoc_vien' | 'trong_vien' | 'tu_den') => {
     const fields = def.fields.filter((f) => f.part === p && shown(f, data));
     if (!fields.length) return null;
-    const locked = isHospital && p === 'truoc_vien';
+    const locked = isHospital && !walkIn && p === 'truoc_vien';
     return (
       <>
-        <h4 style={{ margin: '12px 0 4px' }}>{p === 'trong_vien' ? 'Phần trong viện' : 'Phần trước viện bổ sung'}{locked && <span className="small muted"> (trung tâm điền)</span>}</h4>
+        <h4 style={{ margin: '12px 0 4px' }}>{TITLE[p]}{locked && <span className="small muted"> (trung tâm điền)</span>}</h4>
         <div className="grid3">
           {fields.map((f) => (
             <label key={f.key} className="field">{f.label}{f.required && <b style={{ color: 'var(--danger)' }}> *</b>}
@@ -116,8 +123,19 @@ export function RegistryForm({ caseId, defs, onSaved }: { caseId: string; defs: 
         <b>{def.name}</b>
         <span><StatusBadge status={c.status} />{c.updated_by_name && <span className="small muted"> · {c.updated_by_name} {fmtDateTime(c.updated_at)}</span>}</span>
       </div>
-      <h4 style={{ margin: '8px 0 4px' }}>Trước viện (từ phiếu chuyển viện)</h4>
-      <Prehospital p={c.prehospital ?? {}} />
+      {walkIn ? (
+        <div className="small" style={{ marginTop: 6 }}>
+          <SourceBadge source="tu_den" /> {c.hospital_name} · Số hồ sơ <b className="mono">{c.hospital_record_no}</b>
+          {c.created_by_name && <span className="muted"> · Người tạo: {c.created_by_name}, {fmtDateTime(c.created_at)}</span>}
+          {c.paid_at && <span className="badge green" style={{ marginLeft: 6 }}>Đã thanh toán {fmtDateTime(c.paid_at)}</span>}
+        </div>
+      ) : (
+        <>
+          <h4 style={{ margin: '8px 0 4px' }}>Trước viện (từ phiếu chuyển viện)</h4>
+          <Prehospital p={c.prehospital ?? {}} />
+        </>
+      )}
+      {walkIn && part('tu_den')}
       {part('truoc_vien')}
       {part('trong_vien')}
       {c.missing?.length > 0 && !dirty && <div className="small muted" style={{ marginTop: 6 }}>Còn thiếu: {c.missing.join(', ')}</div>}
@@ -126,6 +144,43 @@ export function RegistryForm({ caseId, defs, onSaved }: { caseId: string; defs: 
         {dirty && <button className="ghost" onClick={() => setDraft({})}>Bỏ thay đổi</button>}
         {msg && <span className="small">{msg}</span>}
       </div>
+    </div>
+  );
+}
+
+/**
+ * Tạo ca tự đến (người dân tự đưa tới khoa cấp cứu): chọn biểu mẫu đang lấy số liệu, nhập số hồ sơ bệnh viện. Tạo xong
+ * thì mở phiếu để điền đủ các phần.
+ */
+export function WalkInCreate({ defs, hospitals, onCreated }: { defs: RegistryDef[]; hospitals?: { id: number; name: string }[]; onCreated: (c: any) => void }) {
+  const open = defs.filter((d) => d.collecting);
+  const [f, setF] = useState({ registry: '', hospitalRecordNo: '', hospitalId: '' });
+  const [msg, setMsg] = useState('');
+  const registry = f.registry || open[0]?.code || '';
+  if (!open.length) return <div className="small muted">Chưa có biểu mẫu nào đang lấy số liệu nên chưa tạo được ca tự đến.</div>;
+  const create = async () => {
+    setMsg('');
+    try {
+      const c = await api('POST', '/api/registry/walk-in', { registry, hospitalRecordNo: f.hospitalRecordNo.trim(), ...(hospitals ? { hospitalId: Number(f.hospitalId) } : {}) });
+      setF({ ...f, hospitalRecordNo: '' }); onCreated(c);
+    } catch (e: any) { setMsg(e.message); }
+  };
+  return (
+    <div>
+      <div className="row" style={{ flexWrap: 'wrap' }}>
+        <select value={registry} onChange={(e) => setF({ ...f, registry: e.target.value })}>
+          {open.map((d) => <option key={d.code} value={d.code}>{d.name}</option>)}
+        </select>
+        {hospitals && (
+          <select value={f.hospitalId} onChange={(e) => setF({ ...f, hospitalId: e.target.value })}>
+            <option value="">Chọn bệnh viện</option>{hospitals.map((h) => <option key={h.id} value={h.id}>{h.name}</option>)}
+          </select>
+        )}
+        <input placeholder="Số hồ sơ / số vào viện" value={f.hospitalRecordNo} onChange={(e) => setF({ ...f, hospitalRecordNo: e.target.value })} />
+        <button className="primary" disabled={!f.hospitalRecordNo.trim() || (!!hospitals && !f.hospitalId)} onClick={create}>Tạo ca tự đến</button>
+      </div>
+      <div className="small muted" style={{ marginTop: 4 }}>Số hồ sơ chỉ dùng để chặn nhập trùng, không đưa vào file xuất nghiên cứu. Không ghi họ tên người bệnh.</div>
+      {msg && <div className="error">{msg}</div>}
     </div>
   );
 }

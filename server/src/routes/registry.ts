@@ -5,7 +5,7 @@ import { many, one, withTx } from '../db.js';
 import { HttpError } from '../domain.js';
 import { toCsv } from '../finance.js';
 import { actorOf, guard, type Ctx, type Role } from '../http.js';
-import { missingFields, prehospitalSnapshot, REGISTRIES, saveRegistryCase } from '../registry.js';
+import { createWalkIn, fieldsFor, missingFields, prehospitalSnapshot, REGISTRIES, saveRegistryCase } from '../registry.js';
 
 /** Nhân viên trung tâm xem và bổ sung biểu mẫu (bác sĩ trên kíp, điều phối, trưởng ca, QLCL) */
 const INTERNAL: Role[] = ['crew', 'dispatcher', 'supervisor', 'qa', 'admin', 'director'];
@@ -13,6 +13,12 @@ const INTERNAL: Role[] = ['crew', 'dispatcher', 'supervisor', 'qa', 'admin', 'di
 const SETTINGS: Role[] = ['admin', 'director'];
 /** Xuất số liệu nghiên cứu (không kèm họ tên, số định danh) */
 const EXPORT: Role[] = ['supervisor', 'qa', 'admin', 'director'];
+/** Xem bảng kê người nhập, số ca để thanh toán; đánh dấu đã trả */
+const PAY_VIEW: Role[] = ['admin', 'director', 'accountant', 'qa'];
+const PAY_MARK: Role[] = ['admin', 'director', 'accountant'];
+/** Nhân viên trung tâm được tạo ca tự đến thay bệnh viện (chọn bệnh viện) */
+const WALK_IN_INTERNAL: Role[] = ['supervisor', 'qa', 'admin', 'director'];
+const SOURCE = z.enum(['xe_115', 'tu_den']);
 const CODE = z.enum(['utstein', 'patos', 'stroke']);
 const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 
@@ -24,8 +30,11 @@ export function registerRegistry(app: FastifyInstance, { pool }: Ctx) {
   const hospitalOf = async (req: FastifyRequest) =>
     req.user.role === 'hospital' ? (await one(pool, 'SELECT hospital_id FROM users WHERE id = $1', [req.user.id]))?.hospital_id ?? -1 : null;
 
-  app.get('/api/registry/defs', { preHandler: guard(...INTERNAL, 'hospital') }, async () =>
-    Object.entries(REGISTRIES).map(([code, r]) => ({ code, ...r })));
+  app.get('/api/registry/defs', { preHandler: guard(...INTERNAL, 'hospital', 'accountant') }, async () => {
+    const on = new Set((await many(pool, `SELECT code FROM registry_settings WHERE enabled AND (start_on IS NULL OR start_on <= vn_today())
+                                             AND (end_on IS NULL OR end_on >= vn_today())`)).map((r) => r.code));
+    return Object.entries(REGISTRIES).map(([code, r]) => ({ code, ...r, collecting: on.has(code) }));
+  });
 
   app.get('/api/registry/settings', { preHandler: guard(...INTERNAL) }, async () =>
     many(pool, `SELECT s.*, u.full_name AS updated_by_name,
@@ -36,34 +45,44 @@ export function registerRegistry(app: FastifyInstance, { pool }: Ctx) {
 
   app.put('/api/registry/settings/:code', { preHandler: guard(...SETTINGS) }, async (req) => {
     const code = z.object({ code: CODE }).parse(req.params).code;
-    const b = z.object({ enabled: z.boolean(), startOn: date.nullish(), endOn: date.nullish(), note: z.string().max(500).nullish() }).parse(req.body);
+    const money = z.number().int().min(0).max(100_000_000).nullish();
+    const b = z.object({ enabled: z.boolean(), startOn: date.nullish(), endOn: date.nullish(), note: z.string().max(500).nullish(),
+      rateWalkIn: money, rateEms: money }).parse(req.body);
     if (b.startOn && b.endOn && b.endOn < b.startOn) throw new HttpError(422, 'Ngày kết thúc trước ngày bắt đầu');
     return withTx(pool, async (tx) => {
-      const row = await one(tx, `UPDATE registry_settings SET enabled = $2, start_on = $3, end_on = $4, note = $5, updated_by = $6, updated_at = now()
-                                  WHERE code = $1 RETURNING *`, [code, b.enabled, b.startOn ?? null, b.endOn ?? null, b.note ?? null, req.user.id]);
+      // Đơn giá không gửi lên thì giữ nguyên
+      const row = await one(tx, `UPDATE registry_settings SET enabled = $2, start_on = $3, end_on = $4, note = $5, updated_by = $6, updated_at = now(),
+                                        rate_walk_in = CASE WHEN $7 THEN $8::numeric ELSE rate_walk_in END, rate_ems = CASE WHEN $9 THEN $10::numeric ELSE rate_ems END
+                                  WHERE code = $1 RETURNING *`, [code, b.enabled, b.startOn ?? null, b.endOn ?? null, b.note ?? null, req.user.id,
+        b.rateWalkIn !== undefined, b.rateWalkIn ?? null, b.rateEms !== undefined, b.rateEms ?? null]);
       await audit(tx, 'system', actorOf(req), 'registry.settings', 'registry', code, b);
       return row;
     });
   });
 
   const LIST = `
-    SELECT c.id, c.registry, c.transfer_id, c.incident_id, c.hospital_id, h.name AS hospital_name, c.status, c.completed_at, c.updated_at, c.created_at,
-           t.transfer_number, t.signed_at, i.code AS incident_code, c.prehospital->>'age' AS age, c.prehospital->>'sex' AS sex,
-           c.prehospital->>'diagnosis' AS diagnosis, u.full_name AS updated_by_name
-      FROM registry_cases c JOIN transfers t ON t.id = c.transfer_id LEFT JOIN incidents i ON i.id = c.incident_id
-      LEFT JOIN hospitals h ON h.id = c.hospital_id LEFT JOIN users u ON u.id = c.updated_by`;
+    SELECT c.id, c.registry, c.source, c.transfer_id, c.incident_id, c.hospital_id, h.name AS hospital_name, c.status, c.completed_at, c.updated_at, c.created_at,
+           c.hospital_record_no, c.paid_at, t.transfer_number, t.signed_at, i.code AS incident_code,
+           coalesce(c.prehospital->>'age', c.data->>'age') AS age, coalesce(c.prehospital->>'sex', c.data->>'sex') AS sex,
+           coalesce(c.prehospital->>'diagnosis', c.data->>'diagnosis') AS diagnosis, u.full_name AS updated_by_name,
+           cb.full_name AS created_by_name, fb.full_name AS completed_by_name
+      FROM registry_cases c LEFT JOIN transfers t ON t.id = c.transfer_id LEFT JOIN incidents i ON i.id = c.incident_id
+      LEFT JOIN hospitals h ON h.id = c.hospital_id LEFT JOIN users u ON u.id = c.updated_by
+      LEFT JOIN users cb ON cb.id = c.created_by LEFT JOIN users fb ON fb.id = c.completed_by`;
 
   app.get('/api/registry/cases', { preHandler: guard(...INTERNAL, 'hospital') }, async (req) => {
     const q = z.object({ registry: CODE.optional(), status: z.enum(['cho_bo_sung', 'dang_bo_sung', 'du', 'chua_du']).optional(),
-      hospitalId: z.coerce.number().int().optional(), from: date.optional(), to: date.optional(), transferId: z.string().uuid().optional() }).parse(req.query);
+      hospitalId: z.coerce.number().int().optional(), from: date.optional(), to: date.optional(), transferId: z.string().uuid().optional(),
+      source: SOURCE.optional() }).parse(req.query);
     const mine = await hospitalOf(req);
     return many(pool, `${LIST}
        WHERE ($1::text IS NULL OR c.registry = $1)
          AND ($2::text IS NULL OR (CASE WHEN $2 = 'chua_du' THEN c.status <> 'du' ELSE c.status = $2 END))
          AND ($3::int IS NULL OR c.hospital_id = $3) AND ($4::date IS NULL OR c.created_at >= $4::date)
          AND ($5::date IS NULL OR c.created_at < $5::date + 1) AND ($6::uuid IS NULL OR c.transfer_id = $6)
+         AND ($7::text IS NULL OR c.source = $7)
        ORDER BY c.created_at DESC LIMIT 500`,
-    [q.registry ?? null, q.status ?? null, mine ?? q.hospitalId ?? null, q.from ?? null, q.to ?? null, q.transferId ?? null]);
+    [q.registry ?? null, q.status ?? null, mine ?? q.hospitalId ?? null, q.from ?? null, q.to ?? null, q.transferId ?? null, q.source ?? null]);
   });
 
   async function loadCase(req: FastifyRequest, id: string) {
@@ -71,7 +90,7 @@ export function registerRegistry(app: FastifyInstance, { pool }: Ctx) {
     if (!c) throw new HttpError(404, 'Không tìm thấy ca trong biểu mẫu');
     const mine = await hospitalOf(req);
     if (mine !== null && c.hospital_id !== mine) throw new HttpError(403, 'Ca này không chuyển tới bệnh viện của bạn');
-    return { ...c, missing: missingFields(c.registry, c.data ?? {}) };
+    return { ...c, missing: missingFields(c.registry, c.data ?? {}, c.source) };
   }
 
   app.get('/api/registry/cases/:id', { preHandler: guard(...INTERNAL, 'hospital') }, async (req) =>
@@ -103,22 +122,94 @@ export function registerRegistry(app: FastifyInstance, { pool }: Ctx) {
     });
   });
 
+  /**
+   * Ca tự đến bệnh viện (người dân tự đưa tới khoa cấp cứu): tài khoản bệnh viện tạo cho bệnh viện mình; QLCL, trưởng ca,
+   * admin tạo thay thì chọn bệnh viện.
+   */
+  app.post('/api/registry/walk-in', { preHandler: guard(...WALK_IN_INTERNAL, 'hospital') }, async (req) => {
+    const b = z.object({ registry: CODE, hospitalRecordNo: z.string().trim().min(1).max(40), hospitalId: z.number().int().optional(),
+      data: z.record(z.string(), z.union([z.string(), z.number(), z.boolean(), z.null()])).default({}) }).parse(req.body);
+    const mine = await hospitalOf(req);
+    const hospitalId = mine ?? b.hospitalId;
+    if (!hospitalId || hospitalId < 0) throw new HttpError(400, 'Chọn bệnh viện');
+    if (!(await one(pool, 'SELECT 1 FROM hospitals WHERE id = $1', [hospitalId]))) throw new HttpError(400, 'Không có bệnh viện này');
+    const row = await withTx(pool, (tx) => createWalkIn(tx, actorOf(req), req.user, { registry: b.registry, hospitalId, hospitalRecordNo: b.hospitalRecordNo, data: b.data }));
+    return loadCase(req, row.id);
+  });
+
+  /* ---------- Thống kê người nhập và thanh toán ---------- */
+
+  /**
+   * Người được tính cho một ca: ca tự đến là người tạo, ca xe 115 là người điền làm biểu mẫu đủ. Chỉ ca đủ mới tính tiền,
+   * và chỉ người nhập là tài khoản bệnh viện (nhân viên trung tâm không tính tiền).
+   */
+  const CONTRIB = `
+    FROM registry_cases c CROSS JOIN LATERAL (SELECT CASE WHEN c.source = 'tu_den' THEN c.created_by ELSE c.completed_by END AS uid) x
+    LEFT JOIN users u ON u.id = x.uid LEFT JOIN hospitals h ON h.id = coalesce(u.hospital_id, c.hospital_id)
+    JOIN registry_settings s ON s.code = c.registry
+   WHERE ($1::date IS NULL OR coalesce(c.completed_at, c.created_at) >= $1::date) AND ($2::date IS NULL OR coalesce(c.completed_at, c.created_at) < $2::date + 1)
+     AND ($3::text IS NULL OR c.registry = $3) AND ($4::int IS NULL OR c.hospital_id = $4) AND ($5::text IS NULL OR c.source = $5)`;
+  const RATE = `(CASE WHEN c.source = 'tu_den' THEN s.rate_walk_in ELSE s.rate_ems END)`;
+  const contribQuery = z.object({ from: date.optional(), to: date.optional(), registry: CODE.optional(), hospitalId: z.coerce.number().int().optional(),
+    source: SOURCE.optional(), format: z.enum(['json', 'csv']).default('json') });
+
+  app.get('/api/registry/contributors', { preHandler: guard(...PAY_VIEW, 'hospital') }, async (req, reply) => {
+    const q = contribQuery.parse(req.query);
+    const mine = await hospitalOf(req);
+    const rows = await many(pool, `
+      SELECT h.id AS hospital_id, h.name AS hospital_name, x.uid AS user_id, u.full_name, u.role, c.registry, c.source,
+             count(*)::int AS total, count(*) FILTER (WHERE c.status = 'du')::int AS complete,
+             count(*) FILTER (WHERE c.status = 'du' AND c.paid_at IS NULL)::int AS unpaid,
+             count(*) FILTER (WHERE c.paid_at IS NOT NULL)::int AS paid, coalesce(sum(c.paid_amount), 0)::float AS paid_amount,
+             max(${RATE})::float AS rate,
+             (CASE WHEN u.role = 'hospital' AND max(${RATE}) IS NOT NULL THEN coalesce(sum(${RATE}) FILTER (WHERE c.status = 'du' AND c.paid_at IS NULL), 0) END)::float AS due
+      ${CONTRIB}
+       GROUP BY h.id, h.name, x.uid, u.full_name, u.role, c.registry, c.source
+       ORDER BY h.name NULLS LAST, u.full_name NULLS LAST, c.registry, c.source`,
+    [q.from ?? null, q.to ?? null, q.registry ?? null, mine ?? q.hospitalId ?? null, q.source ?? null]);
+    if (q.format === 'json') return rows;
+    await audit(pool, 'system', actorOf(req), 'registry.contributors_exported', 'registry', q.registry ?? 'all', { rows: rows.length, from: q.from, to: q.to });
+    reply.header('content-type', 'text/csv; charset=utf-8').header('content-disposition', `attachment; filename="bang-ke-nhap-lieu-${q.from ?? 'all'}-${q.to ?? 'all'}.csv"`);
+    return toCsv([
+      ['Bệnh viện', 'Người nhập', 'Biểu mẫu', 'Nguồn ca', 'Số ca', 'Số ca đủ', 'Đủ, chưa trả', 'Đã trả', 'Đã trả (đồng)', 'Đơn giá (đồng)', 'Còn phải trả (đồng)'],
+      ...rows.map((r) => [r.hospital_name ?? '', r.full_name ?? 'Chưa có', REGISTRIES[r.registry].name, r.source === 'tu_den' ? 'Tự đến' : 'Xe 115',
+        r.total, r.complete, r.unpaid, r.paid, r.paid_amount, r.rate ?? '', r.due ?? '']),
+    ]);
+  });
+
+  /** Đánh dấu đã trả: mọi ca đủ, chưa trả, người nhập là tài khoản bệnh viện, biểu mẫu đã đặt đơn giá, trong bộ lọc */
+  app.post('/api/registry/payouts', { preHandler: guard(...PAY_MARK) }, async (req) => {
+    const b = z.object({ from: date.optional(), to: date.optional(), registry: CODE.optional(), hospitalId: z.number().int().optional(),
+      source: SOURCE.optional(), userId: z.string().uuid().optional() }).parse(req.body);
+    return withTx(pool, async (tx) => {
+      const rows = await many(tx, `
+        UPDATE registry_cases rc SET paid_at = now(), paid_by = $7, paid_amount = p.rate
+          FROM (SELECT c.id, ${RATE} AS rate ${CONTRIB}
+                   AND c.status = 'du' AND c.paid_at IS NULL AND u.role = 'hospital' AND ${RATE} IS NOT NULL AND ($6::uuid IS NULL OR x.uid = $6)) p
+         WHERE rc.id = p.id RETURNING rc.id, rc.paid_amount`,
+      [b.from ?? null, b.to ?? null, b.registry ?? null, b.hospitalId ?? null, b.source ?? null, b.userId ?? null, req.user.id]);
+      const total = rows.reduce((n, r) => n + Number(r.paid_amount), 0);
+      await audit(tx, 'system', actorOf(req), 'registry.paid', 'registry', b.registry ?? 'all', { ...b, cases: rows.length, total });
+      return { cases: rows.length, total };
+    });
+  });
+
   /** Xuất CSV cho nghiên cứu: phần trước viện + trong viện, không họ tên, không số định danh */
   app.get('/api/registry/export', { preHandler: guard(...EXPORT) }, async (req, reply) => {
     const q = z.object({ registry: CODE, from: date.optional(), to: date.optional() }).parse(req.query);
-    const rows = await many(pool, `SELECT c.*, t.transfer_number, h.name AS hospital_name FROM registry_cases c JOIN transfers t ON t.id = c.transfer_id
+    const rows = await many(pool, `SELECT c.*, t.transfer_number, h.name AS hospital_name FROM registry_cases c LEFT JOIN transfers t ON t.id = c.transfer_id
                                     LEFT JOIN hospitals h ON h.id = c.hospital_id
                                    WHERE c.registry = $1 AND ($2::date IS NULL OR c.created_at >= $2::date) AND ($3::date IS NULL OR c.created_at < $3::date + 1)
                                    ORDER BY c.created_at`, [q.registry, q.from ?? null, q.to ?? null]);
-    const def = REGISTRIES[q.registry];
+    const fields = fieldsFor(q.registry, 'tu_den');
     const pre = ['age', 'sex', 'chiefComplaint', 'diagnosis', 'icd10', 'hospital', 'handoverAt'];
     const flat = (v: unknown) => (v == null ? '' : typeof v === 'object' ? JSON.stringify(v) : String(v));
     await audit(pool, 'system', actorOf(req), 'registry.exported', 'registry', q.registry, { rows: rows.length, from: q.from, to: q.to });
     reply.header('content-type', 'text/csv; charset=utf-8').header('content-disposition', `attachment; filename="${q.registry}-${q.from ?? 'all'}-${q.to ?? 'all'}.csv"`);
     return toCsv([
-      ['Số phiếu', 'Bệnh viện nhận', 'Ngày vào biểu mẫu', 'Trạng thái', ...pre, 'Phần trước viện (đầy đủ)', ...def.fields.map((f) => f.label)],
-      ...rows.map((r) => [r.transfer_number, r.hospital_name, String(r.created_at), r.status,
-        ...pre.map((k) => flat(r.prehospital?.[k])), flat(r.prehospital), ...def.fields.map((f) => flat(r.data?.[f.key]))]),
+      ['Mã ca nghiên cứu', 'Nguồn ca', 'Số phiếu', 'Bệnh viện', 'Ngày vào biểu mẫu', 'Trạng thái', ...pre, 'Phần trước viện (đầy đủ)', ...fields.map((f) => f.label)],
+      ...rows.map((r) => [r.id, r.source === 'tu_den' ? 'Tự đến' : 'Xe 115', r.transfer_number ?? '', r.hospital_name, String(r.created_at), r.status,
+        ...pre.map((k) => flat(r.prehospital?.[k] ?? r.data?.[k])), r.source === 'tu_den' ? '' : flat(r.prehospital), ...fields.map((f) => flat(r.data?.[f.key]))]),
     ]);
   });
 

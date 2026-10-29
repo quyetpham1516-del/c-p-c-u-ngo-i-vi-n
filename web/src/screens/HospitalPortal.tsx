@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { api, fmtDateTime } from '../api';
-import { RegistryForm, StatusBadge, useRegistryDefs } from '../components/RegistryForm';
+import { RegistryContributors } from '../components/RegistryContributors';
+import { RegistryForm, StatusBadge, useRegistryDefs, WalkInCreate } from '../components/RegistryForm';
 
 const SEX: Record<string, string> = { M: 'Nam', F: 'Nữ', U: '' };
 
@@ -72,8 +73,53 @@ export function HospitalPortal() {
         </div>
       )}
       {cur?.registries.map((c: any) => <RegistryForm key={c.id} caseId={c.id} defs={defs} onSaved={load} />)}
+      <WalkIns defs={defs} />
+      <RegistryContributors defs={defs} />
       <FormPreview defs={defs} />
     </div>
+  );
+}
+
+/**
+ * Ca tự đến: người dân tự đưa tới khoa cấp cứu (không qua xe 115). Khoa cấp cứu tạo phiếu mới, điền đủ các phần của biểu mẫu;
+ * ca vào chung số liệu với ca xe 115.
+ */
+function WalkIns({ defs }: { defs: any[] }) {
+  const [rows, setRows] = useState<any[]>([]);
+  const [sel, setSel] = useState<string | null>(null);
+  const [adding, setAdding] = useState(false);
+  const load = () => api<any[]>('GET', '/api/registry/cases?source=tu_den').then(setRows).catch(() => {});
+  useEffect(() => { load(); }, []);
+  const nameOf = (code: string) => defs.find((d) => d.code === code)?.name ?? code;
+  return (
+    <>
+      <div className="panel" id="ca-tu-den">
+        <div className="row" style={{ justifyContent: 'space-between' }}>
+          <h3 style={{ margin: 0 }}>Ca tự đến khoa cấp cứu</h3>
+          <button className="primary" onClick={() => setAdding(!adding)}>{adding ? 'Đóng' : '+ Ca tự đến'}</button>
+        </div>
+        <div className="small muted">Ca ngừng tim, đột quỵ, chấn thương do người dân tự đưa tới (không qua xe 115). Phiếu có đủ các phần của biểu mẫu nghiên cứu.</div>
+        {adding && <div style={{ marginTop: 8 }}><WalkInCreate defs={defs} onCreated={(c) => { setAdding(false); setSel(c.id); load(); }} /></div>}
+        <div style={{ overflowX: 'auto', marginTop: 8 }}>
+          <table>
+            <thead><tr><th>Số hồ sơ</th><th>Biểu mẫu</th><th>Tuổi, chẩn đoán</th><th>Người tạo</th><th>Trạng thái</th></tr></thead>
+            <tbody>
+              {rows.map((r) => (
+                <tr key={r.id} onClick={() => setSel(r.id)} style={{ cursor: 'pointer', background: r.id === sel ? 'var(--panel-2)' : undefined }}>
+                  <td className="mono">{r.hospital_record_no}</td>
+                  <td className="small">{nameOf(r.registry)}</td>
+                  <td className="small">{[r.age && `${r.age} tuổi`, r.diagnosis].filter(Boolean).join(' · ')}</td>
+                  <td className="small">{r.created_by_name}<div className="muted">{fmtDateTime(r.created_at)}</div></td>
+                  <td><StatusBadge status={r.status} />{r.paid_at && <div className="small muted">Đã thanh toán</div>}</td>
+                </tr>
+              ))}
+              {rows.length === 0 && <tr><td colSpan={5} className="muted">Chưa có ca tự đến nào.</td></tr>}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {sel && <RegistryForm key={sel} caseId={sel} defs={defs} onSaved={load} />}
+    </>
   );
 }
 
